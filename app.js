@@ -17,7 +17,7 @@ import {
 } from './facturen-ui.js?v=20261021a';
 import { openIbanClusterScherm } from './boekingen-relaties-ui.js?v=20261021a';
 import { renderKm, openRitModal, sluitRitModal, saveRit, verwijderRitUi, verwijderRitUitModal } from './km-ui.js?v=20261021a';
-import { kiesVeilingTab, kiesVeilingBestand, importeerVeiling } from './veiling-ui.js?v=20261021a';
+import { kiesVeilingBestand, importeerVeiling } from './veiling-ui.js?v=20261021a';
 import { renderActiva, openActivumModal, sluitActivumModal, saveActivum, verwijderActivumUi, verwijderActivumUitModal } from './activa-ui.js?v=20261021a';
 import { renderBeheer, bewaarMinVoorraad, bewaarReferentiePriveSt2022, herprobeerSynchronisatie, bewaarBtwVanaf, bewaarBedrijfsgegevens, bewaarKmTarief, bewaarFactuurInstellingen, bewaarBankKoppelingRek } from './beheer.js?v=20261021a';
 import { renderPortaal } from './home.js?v=20261021a';
@@ -91,7 +91,7 @@ Object.assign(window, {
   openIbanClusterScherm,
   renderKm, openRitModal, sluitRitModal, saveRit, verwijderRitUi, verwijderRitUitModal, bewaarKmTarief,
   renderActiva, openActivumModal, sluitActivumModal, saveActivum, verwijderActivumUi, verwijderActivumUitModal,
-  kiesVeilingTab, kiesVeilingBestand, importeerVeiling,
+  kiesVeilingBestand, importeerVeiling,
   renderCrediteuren, wisselJaarCrediteuren, renderDebiteuren, wisselJaarDebiteuren,
   renderGrootboek, wisFiltersGrootboek, openGrootboekRekening, sluitGrootboekRekening,
   openGrootboekBeheerModal, sluitGrootboekBeheerModal, voegGrootboekToe, verwijderGrootboek,

@@ -50,7 +50,7 @@ const TITELS = {
   controle: 'Controle',
   voorraad: 'Voorraad',
   hnvi: 'HNVI / Xtenate',
-  veiling: 'Veiling',
+  veiling: 'Artikelvoorraad',
   km: 'Kilometers',
   activa: 'Activa',
   beheer: 'Beheer'
