@@ -1,15 +1,16 @@
 // dashboard.js — Home: het financiële dashboard.
 
-import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261021b';
+import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261021c';
 import {
   BEGINSALDO_2026, calcIB, ddmm, esc, fmt, fmtKort, isInkomst, isOmzet, isUitgave,
   maandLabel, rekBadge, saldoDelta, typeBadge, weergaveNaam
-} from './helpers.js?v=20261021b';
-import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261021b';
-import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261021b';
-import { draaiControles } from './controle.js?v=20261021b';
-import { maakSorteerbaar } from './tables.js?v=20261021b';
-import { hertekenHuidigePagina } from './ui.js?v=20261021b';
+} from './helpers.js?v=20261021c';
+import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261021c';
+import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261021c';
+import { draaiControles } from './controle.js?v=20261021c';
+import { aangifteModel, ibOver } from './belasting.js?v=20261021c';
+import { maakSorteerbaar } from './tables.js?v=20261021c';
+import { hertekenHuidigePagina } from './ui.js?v=20261021c';
 
 const HOOFDREKENING = '1010'; // de bankrekening waarop het beginsaldo staat
 
@@ -321,8 +322,16 @@ export function renderHome() {
   const winst = omzet - kosten;
   const bank = berekenBanksaldo(jaar);
   const voorraad = berekenVoorraad();
-  const ib = calcIB(winst);
-  const reservering = Math.max(0, Math.round(winst * 0.30));
+  // De belasting hoort bij dezelfde winst als op de pagina Belasting (verkochte
+  // inkoop als kosten, voorraad niet). Het netto resultaat hierboven is het
+  // kasresultaat: alles wat is uitgegeven, ook voorraad die nog ligt.
+  let fiscaleWinst = winst;
+  if (jaar !== 'all') {
+    try { fiscaleWinst = aangifteModel(jaar).resultaat.winst; }
+    catch (e) { console.error('Belastingwinst kon niet worden berekend:', e); }
+  }
+  const ib = fiscaleWinst > 0 ? ibOver(fiscaleWinst) : calcIB(fiscaleWinst);
+  const reservering = Math.max(0, Math.round(fiscaleWinst * 0.30));
 
   const bronMerk = uitExcel
     // Herkomstlabel, geen oordeel: deze badge zegt waar de cijfers vandaan
@@ -353,7 +362,7 @@ export function renderHome() {
         hnviInv > 0 ? `waarvan ${fmt(hnviInv)} HNVI-inkoop` : '', '',
         { icoon: 'kosten', trend: kpiTrend(groei(kosten, vorig?.kosten), false) }) +
     kpi('Netto resultaat', fmt(winst), winst >= 0 ? 'pos' : 'neg',
-        omzet > 0 ? `marge ${Math.round(winst / omzet * 100)}%` : '', '',
+        omzet > 0 ? `kasresultaat · marge ${Math.round(winst / omzet * 100)}%` : '', '',
         { icoon: 'winst',
           trend: kpiTrend(groei(winst, vorig ? vorig.omzet - vorig.kosten : NaN), true) }) +
     kpi('Banksaldo', bank.saldo === null ? '—' : fmt(bank.saldo),
@@ -368,7 +377,7 @@ export function renderHome() {
     kpi(ib <= 0 ? 'Geschatte teruggave' : 'Geschatte inkomstenbelasting',
         (ib <= 0 ? '+' : '') + fmt(Math.abs(Math.round(ib))),
         ib <= 0 ? 'pos' : 'neg',
-        winst > 0 ? `reserveer ± ${fmt(reservering)}` : 'geen winst dit jaar', ' kpi--secondary') +
+        fiscaleWinst > 0 ? `over fiscale winst ${fmt(fiscaleWinst)} · reserveer ± ${fmt(reservering)}` : 'geen winst dit jaar', ' kpi--secondary') +
     (state.huidigJaar && state.huidigJaar !== 'all'
       ? kpi(`Voorraadwaarde eind ${jaarTekst}`, fmt(voorraad.waarde), '',
             `${voorraad.loten} loten · ${voorraad.covers} covers op voorraad · ${voorraad.ingekochtStuks} ingekocht · ${voorraad.verkochtStuks} verkocht`,

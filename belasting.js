@@ -1,11 +1,11 @@
 // belasting.js — Belasting-pagina (indicatieve IB-berekening).
 
-import { charts, dc, kleurVoorGb } from './charts.js?v=20261021b';
-import { ddmm, fmt, gbCode, isInkomst, isOmzet, isUitgave } from './helpers.js?v=20261021b';
-import { downloadModelPdf } from './pdf.js?v=20261021b';
-import { state, grootboekNamen } from './storage.js?v=20261021b';
-import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261021b';
-import { totaalAfschrijvingVanJaar } from './activa.js?v=20261021b';
+import { charts, dc, kleurVoorGb } from './charts.js?v=20261021c';
+import { ddmm, fmt, gbCode, isInkomst, isOmzet, isUitgave } from './helpers.js?v=20261021c';
+import { downloadModelPdf } from './pdf.js?v=20261021c';
+import { state, grootboekNamen } from './storage.js?v=20261021c';
+import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261021c';
+import { totaalAfschrijvingVanJaar } from './activa.js?v=20261021c';
 
 const HUIDIG_JAAR = '2026';
 
@@ -48,6 +48,28 @@ export function nettoOmzet(belTX) {
   const bij = belTX.filter(t => isInkomst(t) && isOmzet(t.gb)).reduce((s, t) => s + (Number(t.bedrag) || 0), 0);
   const af  = belTX.filter(t => isUitgave(t) && isOmzet(t.gb)).reduce((s, t) => s + (Number(t.bedrag) || 0), 0);
   return { bij, af, netto: bij - af };
+}
+
+/**
+ * HNVI-verkopen die nog niet in de bankomzet zitten.
+ *
+ * Een verkocht lot bracht geld op, en dat staat meestal al als inkomst op een
+ * omzetrekening in de bank. Telden we de verkoopprijs van het lot er dan nog
+ * eens bij op, dan stond dezelfde verkoop twee keer in de omzet. Daarom
+ * koppelen we elk verkocht lot aan één bankinkomst met exact hetzelfde bedrag;
+ * alleen wat nergens in de bank te vinden is, komt er als omzet bij.
+ */
+export function hnviOmzetBuitenBank(hnviJaar, belTX) {
+  const vrij = belTX.filter(t => isInkomst(t) && isOmzet(t.gb)).map(t => Number(t.bedrag) || 0);
+  let bedrag = 0, alInBank = 0, aantalAlInBank = 0;
+  for (const lot of hnviJaar.filter(i => i.status === 'verkocht')) {
+    const prijs = Number(lot.verkoop) || 0;
+    if (!(prijs > 0)) continue;
+    const plek = vrij.findIndex(b => Math.abs(b - prijs) < 0.005);
+    if (plek >= 0) { vrij.splice(plek, 1); alInBank += prijs; aantalAlInBank++; }
+    else bedrag += prijs;
+  }
+  return { bedrag, alInBank, aantalAlInBank };
 }
 
 const SOORT_SLEUTEL = 'xtenate_inkomenssoort';
@@ -353,7 +375,8 @@ export function renderBelasting() {
   const hnviJaar = jaar === 'all' ? state.HNVI_LOTS : state.HNVI_LOTS.filter(i => i.datum && i.datum.startsWith(jaar));
   
   // HNVI-verkoopwaarde telt als opbrengst (verkochte loten)
-  const hnviOmzet = hnviJaar.filter(i => i.status === 'verkocht').reduce((s,i)=>s+(Number(i.verkoop)||0),0);
+  const hnviSplit = hnviOmzetBuitenBank(hnviJaar, belTX);
+  const hnviOmzet = hnviSplit.bedrag;
   const omzetTotal = omzetBank + hnviOmzet;
 
   // Kosten die meteen aftrekbaar zijn. Handelsvoorraad hoort hier niet bij:
@@ -479,6 +502,12 @@ export function renderBelasting() {
   // een ingekocht aantal staat om het bedrag over te verdelen.
   // Terugbetalingen en eigen overboekingen benoemen, want die zag je eerder
   // als kosten terug en dat vertekende de winst.
+  if (hnviSplit.aantalAlInBank > 0) {
+    punten.push({
+      soort: 'gunstig',
+      tekst: `${hnviSplit.aantalAlInBank} verkochte HNVI-loten (samen ${fmt(hnviSplit.alInBank)}) staan al als inkomst in de bank. Die zijn niet nog eens als omzet bijgeteld.`
+    });
+  }
   if (omzetSplit.af > 0) {
     punten.push({
       soort: 'gunstig',
@@ -889,7 +918,7 @@ export function aangifteModel(jaar = gekozenJaar()) {
     : hnviBank;
   
   // Omzet uit verkochte HNVI-loten
-  const hnviOmzet = hnviJaar.filter(i => i.status === 'verkocht').reduce((s, i) => s + (Number(i.verkoop) || 0), 0);
+  const hnviOmzet = hnviOmzetBuitenBank(hnviJaar, belTX).bedrag;
   const omzet = omzetBank + hnviOmzet;
 
   // Voorraad-COGS: artikelen die dit jaar verkocht zijn
@@ -932,6 +961,7 @@ export function aangifteModel(jaar = gekozenJaar()) {
   // opmaak in de code staat.
   return {
     jaar,
+    resultaat: { omzet, winst },
     titel: 'Aangifte inkomstenbelasting — winst uit onderneming',
     ondertitel: `Boekjaar ${jaar === 'all' ? 'alle jaren' : jaar}`,
     blokken: [
