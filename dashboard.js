@@ -1,15 +1,15 @@
 // dashboard.js — Home: het financiële dashboard.
 
-import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261021a';
+import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261021b';
 import {
   BEGINSALDO_2026, calcIB, ddmm, esc, fmt, fmtKort, isInkomst, isOmzet, isUitgave,
   maandLabel, rekBadge, saldoDelta, typeBadge, weergaveNaam
-} from './helpers.js?v=20261021a';
-import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261021a';
-import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261021a';
-import { draaiControles } from './controle.js?v=20261021a';
-import { maakSorteerbaar } from './tables.js?v=20261021a';
-import { hertekenHuidigePagina } from './ui.js?v=20261021a';
+} from './helpers.js?v=20261021b';
+import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261021b';
+import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261021b';
+import { draaiControles } from './controle.js?v=20261021b';
+import { maakSorteerbaar } from './tables.js?v=20261021b';
+import { hertekenHuidigePagina } from './ui.js?v=20261021b';
 
 const HOOFDREKENING = '1010'; // de bankrekening waarop het beginsaldo staat
 

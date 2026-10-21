@@ -1,22 +1,22 @@
 // ui.js — navigatie tussen pagina's en het onthouden van de actieve pagina.
 
-import { renderBank } from './bank.js?v=20261021a';
-import { renderBelasting } from './belasting.js?v=20261021a';
-import { renderBtw } from './btw.js?v=20261021a';
-import { renderCrediteuren } from './crediteuren.js?v=20261021a';
-import { renderDebiteuren } from './debiteuren.js?v=20261021a';
-import { renderHome } from './dashboard.js?v=20261021a';
-import { renderPortaal } from './home.js?v=20261021a';
-import { renderGrootboek } from './grootboek.js?v=20261021a';
-import { renderHNVI } from './hnvi.js?v=20261021a';
-import { renderControle } from './controle.js?v=20261021a';
-import { renderCovers } from './voorraad.js?v=20261021a';
-import { renderFacturen } from './facturen-ui.js?v=20261021a';
-import { renderKm } from './km-ui.js?v=20261021a';
-import { renderActiva } from './activa-ui.js?v=20261021a';
-import { renderVeiling } from './veiling-ui.js?v=20261021a';
-import { renderBeheer } from './beheer.js?v=20261021a';
-import { toonGroepVan } from './navgroepen.js?v=20261021a';
+import { renderBank } from './bank.js?v=20261021b';
+import { renderBelasting } from './belasting.js?v=20261021b';
+import { renderBtw } from './btw.js?v=20261021b';
+import { renderCrediteuren } from './crediteuren.js?v=20261021b';
+import { renderDebiteuren } from './debiteuren.js?v=20261021b';
+import { renderHome } from './dashboard.js?v=20261021b';
+import { renderPortaal } from './home.js?v=20261021b';
+import { renderGrootboek } from './grootboek.js?v=20261021b';
+import { renderHNVI } from './hnvi.js?v=20261021b';
+import { renderControle } from './controle.js?v=20261021b';
+import { renderCovers } from './voorraad.js?v=20261021b';
+import { renderFacturen } from './facturen-ui.js?v=20261021b';
+import { renderKm } from './km-ui.js?v=20261021b';
+import { renderActiva } from './activa-ui.js?v=20261021b';
+import { renderVeiling } from './veiling-ui.js?v=20261021b';
+import { renderBeheer } from './beheer.js?v=20261021b';
+import { toonGroepVan } from './navgroepen.js?v=20261021b';
 
 const RENDERS = {
   home: renderPortaal,      // de startpagina: tegels naar de onderdelen
