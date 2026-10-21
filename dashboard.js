@@ -7,6 +7,7 @@ import {
 } from './helpers.js?v=20260902a';
 import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20260902a';
 import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20260902a';
+import { draaiControles } from './controle.js?v=20260902a';
 import { maakSorteerbaar } from './tables.js?v=20260902a';
 import { hertekenHuidigePagina } from './ui.js?v=20260902a';
 
@@ -220,6 +221,22 @@ function aandachtspunten() {
     actie: "nav('voorraad')", knop: 'Verdeling'
   });
 
+  // Uitkomst van de Controle-pagina, zodat "Alles op orde" niet kan blijven
+  // staan terwijl daar een fout of waarschuwing open staat.
+  try {
+    const regels = draaiControles();
+    const fouten = regels.filter(r => r.ernst === 'fout' && !r.ok).length;
+    const waarschuwingen = regels.filter(r => r.ernst === 'waarschuwing' && !r.ok).length;
+    if (fouten + waarschuwingen > 0) punten.unshift({
+      kleur: fouten ? 'red' : 'amber',
+      titel: `Controle: ${fouten} ${fouten === 1 ? 'fout' : 'fouten'} \u00b7 ${waarschuwingen} ${waarschuwingen === 1 ? 'aandachtspunt' : 'aandachtspunten'}`,
+      tekst: 'In de administratie staan punten open die je kunt nakijken.',
+      actie: "nav('controle')", knop: 'Controle'
+    });
+  } catch (e) {
+    console.error('Controles konden niet worden gedraaid voor het dashboard:', e);
+  }
+
   return punten;
 }
 
@@ -354,7 +371,7 @@ export function renderHome() {
         winst > 0 ? `reserveer ± ${fmt(reservering)}` : 'geen winst dit jaar', ' kpi--secondary') +
     (state.huidigJaar && state.huidigJaar !== 'all'
       ? kpi(`Voorraadwaarde eind ${jaarTekst}`, fmt(voorraad.waarde), '',
-            `${voorraad.ingekochtStuks} ingekocht · ${voorraad.verkochtStuks} verkocht · ${voorraad.covers} op voorraad`,
+            `${voorraad.loten} loten · ${voorraad.covers} covers op voorraad · ${voorraad.ingekochtStuks} ingekocht · ${voorraad.verkochtStuks} verkocht`,
             ' kpi--secondary')
       : kpi('Voorraadwaarde', fmt(voorraad.waarde), '',
             voorraad.zonderPrijs > 0
