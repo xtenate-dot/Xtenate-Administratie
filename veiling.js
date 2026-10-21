@@ -247,6 +247,7 @@ export function voorraadRegels(artikelen) {
       groep = [];
     }
   }
-  uit.push({ soort: 'totaal', artikel: 'Totaal alle artikelen', ...som(alle) });
+  const totaalNaam = (artikelen.find(a => a.soort === 'totaal') || {}).artikel || 'Totaal alle artikelen';
+  uit.push({ soort: 'totaal', artikel: totaalNaam, ...som(alle) });
   return uit;
 }
