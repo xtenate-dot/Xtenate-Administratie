@@ -1,21 +1,22 @@
 // ui.js — navigatie tussen pagina's en het onthouden van de actieve pagina.
 
-import { renderBank } from './bank.js?v=20260902a';
-import { renderBelasting } from './belasting.js?v=20260902a';
-import { renderBtw } from './btw.js?v=20260902a';
-import { renderCrediteuren } from './crediteuren.js?v=20260902a';
-import { renderDebiteuren } from './debiteuren.js?v=20260902a';
-import { renderHome } from './dashboard.js?v=20260902a';
-import { renderPortaal } from './home.js?v=20260902a';
-import { renderGrootboek } from './grootboek.js?v=20260902a';
-import { renderHNVI } from './hnvi.js?v=20260902a';
-import { renderControle } from './controle.js?v=20260902a';
-import { renderCovers } from './voorraad.js?v=20260902a';
-import { renderFacturen } from './facturen-ui.js?v=20260902a';
-import { renderKm } from './km-ui.js?v=20260902a';
-import { renderActiva } from './activa-ui.js?v=20260902a';
-import { renderBeheer } from './beheer.js?v=20260902a';
-import { toonGroepVan } from './navgroepen.js?v=20260902a';
+import { renderBank } from './bank.js?v=20261021a';
+import { renderBelasting } from './belasting.js?v=20261021a';
+import { renderBtw } from './btw.js?v=20261021a';
+import { renderCrediteuren } from './crediteuren.js?v=20261021a';
+import { renderDebiteuren } from './debiteuren.js?v=20261021a';
+import { renderHome } from './dashboard.js?v=20261021a';
+import { renderPortaal } from './home.js?v=20261021a';
+import { renderGrootboek } from './grootboek.js?v=20261021a';
+import { renderHNVI } from './hnvi.js?v=20261021a';
+import { renderControle } from './controle.js?v=20261021a';
+import { renderCovers } from './voorraad.js?v=20261021a';
+import { renderFacturen } from './facturen-ui.js?v=20261021a';
+import { renderKm } from './km-ui.js?v=20261021a';
+import { renderActiva } from './activa-ui.js?v=20261021a';
+import { renderVeiling } from './veiling-ui.js?v=20261021a';
+import { renderBeheer } from './beheer.js?v=20261021a';
+import { toonGroepVan } from './navgroepen.js?v=20261021a';
 
 const RENDERS = {
   home: renderPortaal,      // de startpagina: tegels naar de onderdelen
@@ -30,6 +31,7 @@ const RENDERS = {
   controle: renderControle,
   voorraad: renderCovers,
   hnvi: renderHNVI,
+  veiling: renderVeiling,
   km: renderKm,
   activa: renderActiva,
   beheer: renderBeheer
@@ -48,6 +50,7 @@ const TITELS = {
   controle: 'Controle',
   voorraad: 'Voorraad',
   hnvi: 'HNVI / Xtenate',
+  veiling: 'Veiling',
   km: 'Kilometers',
   activa: 'Activa',
   beheer: 'Beheer'

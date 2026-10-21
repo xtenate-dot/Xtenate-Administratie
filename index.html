@@ -21,10 +21,10 @@
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<link rel="stylesheet" href="theme.css?v=20260902a">
-<link rel="stylesheet" href="layout.css?v=20260902a">
-<link rel="stylesheet" href="components.css?v=20260902a">
-<link rel="stylesheet" href="responsive.css?v=20260902a">
+<link rel="stylesheet" href="theme.css?v=20261021a">
+<link rel="stylesheet" href="layout.css?v=20261021a">
+<link rel="stylesheet" href="components.css?v=20261021a">
+<link rel="stylesheet" href="responsive.css?v=20261021a">
 </head>
 <body>
 
@@ -193,6 +193,10 @@
   <div class="nav-item" data-page="hnvi" onclick="nav('hnvi',this)" title="HNVI / Xtenate">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 12l9 4 9-4"/><path d="M3 17l9 4 9-4"/></svg>
     <span class="nav-label">HNVI / Xtenate</span>
+  </div>
+  <div class="nav-item" data-page="veiling" onclick="nav('veiling',this)" title="Veiling">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 4l6 6-3 3-6-6z"/><path d="M11 7L4 14l3 3 7-7"/><path d="M4 21h9"/></svg>
+    <span class="nav-label">Veiling</span>
   </div>
 
   </div>
@@ -590,6 +594,18 @@
     </div>
   </div>
   <div id="activa-inhoud"></div>
+</div>
+
+<!-- VEILING -->
+<div id="p-veiling" class="page">
+  <div class="page-head">
+    <div>
+      <div class="page-title">Veiling</div>
+      <div class="page-sub">De tabbladen "Veiling inkopenVerkopen" en "Veiling Voorraad" uit je Excel.</div>
+    </div>
+  </div>
+  <input type="file" id="veiling-bestand" accept=".xlsx" style="display:none" onchange="importeerVeiling(event)">
+  <div id="veiling-inhoud"></div>
 </div>
 
 <!-- CONTROLE -->
@@ -1293,6 +1309,6 @@
 </div>
 </div>
 
-<script type="module" src="app.js?v=20260902a"></script>
+<script type="module" src="app.js?v=20261021a"></script>
 </body>
 </html>

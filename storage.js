@@ -19,7 +19,7 @@ import {
   saveAppData,
   loadAppData,
   laatsteAppDataFout
-} from './supabase-client-v2.js?v=20260902a';
+} from './supabase-client-v2.js?v=20261021a';
 
 /**
  * Stuurt een los lijstje (groepen, facturen, tellers) naar de cloud zonder
@@ -112,6 +112,7 @@ function appDataWaarde(sleutel) {
   if (sleutel === 'km_instellingen') return KM_INSTELLINGEN;
   if (sleutel === 'ritten') return { lijst: state.RITTEN, volgende: state.nxtRit };
   if (sleutel === 'activa') return { lijst: state.ACTIVA, volgende: state.nxtActivum };
+  if (sleutel === 'veiling') return state.VEILING;
   if (sleutel === 'tellers') return { tx: state.nxtTx, cover: state.nxtCover, hnvi: state.nxtHnvi };
   return undefined;
 }
@@ -605,6 +606,17 @@ export function saveActiva() {
   duwAppData('activa', { lijst: state.ACTIVA, volgende: state.nxtActivum });
 }
 
+// ─── VEILING (twee tabbladen uit de Excel) ─────────────────────────────────
+// Een eigen onderdeel naast HNVI en Voorraad: een kopie van de tabbladen
+// "Veiling inkopenVerkopen" en "Veiling Voorraad". Een nieuwe import
+// vervangt deze kopie; er wordt niets in HNVI of Voorraad aangepast.
+state.VEILING = load('xtenate_veiling', null);
+
+export function saveVeiling() {
+  save('xtenate_veiling', state.VEILING);
+  duwAppData('veiling', state.VEILING);
+}
+
 // ─── BANKKOPPELINGEN (Enable Banking, fase 4b-1) ───────────────────────────
 // Géén app_data meer (dat was de opzet in fase 4a, nu herzien): session_id/
 // account_uid/geldig_tot geven tot 90 dagen toegang tot echte bankgegevens
@@ -777,6 +789,11 @@ export async function loadDataHybrid() {
           state.ACTIVA = extra.activa.lijst;
           if (Number(extra.activa.volgende) > 0) state.nxtActivum = Number(extra.activa.volgende);
           console.log(`✅ Activa uit Supabase: ${state.ACTIVA.length}`);
+        }
+        if (extra.veiling && typeof extra.veiling === 'object') {
+          state.VEILING = extra.veiling;
+          save('xtenate_veiling', state.VEILING);
+          console.log('✅ Veiling uit Supabase');
         }
         // Tellers: het hoogste getal wint, zodat twee apparaten nooit
         // hetzelfde id uitdelen aan verschillende dingen.
