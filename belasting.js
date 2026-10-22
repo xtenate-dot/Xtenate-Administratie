@@ -1,11 +1,11 @@
 // belasting.js — Belasting-pagina (indicatieve IB-berekening).
 
-import { charts, dc, kleurVoorGb } from './charts.js?v=20261022f';
-import { ddmm, fmt, gbCode, isInkomst, isOmzet, isUitgave } from './helpers.js?v=20261022f';
-import { downloadModelPdf } from './pdf.js?v=20261022f';
-import { state, grootboekNamen } from './storage.js?v=20261022f';
-import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261022f';
-import { totaalAfschrijvingVanJaar } from './activa.js?v=20261022f';
+import { charts, dc, kleurVoorGb } from './charts.js?v=20261023a';
+import { ddmm, fmt, gbCode, isInkomst, isKostenBoeking, isOmzet, isPriveBetaaldeKost, isUitgave } from './helpers.js?v=20261023a';
+import { downloadModelPdf } from './pdf.js?v=20261023a';
+import { state, grootboekNamen } from './storage.js?v=20261023a';
+import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261023a';
+import { totaalAfschrijvingVanJaar } from './activa.js?v=20261023a';
 
 const HUIDIG_JAAR = '2026';
 
@@ -158,7 +158,7 @@ export function aftrekbaarBedrag(t, kaart = aftrekPercentages()) {
 
 /** Telt deze uitgave mee als bedrijfskosten? *//** Telt deze uitgave mee als bedrijfskosten? */
 export function isKostenpost(t) {
-  if (!isUitgave(t)) return false;
+  if (!isKostenBoeking(t)) return false;
   const gb = String(t.gb);
   // Alleen de winst-en-verliesrekeningen tellen mee. Alles onder 4000 is
   // balans: bank, kruisposten, privé, schulden. Daar gaat geld heen en weer
@@ -247,7 +247,7 @@ export function inkoopprijzenUitBank(alleTX, covers) {
   }
 
   for (const t of alleTX || []) {
-    if (!isUitgave(t)) continue;
+    if (!isKostenBoeking(t)) continue;
     const gb = gbCode(t.gb);
     if (!gewogen[gb]) continue;
     const jr = String(t.datum || '').slice(0, 4);
@@ -410,7 +410,7 @@ export function renderBelasting() {
   // Wat er dit jaar op die voorraadrekeningen is uitgegeven. Niet als kosten
   // geteld, maar wel getoond zodat je ziet waar het gebleven is.
   const voorraadInkoopBank = belTX
-    .filter(t => isUitgave(t) && vrdRek.includes(String(t.gb)))
+    .filter(t => isKostenBoeking(t) && vrdRek.includes(String(t.gb)))
     .reduce((s,t)=>s+t.bedrag,0);
   const hnviVerkocht = hnviJaar.filter(i => i.status === 'verkocht').reduce((s,i)=>s+(Number(i.inkoop)||0),0);
   const hnviVoorraad = hnviJaar.filter(i => i.status === 'voorraad').reduce((s,i)=>s+(Number(i.inkoop)||0),0);
@@ -521,6 +521,14 @@ export function renderBelasting() {
   // een ingekocht aantal staat om het bedrag over te verdelen.
   // Terugbetalingen en eigen overboekingen benoemen, want die zag je eerder
   // als kosten terug en dat vertekende de winst.
+  const priveKosten = belTX.filter(isPriveBetaaldeKost);
+  if (priveKosten.length) {
+    const bedr = priveKosten.reduce((s, t) => s + (Number(t.bedrag) || 0), 0);
+    punten.push({
+      soort: 'gunstig',
+      tekst: `${priveKosten.length} zakelijke kosten (samen ${fmt(bedr)}) zijn privé betaald, bijvoorbeeld met de creditkaart. Ze staan als privé-storting in de bank en tellen mee als kosten of inkoop.`
+    });
+  }
   if (hnviSplit.aantalAlInBank > 0) {
     punten.push({
       soort: 'gunstig',
@@ -776,19 +784,19 @@ export function renderBelasting() {
     return rij(gb, tot, 'plus', 'altijd baten', 'pos');
   }).join('');
 
-  const r4Gbs = [...new Set(belTX.filter(isUitgave).map(t=>t.gb))].filter(g=>g.startsWith('4')).sort();
+  const r4Gbs = [...new Set(belTX.filter(isKostenBoeking).map(t=>t.gb))].filter(g=>g.startsWith('4')).sort();
   const r4Rows = r4Gbs.map(gb => {
-    const tot = belTX.filter(t=>isUitgave(t)&&t.gb===gb).reduce((s,t)=>s+t.bedrag,0);
+    const tot = belTX.filter(t=>isKostenBoeking(t)&&t.gb===gb).reduce((s,t)=>s+t.bedrag,0);
     return rij(gb, tot, 'min', 'altijd aftrekbaar', 'neg');
   }).join('');
 
-  const r7AltijdGbs = [...new Set(belTX.filter(isUitgave).map(t=>t.gb))].filter(g=>['7000','7020','7100','7900'].includes(g)).sort();
+  const r7AltijdGbs = [...new Set(belTX.filter(isKostenBoeking).map(t=>t.gb))].filter(g=>['7000','7020','7100','7900'].includes(g)).sort();
   // Inkoopposten zijn alleen aftrekbaar voor zover de spullen verkocht zijn.
   // Of dat klopt hangt af van wat er in de Voorraad-tab staat, dus daar kijken
   // we naar in plaats van "altijd aftrekbaar" te beweren.
   const heeftVoorraadAdmin = (state.COVERS || []).some(a => Number(a.inkoopprijs) > 0);
   const r7AltijdRows = r7AltijdGbs.map(gb => {
-    const tot = belTX.filter(t=>isUitgave(t)&&t.gb===gb).reduce((s,t)=>s+t.bedrag,0);
+    const tot = belTX.filter(t=>isKostenBoeking(t)&&t.gb===gb).reduce((s,t)=>s+t.bedrag,0);
     return heeftVoorraadAdmin
       ? rij(gb, tot, 'min', 'zie voorraad-COGS', '')
       : rij(gb, tot, 'min', 'alleen als verkocht', '');
@@ -932,7 +940,7 @@ export function inkoopOverzicht(jaar = gekozenJaar()) {
   const belTX = jaar === 'all' ? alleTX
     : (jaar === HUIDIG_JAAR ? state.TX : state.HIST_TX.filter(t => t.datum.startsWith(jaar)));
   const namen = grootboekNamen();
-  const bank = gb => belTX.filter(t => isUitgave(t) && gbCode(t.gb) === gb).reduce((s, t) => s + (Number(t.bedrag) || 0), 0);
+  const bank = gb => belTX.filter(t => isKostenBoeking(t) && gbCode(t.gb) === gb).reduce((s, t) => s + (Number(t.bedrag) || 0), 0);
   const rijen = [];
 
   // Voorraadrekeningen via de artikelen

@@ -1,16 +1,16 @@
 // dashboard.js — Home: het financiële dashboard.
 
-import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261022f';
+import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261023a';
 import {
-  BEGINSALDO_2026, calcIB, ddmm, esc, fmt, fmtKort, isInkomst, isOmzet, isUitgave,
+  BEGINSALDO_2026, calcIB, ddmm, esc, fmt, fmtKort, isInkomst, isKostenBoeking, isOmzet, isUitgave,
   maandLabel, rekBadge, saldoDelta, typeBadge, weergaveNaam
-} from './helpers.js?v=20261022f';
-import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261022f';
-import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261022f';
-import { draaiControles } from './controle.js?v=20261022f';
-import { aangifteModel, ibOver } from './belasting.js?v=20261022f';
-import { maakSorteerbaar } from './tables.js?v=20261022f';
-import { hertekenHuidigePagina } from './ui.js?v=20261022f';
+} from './helpers.js?v=20261023a';
+import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261023a';
+import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261023a';
+import { draaiControles } from './controle.js?v=20261023a';
+import { aangifteModel, ibOver } from './belasting.js?v=20261023a';
+import { maakSorteerbaar } from './tables.js?v=20261023a';
+import { hertekenHuidigePagina } from './ui.js?v=20261023a';
 
 const HOOFDREKENING = '1010'; // de bankrekening waarop het beginsaldo staat
 
@@ -35,7 +35,7 @@ function berekenJaarMetrics(jaar, txVanJaar) {
   
   return {
     omzet: txVanJaar.filter(t => isInkomst(t) && isOmzet(t.gb)).reduce((s, t) => s + t.bedrag, 0),
-    kosten: txVanJaar.filter(isUitgave).reduce((s, t) => s + t.bedrag, 0),
+    kosten: txVanJaar.filter(isKostenBoeking).reduce((s, t) => s + t.bedrag, 0),
     omzXt: txVanJaar.filter(t => isInkomst(t) && t.gb === '8000').reduce((s, t) => s + t.bedrag, 0),
     omzBol: txVanJaar.filter(t => isInkomst(t) && t.gb === '8010').reduce((s, t) => s + t.bedrag, 0),
     omzHC: txVanJaar.filter(t => isInkomst(t) && t.gb === '8020').reduce((s, t) => s + t.bedrag, 0),

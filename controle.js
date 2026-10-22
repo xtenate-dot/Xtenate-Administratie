@@ -8,13 +8,13 @@
 //   'gb:<nr>'  -> die grootboekrekening
 //   'pagina:<naam>' -> die pagina
 
-import { BEGINSALDO_2026, esc, fmt, teltBij, weergaveNaam } from './helpers.js?v=20261022f';
-import { MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261022f';
-import { DREMPEL, vindDuplicaten } from './duplicaten.js?v=20261022f';
+import { BEGINSALDO_2026, esc, fmt, isPriveBetaaldeKost, teltBij, weergaveNaam } from './helpers.js?v=20261023a';
+import { MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261023a';
+import { DREMPEL, vindDuplicaten } from './duplicaten.js?v=20261023a';
 import {
   REDEN_LABEL, aantalVerborgen, herstelAlles, herstelControle, herstelMelding,
   isControleUit, isVerborgen, verbergMelding, verborgenOverzicht, zetControleUit
-} from './negeren.js?v=20261022f';
+} from './negeren.js?v=20261023a';
 
 const el = id => document.getElementById(id);
 const HOOFDREKENING = '1010';
@@ -161,9 +161,9 @@ function controlesPrive(tx) {
   uit.push(check('tx-kosten-richting', 'Privé',
     'Privé-stortingen correct geboekt',
     n => `${enkelvoud(n, 'privé-storting', 'privé-stortingen')} verkeerd geboekt`, 'fout',
-    tx.filter(t => (t.type === 'prive_storting') !== (t.gb === '600'))
+    tx.filter(t => (t.type === 'prive_storting') !== (t.gb === '600') && !isPriveBetaaldeKost(t))
       .map(t => meld(t.id, { label: txLabel(t), sub: `soort "${t.type}" bij grootboek ${t.gb}`, ga: `tx:${t.id}` })),
-    'Loopt dit uiteen, dan telt een storting mee als opname of andersom, en klopt je privé-saldo niet.'));
+    'Loopt dit uiteen, dan telt een storting mee als opname of andersom, en klopt je privé-saldo niet. Zakelijke kosten die je privé hebt betaald (privé-storting op een kosten- of inkooprekening) zijn bewust toegestaan en tellen als kosten.'));
 
   return uit;
 }

@@ -54,6 +54,18 @@ export const isUitgave = t => t.type === 'uitgave';
 export const isInkomst = t => t.type === 'inkomst';
 
 /**
+ * Zakelijke kosten die privé zijn betaald (bijvoorbeeld met de creditkaart).
+ * Zo'n boeking staat als privé-storting in de bank, maar op een kosten- of
+ * inkooprekening (4000 en hoger, geen omzet). Het geld komt van jezelf, de
+ * kosten zijn gewoon zakelijk: ze tellen mee als kosten en inkoop.
+ */
+export const isPriveBetaaldeKost = t =>
+  t.type === 'prive_storting' && gbCode(t.gb) !== '600' && Number(gbCode(t.gb)) >= 4000 && !isOmzet(t.gb);
+
+/** Een uitgave of een privé betaalde kost: alles wat als kosten kan tellen. */
+export const isKostenBoeking = t => isUitgave(t) || isPriveBetaaldeKost(t);
+
+/**
  * Telt deze boeking bij of af op de rekening? Privé-stortingen komen erbij,
  * privé-opnames gaan eraf — precies zoals typeBadge ze in de tabel toont.
  * isInkomst blijft voorbehouden aan zakelijke inkomsten.
