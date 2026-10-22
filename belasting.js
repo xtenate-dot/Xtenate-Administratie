@@ -1,11 +1,11 @@
 // belasting.js — Belasting-pagina (indicatieve IB-berekening).
 
-import { charts, dc, kleurVoorGb } from './charts.js?v=20261022c';
-import { ddmm, fmt, gbCode, isInkomst, isOmzet, isUitgave } from './helpers.js?v=20261022c';
-import { downloadModelPdf } from './pdf.js?v=20261022c';
-import { state, grootboekNamen } from './storage.js?v=20261022c';
-import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261022c';
-import { totaalAfschrijvingVanJaar } from './activa.js?v=20261022c';
+import { charts, dc, kleurVoorGb } from './charts.js?v=20261022d';
+import { ddmm, fmt, gbCode, isInkomst, isOmzet, isUitgave } from './helpers.js?v=20261022d';
+import { downloadModelPdf } from './pdf.js?v=20261022d';
+import { state, grootboekNamen } from './storage.js?v=20261022d';
+import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261022d';
+import { totaalAfschrijvingVanJaar } from './activa.js?v=20261022d';
 
 const HUIDIG_JAAR = '2026';
 
@@ -48,6 +48,23 @@ export function nettoOmzet(belTX) {
   const bij = belTX.filter(t => isInkomst(t) && isOmzet(t.gb)).reduce((s, t) => s + (Number(t.bedrag) || 0), 0);
   const af  = belTX.filter(t => isUitgave(t) && isOmzet(t.gb)).reduce((s, t) => s + (Number(t.bedrag) || 0), 0);
   return { bij, af, netto: bij - af };
+}
+
+/**
+ * De HNVI-loten die bij een jaar horen.
+ *
+ * Verkochte loten tellen in het jaar van verkoop (de inkoop is dan kosten, de
+ * opbrengst omzet). Heeft een lot nog geen verkoopdatum, dan geldt het jaar
+ * van inkoop, zoals het altijd werkte. Loten op voorraad horen bij elk jaar
+ * vanaf hun inkoop: ze liggen er nog, maar tellen pas bij verkoop als kosten.
+ */
+export function hnviLotenVanJaar(jaar) {
+  const alle = state.HNVI_LOTS || [];
+  if (jaar === 'all') return alle;
+  const jr = x => String(x || '').slice(0, 4);
+  return alle.filter(l => l.status === 'verkocht'
+    ? jr(l.verkoopDatum || l.datum) === jaar
+    : (l.datum && jr(l.datum) <= jaar));
 }
 
 /**
@@ -372,7 +389,7 @@ export function renderBelasting() {
   const omzetBank = omzetSplit.netto;
 
   // HNVI inkoop: filter op jaar van het lot (via datum)
-  const hnviJaar = jaar === 'all' ? state.HNVI_LOTS : state.HNVI_LOTS.filter(i => i.datum && i.datum.startsWith(jaar));
+  const hnviJaar = hnviLotenVanJaar(jaar);
   
   // HNVI-verkoopwaarde telt als opbrengst (verkochte loten)
   const hnviSplit = hnviOmzetBuitenBank(hnviJaar, belTX);
@@ -942,7 +959,7 @@ export function inkoopOverzicht(jaar = gekozenJaar()) {
   }
 
   // HNVI via de loten
-  const lotenJaar = jaar === 'all' ? state.HNVI_LOTS : state.HNVI_LOTS.filter(i => i.datum && i.datum.startsWith(jaar));
+  const lotenJaar = hnviLotenVanJaar(jaar);
   const hnviBank = bank('7010');
   if (hnviBank || lotenJaar.length) {
     const verkocht = lotenJaar.filter(i => i.status === 'verkocht').reduce((s, i) => s + (Number(i.inkoop) || 0), 0);
@@ -950,7 +967,7 @@ export function inkoopOverzicht(jaar = gekozenJaar()) {
     rijen.push({
       rekening: '7010', naam: namen['7010'] || 'Inkoop HNVI', soort: 'hnvi', ingekocht: hnviBank, aftrekbaar: verkocht, voorraad: op,
       teVerdelen: hnviBank - verkocht - op,
-      opmerking: `${lotenJaar.filter(i => i.status === 'verkocht').length} loten verkocht, ${lotenJaar.filter(i => i.status === 'voorraad').length} op voorraad (lot-jaar = jaar van inkoop)`
+      opmerking: `${lotenJaar.filter(i => i.status === 'verkocht').length} loten verkocht, ${lotenJaar.filter(i => i.status === 'voorraad').length} op voorraad (verkocht telt in het jaar van verkoop; zonder verkoopdatum het jaar van inkoop)`
     });
   }
 
@@ -982,7 +999,7 @@ export function aangifteModel(jaar = gekozenJaar()) {
   const prijzenUitBank = inkoopprijzenUitBank([...state.HIST_TX, ...state.TX], state.COVERS);
   const kostenOverig = belTX.filter(isKostenpost).reduce((s, t) => s + aftrekbaarBedrag(t), 0);
 
-  const hnviJaar = jaar === 'all' ? state.HNVI_LOTS : state.HNVI_LOTS.filter(i => i.datum && i.datum.startsWith(jaar));
+  const hnviJaar = hnviLotenVanJaar(jaar);
   const hnviBank = belTX.filter(t => isUitgave(t) && t.gb === '7010').reduce((s, t) => s + (Number(t.bedrag) || 0), 0);
   const hnviInkoop = hnviJaar.length
     ? hnviJaar.filter(i => i.status === 'verkocht').reduce((s, i) => s + (Number(i.inkoop) || 0), 0)

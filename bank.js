@@ -3,13 +3,13 @@
 import {
   bedragUit, ddmm, esc, fmt, isInkomst, isUitgave, leegVlak, maandLabel, rekBadge,
   typeBadge, vulMaandSelect, weergaveNaam
-} from './helpers.js?v=20261022c';
+} from './helpers.js?v=20261022d';
 import {
   MAAND_SALDOS, saveHistTxData, saveTxData, state, isBtwPlichtig,
   grootboekNamen, rekeningNamen, grootboekOptgroepen, rekeningenLijst
-} from './storage.js?v=20261022c';
-import { maakSorteerbaar } from './tables.js?v=20261022c';
-import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking } from './facturen.js?v=20261022c';
+} from './storage.js?v=20261022d';
+import { maakSorteerbaar } from './tables.js?v=20261022d';
+import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking } from './facturen.js?v=20261022d';
 
 // Fase 3A: Supabase pending queue
 import {
@@ -17,7 +17,7 @@ import {
   syncPendingQueue,
   pendingQueue,
   isSupabaseReady
-} from './supabase-client-v2.js?v=20261022c';
+} from './supabase-client-v2.js?v=20261022d';
 
 const el = id => document.getElementById(id);
 
