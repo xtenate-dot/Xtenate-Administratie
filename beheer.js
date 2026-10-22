@@ -5,13 +5,13 @@
 // ongewijzigd: elke tegel roept dezelfde globale functie aan als het
 // zijbalk-item, dus er verandert niets aan wat ze doen.
 
-import { draaiControles } from './controle.js?v=20261023c';
-import { esc } from './helpers.js?v=20261023c';
-import { saveVoorraadInstellingen, standaardMinVoorraad, saveControleInstellingen, CONTROLE_INSTELLINGEN, saveBtwInstellingen, BTW_INSTELLINGEN, saveBedrijfsgegevens, BEDRIJFSGEGEVENS, saveKmInstellingen, KM_INSTELLINGEN, saveFactuurInstellingen, FACTUUR_INSTELLINGEN, appDataStatus, state, rekeningenLijst, bankKoppelingDagenTotVerval } from './storage.js?v=20261023c';
-import { werkBankKoppelingRekBijInSupabase } from './supabase-client-v2.js?v=20261023c';
-import { hertekenHuidigePagina } from './ui.js?v=20261023c';
-import { getPendingItems } from './supabase-client-v2.js?v=20261023c';
-import { syncNu } from './autosync.js?v=20261023c';
+import { draaiControles } from './controle.js?v=20261023d';
+import { esc } from './helpers.js?v=20261023d';
+import { saveVoorraadInstellingen, standaardMinVoorraad, saveControleInstellingen, CONTROLE_INSTELLINGEN, saveBtwInstellingen, BTW_INSTELLINGEN, saveBedrijfsgegevens, BEDRIJFSGEGEVENS, saveKmInstellingen, KM_INSTELLINGEN, saveFactuurInstellingen, FACTUUR_INSTELLINGEN, appDataStatus, state, rekeningenLijst, bankKoppelingDagenTotVerval } from './storage.js?v=20261023d';
+import { werkBankKoppelingRekBijInSupabase } from './supabase-client-v2.js?v=20261023d';
+import { hertekenHuidigePagina } from './ui.js?v=20261023d';
+import { getPendingItems } from './supabase-client-v2.js?v=20261023d';
+import { syncNu } from './autosync.js?v=20261023d';
 
 const el = id => document.getElementById(id);
 
