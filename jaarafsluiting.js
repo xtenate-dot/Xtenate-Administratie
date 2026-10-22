@@ -2,10 +2,10 @@
 // controlelijst, de inkoop die wel en niet meetelt, het resultaat en de
 // aangifte. Alleen kijken; er wordt niets aangepast.
 
-import { state } from './storage.js?v=20261023d';
-import { esc, fmt, MND_KORT } from './helpers.js?v=20261023d';
-import { aangifteModel, inkoopOverzicht, ibOver } from './belasting.js?v=20261023d';
-import { draaiControles } from './controle.js?v=20261023d';
+import { state } from './storage.js?v=20261023e';
+import { esc, fmt, MND_KORT } from './helpers.js?v=20261023e';
+import { aangifteModel, inkoopOverzicht, ibOver } from './belasting.js?v=20261023e';
+import { draaiControles } from './controle.js?v=20261023e';
 
 const el = id => document.getElementById(id);
 const HUIDIG = '2026';
@@ -59,7 +59,7 @@ function checks(jaar, tx, inkoop) {
   if (metOmzetGeenPrijs.length) uit.push(regel('waarschuwing', `${metOmzetGeenPrijs.length} verkochte loten zonder verkoopprijs`, '', 'hnvi'));
 
   // 4. Voorraadinkoop verdeeld
-  const nietVerdeeld = inkoop.rijen.filter(r => r.soort !== 'direct' && Math.abs(r.teVerdelen) >= 1);
+  const nietVerdeeld = inkoop.rijen.filter(r => r.soort !== 'direct' && r.teVerdelen >= 1);
   if (nietVerdeeld.length) {
     uit.push(regel('waarschuwing', `Nog ${fmt(nietVerdeeld.reduce((s, r) => s + r.teVerdelen, 0))} inkoop niet toegerekend`,
       nietVerdeeld.map(r => `${esc(r.rekening)} ${esc(r.naam)}: ${fmt(r.teVerdelen)} — ${esc(r.opmerking)}`).join('<br>'), 'voorraad'));
@@ -79,7 +79,7 @@ function inkoopTabel(inkoop) {
     <tbody>${r}<tr style="font-weight:600;background:var(--accent-softer)"><td>Totaal</td>
     <td style="text-align:right">${fmt(t.ingekocht)}</td><td style="text-align:right">${fmt(t.aftrekbaar)}</td>
     <td style="text-align:right">${fmt(t.voorraad)}</td><td style="text-align:right">${fmt(t.teVerdelen)}</td></tr></tbody></table></div></div>
-    <p class="muted" style="font-size:12px;margin-top:6px">“Wel aftrekbaar” is de inkoop van wat dit jaar is verkocht. “Nog op voorraad” telt pas mee in het jaar van verkoop.</p>`;
+    <p class="muted" style="font-size:12px;margin-top:6px">Een negatief bedrag bij “Niet toegerekend” betekent dat je dit jaar inkoop aftrekt die je in een eerder jaar hebt betaald (loten uit vorig jaar die nu zijn verkocht). “Wel aftrekbaar” is de inkoop van wat dit jaar is verkocht. “Nog op voorraad” telt pas mee in het jaar van verkoop.</p>`;
 }
 
 export function renderJaarafsluiting() {
