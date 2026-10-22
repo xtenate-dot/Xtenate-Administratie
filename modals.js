@@ -1,6 +1,6 @@
 // modals.js — beheer-acties: Excel-import, cloud sync, API-sleutel, data wissen.
 
-import { renderHome } from './dashboard.js?v=20261023e';
+import { renderHome } from './dashboard.js?v=20261023f';
 
 // De omzetrekeningen. Deze stond eerder binnen `reader.onload`, maar wordt ook
 // door `bevestigImport` gebruikt — een andere functie, dus een ander bereik.
@@ -10,8 +10,9 @@ const OMZET_GB = ['8000', '8010', '8020'];
 import {
   HIST_TX_DEFAULT, HOME_TOTALS, HOME_TOTALS_DEFAULT, MAAND_SALDOS, normaliseerVoorraad, save,
   saveCoversData, saveHnviData, saveTxData, state, voegJaarcijfersToe, rekeningNamen
-} from './storage.js?v=20261023e';
-import { addToPendingQueue, deleteFromSupabase, previewWisJaren, vervangBoekingenInSupabase, wisJarenInSupabase } from './supabase-client-v2.js?v=20261023e';
+} from './storage.js?v=20261023f';
+import { maakHerstelpunt } from './herstelpunt.js?v=20261023f';
+import { addToPendingQueue, deleteFromSupabase, previewWisJaren, vervangBoekingenInSupabase, wisJarenInSupabase } from './supabase-client-v2.js?v=20261023f';
 
 // Leest het "Per Periode"-tabblad (indien aanwezig): een pivot-overzicht per grootboekrekening
 // met een kolom "Totaal" voor het hele boekjaar. Dit is de brontabel van de boekhouding zelf,
@@ -613,6 +614,7 @@ export async function bevestigImport() {
   // uitvoering \u2014 een tweede klik heeft dan niets meer om te doen \u2014 maar zonder
   // dit bleef de knop nog even aanklikbaar ogen terwijl er al niets meer
   // gebeurde. Dit maakt dat ook zichtbaar, net als bij doWis().
+  maakHerstelpunt('vóór Excel-import');
   const bevestigKnop = document.getElementById('import-bevestig-knop');
   if (bevestigKnop) { bevestigKnop.disabled = true; bevestigKnop.textContent = 'Bezig...'; }
 
@@ -913,6 +915,7 @@ export async function doWis() {
 
   // Vergrendel de knop: een tweede klik terwijl dit nog loopt zou een tweede
   // wis-actie tegelijk starten, met alle race conditions van dien.
+  maakHerstelpunt('vóór het wissen van ' + jaren.join(', '));
   if (knop) { knop.disabled = true; knop.textContent = 'Bezig met wissen…'; }
   status.textContent = 'Bezig: eerst de cloud, dan pas lokaal…';
 

@@ -6,9 +6,9 @@
 // er nog steeds bij. Echte afscherming ontstaat pas wanneer de gegevens in
 // Supabase staan en Row Level Security ze bewaakt.
 
-import { getClient, leesbareFout, testVerbinding } from './supabase.js?v=20261023e';
-import { configProbleem, isGeconfigureerd } from './config.js?v=20261023e';
-import { loadDataHybrid } from './storage.js?v=20261023e';
+import { getClient, leesbareFout, testVerbinding } from './supabase.js?v=20261023f';
+import { configProbleem, isGeconfigureerd } from './config.js?v=20261023f';
+import { loadDataHybrid, state } from './storage.js?v=20261023f';
 
 const el = id => document.getElementById(id);
 
@@ -255,6 +255,7 @@ function naarApp() {
       .then(() => startApp?.())
       .catch(err => {
         console.error('loadDataHybrid failed:', err);
+        state.dataKlaar = true;   // mislukt laden: toch tonen wat er lokaal is, met de fout in de console
         startApp?.();  // Even try to continue
       });
   }

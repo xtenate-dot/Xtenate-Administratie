@@ -3,13 +3,13 @@
 import {
   bedragUit, ddmm, esc, fmt, isInkomst, isUitgave, leegVlak, maandLabel, rekBadge,
   typeBadge, vulMaandSelect, weergaveNaam
-} from './helpers.js?v=20261023e';
+} from './helpers.js?v=20261023f';
 import {
   MAAND_SALDOS, saveHistTxData, saveTxData, state, isBtwPlichtig,
   grootboekNamen, rekeningNamen, grootboekOptgroepen, rekeningenLijst
-} from './storage.js?v=20261023e';
-import { maakSorteerbaar } from './tables.js?v=20261023e';
-import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking } from './facturen.js?v=20261023e';
+, jaarIsVergrendeld} from './storage.js?v=20261023f';
+import { maakSorteerbaar } from './tables.js?v=20261023f';
+import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking } from './facturen.js?v=20261023f';
 
 // Fase 3A: Supabase pending queue
 import {
@@ -17,7 +17,7 @@ import {
   syncPendingQueue,
   pendingQueue,
   isSupabaseReady
-} from './supabase-client-v2.js?v=20261023e';
+} from './supabase-client-v2.js?v=20261023f';
 
 const el = id => document.getElementById(id);
 
@@ -287,6 +287,11 @@ export function deleteTx() {
       `.\nBij verwijderen wordt die koppeling losgemaakt en komt ${gekoppeld.length > 1 ? 'ze' : 'die'} weer op "openstaand" te staan.`
     : '';
 
+  if (jaarIsVergrendeld(tx.datum) && !window.confirm(
+    `🔒 Het jaar ${String(tx.datum).slice(0, 4)} is vergrendeld (aangifte ingediend).\n\nDeze boeking verwijderen verandert de cijfers van dat jaar. Toch doorgaan?`)) {
+    return;
+  }
+
   // Vraag duidelijke bevestiging
   const bevestiging = window.confirm(
     `⚠️ BOEKING VERWIJDEREN\n\n` +
@@ -350,6 +355,13 @@ export function saveTx() {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(datum)) { fout.textContent = 'Vul een geldige datum in.'; el('tx-d').focus(); return; }
   if (isNaN(bedrag) || bedrag <= 0) { fout.textContent = 'Vul een bedrag groter dan nul in. Of het bij- of afgaat bepaal je met de soort.'; el('tx-b').focus(); return; }
   fout.textContent = '';
+
+  // Ingediende jaren: pas na een extra bevestiging wijzigen (oude of nieuwe datum).
+  const oud = state.editTxId != null ? vindTx(state.editTxId) : null;
+  if ((jaarIsVergrendeld(datum) || (oud && jaarIsVergrendeld(oud.tx.datum))) &&
+      !window.confirm('🔒 Dit jaar is vergrendeld (aangifte ingediend).\n\nDeze wijziging verandert de cijfers van dat jaar. Toch opslaan?')) {
+    return;
+  }
 
   let type = el('tx-t').value;
   let gb = el('tx-gb').value;

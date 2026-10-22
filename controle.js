@@ -8,13 +8,13 @@
 //   'gb:<nr>'  -> die grootboekrekening
 //   'pagina:<naam>' -> die pagina
 
-import { BEGINSALDO_2026, esc, fmt, isPriveBetaaldeKost, teltBij, weergaveNaam } from './helpers.js?v=20261023e';
-import { MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261023e';
-import { DREMPEL, vindDuplicaten } from './duplicaten.js?v=20261023e';
+import { BEGINSALDO_2026, esc, fmt, isPriveBetaaldeKost, teltBij, weergaveNaam } from './helpers.js?v=20261023f';
+import { MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261023f';
+import { DREMPEL, vindDuplicaten } from './duplicaten.js?v=20261023f';
 import {
   REDEN_LABEL, aantalVerborgen, herstelAlles, herstelControle, herstelMelding,
   isControleUit, isVerborgen, verbergMelding, verborgenOverzicht, zetControleUit
-} from './negeren.js?v=20261023e';
+} from './negeren.js?v=20261023f';
 
 const el = id => document.getElementById(id);
 const HOOFDREKENING = '1010';
@@ -168,6 +168,10 @@ function controlesPrive(tx) {
   return uit;
 }
 
+// Een terugbetaling of creditnota op een kosten- of omzetrekening is normaal.
+const TERUGBETALING = /terugbetal|retour|refund|restitutie|credit ?nota|creditnota|teruggave|terugstort|storno|vergoeding/i;
+const isTerugbetaling = t => TERUGBETALING.test(`${t.naam || ''} ${t.omschr || ''}`);
+
 function controlesRichting(tx) {
   const GBNM = grootboekNamen();
   const uit = [];
@@ -175,16 +179,16 @@ function controlesRichting(tx) {
   uit.push(check('prive-opname', 'Boekingen',
     'Omzet staat als inkomst geboekt',
     n => `${enkelvoud(n, 'omzetboeking', 'omzetboekingen')} geboekt als uitgave`, 'waarschuwing',
-    tx.filter(t => String(t.gb).startsWith('8') && t.type === 'uitgave')
+    tx.filter(t => String(t.gb).startsWith('8') && t.type === 'uitgave' && !isTerugbetaling(t))
       .map(t => meld(t.id, { label: txLabel(t), sub: `${GBNM[t.gb] || t.gb} maar geboekt als uitgave`, ga: `tx:${t.id}` })),
-    'Een omzetrekening met een uitgave erop is meestal een terugbetaling of een verkeerd gekozen soort. Klopt het wel, boek het dan op een aparte rekening.'));
+    'Een omzetrekening met een uitgave erop is meestal een terugbetaling of een verkeerd gekozen soort. Klopt het wel, boek het dan op een aparte rekening. Boekingen waarvan de naam of omschrijving duidelijk een terugbetaling, retour of creditnota noemt, worden niet gemeld.'));
 
   uit.push(check('prive-storting', 'Boekingen',
     'Kosten en inkoop staan als uitgave geboekt',
     n => `${enkelvoud(n, 'kostenboeking', 'kostenboekingen')} geboekt als inkomst`, 'waarschuwing',
-    tx.filter(t => (String(t.gb).startsWith('7') || String(t.gb).startsWith('4')) && t.type === 'inkomst')
+    tx.filter(t => (String(t.gb).startsWith('7') || String(t.gb).startsWith('4')) && t.type === 'inkomst' && !isTerugbetaling(t))
       .map(t => meld(t.id, { label: txLabel(t), sub: `${GBNM[t.gb] || t.gb} maar geboekt als inkomst`, ga: `tx:${t.id}` })),
-    'Een kostenrekening met een inkomst erop is meestal een creditnota of retour. Dat mag, maar het drukt wel je kosten.'));
+    'Een kostenrekening met een inkomst erop is meestal een creditnota of retour. Dat mag, maar het drukt wel je kosten. Boekingen waarvan de naam of omschrijving duidelijk een terugbetaling, retour of creditnota noemt, worden niet gemeld.'));
 
   return uit;
 }

@@ -2,10 +2,10 @@
 // controlelijst, de inkoop die wel en niet meetelt, het resultaat en de
 // aangifte. Alleen kijken; er wordt niets aangepast.
 
-import { state } from './storage.js?v=20261023e';
-import { esc, fmt, MND_KORT } from './helpers.js?v=20261023e';
-import { aangifteModel, inkoopOverzicht, ibOver } from './belasting.js?v=20261023e';
-import { draaiControles } from './controle.js?v=20261023e';
+import { state } from './storage.js?v=20261023f';
+import { esc, fmt, MND_KORT } from './helpers.js?v=20261023f';
+import { aangifteModel, inkoopOverzicht, ibOver, hnviLotenVanJaar, hnviOmzetBuitenBank } from './belasting.js?v=20261023f';
+import { draaiControles } from './controle.js?v=20261023f';
 
 const el = id => document.getElementById(id);
 const HUIDIG = '2026';
@@ -58,6 +58,15 @@ function checks(jaar, tx, inkoop) {
   const metOmzetGeenPrijs = loten.filter(l => l.status === 'verkocht' && !(Number(l.verkoop) > 0));
   if (metOmzetGeenPrijs.length) uit.push(regel('waarschuwing', `${metOmzetGeenPrijs.length} verkochte loten zonder verkoopprijs`, '', 'hnvi'));
 
+  // HNVI-verkopen die niet in de bank te vinden zijn tellen als extra omzet
+  const belTX = jaar === HUIDIG ? state.TX : state.HIST_TX.filter(t => String(t.datum || '').startsWith(jaar));
+  const buiten = hnviOmzetBuitenBank(hnviLotenVanJaar(jaar), belTX).buitenBank || [];
+  uit.push(buiten.length
+    ? regel('waarschuwing', `${buiten.length} verkochte HNVI-loten niet terug te vinden in de bank (${fmt(buiten.reduce((s, l) => s + Number(l.verkoop), 0))})`,
+        'Deze verkoopprijzen tellen als extra omzet. Klopt dat niet, bijvoorbeeld omdat het geld onder een ander bedrag is binnengekomen, dan staat de omzet te hoog.<br>' +
+        buiten.map(l => esc(l.omschr || l.id) + ': ' + fmt(l.verkoop)).join('<br>'), 'hnvi')
+    : regel('ok', 'Alle verkochte HNVI-loten zijn in de bank terug te vinden'));
+
   // 4. Voorraadinkoop verdeeld
   const nietVerdeeld = inkoop.rijen.filter(r => r.soort !== 'direct' && r.teVerdelen >= 1);
   if (nietVerdeeld.length) {
@@ -107,6 +116,13 @@ export function renderJaarafsluiting() {
         <div class="kpi kpi--secondary"><div class="kpi-lbl">Fiscale winst</div><div class="kpi-val">${fmt(winst)}</div></div>
         <div class="kpi kpi--secondary"><div class="kpi-lbl">Geschatte inkomstenbelasting</div><div class="kpi-val">${fmt(ib)}</div></div>
       </div>
+      <div class="section-head"><div class="section-titel">Vergrendelen</div></div>
+      <div class="card" style="display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+        <div>${(state.VERGRENDELD || []).includes(jaar)
+          ? `<strong>🔒 ${esc(jaar)} is vergrendeld.</strong><div class="muted" style="font-size:12px">Wijzigen en verwijderen van boekingen uit dit jaar vraagt een extra bevestiging.</div>`
+          : `<strong>${esc(jaar)} is niet vergrendeld.</strong><div class="muted" style="font-size:12px">Vergrendel het jaar zodra de aangifte is ingediend. Dan kun je boekingen niet meer per ongeluk wijzigen.</div>`}</div>
+        <button class="btn" onclick="wisselVergrendeling('${esc(jaar)}')">${(state.VERGRENDELD || []).includes(jaar) ? 'Ontgrendelen' : 'Jaar vergrendelen'}</button>
+      </div>
       <div class="section-head"><div class="section-titel">Aangifte</div></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-primary" onclick="downloadAangiftePdf()">Download aangifte als pdf</button>
@@ -117,4 +133,11 @@ export function renderJaarafsluiting() {
     console.error('Jaarafsluiting mislukt:', e);
     doel.innerHTML = '<div class="card"><p>De jaarafsluiting kon niet worden berekend.</p></div>';
   }
+}
+
+export function wisselVergrendeling(jaar) {
+  const aan = !(state.VERGRENDELD || []).includes(jaar);
+  if (!aan && !window.confirm(`${jaar} ontgrendelen? Daarna kun je boekingen weer zonder extra vraag wijzigen.`)) return;
+  zetJaarVergrendeld(jaar, aan);
+  renderJaarafsluiting();
 }

@@ -1,11 +1,11 @@
 // belasting.js — Belasting-pagina (indicatieve IB-berekening).
 
-import { charts, dc, kleurVoorGb } from './charts.js?v=20261023e';
-import { ddmm, fmt, gbCode, isInkomst, isKostenBoeking, isOmzet, isPriveBetaaldeKost, isUitgave } from './helpers.js?v=20261023e';
-import { downloadModelPdf } from './pdf.js?v=20261023e';
-import { state, grootboekNamen } from './storage.js?v=20261023e';
-import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261023e';
-import { totaalAfschrijvingVanJaar } from './activa.js?v=20261023e';
+import { charts, dc, kleurVoorGb } from './charts.js?v=20261023f';
+import { ddmm, fmt, gbCode, isInkomst, isKostenBoeking, isOmzet, isPriveBetaaldeKost, isUitgave } from './helpers.js?v=20261023f';
+import { downloadModelPdf } from './pdf.js?v=20261023f';
+import { state, grootboekNamen } from './storage.js?v=20261023f';
+import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261023f';
+import { totaalAfschrijvingVanJaar } from './activa.js?v=20261023f';
 
 const HUIDIG_JAAR = '2026';
 
@@ -78,15 +78,26 @@ export function hnviLotenVanJaar(jaar) {
  */
 export function hnviOmzetBuitenBank(hnviJaar, belTX) {
   const vrij = belTX.filter(t => isInkomst(t) && isOmzet(t.gb)).map(t => Number(t.bedrag) || 0);
-  let bedrag = 0, alInBank = 0, aantalAlInBank = 0;
-  for (const lot of hnviJaar.filter(i => i.status === 'verkocht')) {
-    const prijs = Number(lot.verkoop) || 0;
-    if (!(prijs > 0)) continue;
-    const plek = vrij.findIndex(b => Math.abs(b - prijs) < 0.005);
-    if (plek >= 0) { vrij.splice(plek, 1); alInBank += prijs; aantalAlInBank++; }
-    else bedrag += prijs;
+  const lijst = hnviJaar.filter(i => i.status === 'verkocht' && Number(i.verkoop) > 0);
+  const gekoppeld = new Set();
+  let alInBank = 0, aantalAlInBank = 0, bedrag = 0;
+  const koppel = (lot, plek) => { vrij.splice(plek, 1); gekoppeld.add(lot); alInBank += Number(lot.verkoop); aantalAlInBank++; };
+
+  // Eerst alleen exact dezelfde bedragen, zodat een zekere koppeling nooit
+  // wordt weggekaapt door een ruime. Daarna de rest tot één euro verschil:
+  // dan heeft de bank bijvoorbeeld een klein bedrag aan kosten ingehouden.
+  for (const lot of lijst) {
+    const plek = vrij.findIndex(b => Math.abs(b - Number(lot.verkoop)) < 0.005);
+    if (plek >= 0) koppel(lot, plek);
   }
-  return { bedrag, alInBank, aantalAlInBank };
+  for (const lot of lijst.filter(l => !gekoppeld.has(l))) {
+    let beste = -1, kleinste = 1.0001;
+    vrij.forEach((b, k) => { const v = Math.abs(b - Number(lot.verkoop)); if (v < kleinste) { kleinste = v; beste = k; } });
+    if (beste >= 0) koppel(lot, beste);
+  }
+  const buitenBank = lijst.filter(l => !gekoppeld.has(l));
+  bedrag = buitenBank.reduce((s, l) => s + Number(l.verkoop), 0);
+  return { bedrag, alInBank, aantalAlInBank, buitenBank };
 }
 
 const SOORT_SLEUTEL = 'xtenate_inkomenssoort';

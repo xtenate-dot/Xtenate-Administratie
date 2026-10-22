@@ -11,7 +11,7 @@
  * Fase 3A Implementation
  */
 
-import { getClient, heeftClient, leesbareFout } from './supabase.js?v=20261023e';
+import { getClient, heeftClient, leesbareFout } from './supabase.js?v=20261023f';
 
 // ===== NOODREM =====
 export function syncIsAangezet() {
@@ -428,11 +428,24 @@ export async function loadBoekingenFromSupabase() {
   try {
     const sb = await getClient();
     
-    const { data, error } = await sb
-      .from('boekingen')
-      .select('*')
-      .is('deleted_at', null)
-      .order('datum');
+    // Supabase geeft per aanvraag maximaal 1000 rijen. Zonder te pagineren
+    // zouden boekingen boven die grens stilletjes ontbreken (de nieuwste, want
+    // we sorteren op datum). Daarom halen we ze in blokken op.
+    const BLOK = 1000;
+    const data = [];
+    let error = null;
+    for (let van = 0; ; van += BLOK) {
+      const res = await sb
+        .from('boekingen')
+        .select('*')
+        .is('deleted_at', null)
+        .order('datum', { ascending: true })
+        .order('legacy_id', { ascending: true })
+        .range(van, van + BLOK - 1);
+      if (res.error) { error = res.error; break; }
+      data.push(...(res.data || []));
+      if (!res.data || res.data.length < BLOK) break;
+    }
     
     if (error) {
       console.warn('❌ Supabase load failed:', error.message);

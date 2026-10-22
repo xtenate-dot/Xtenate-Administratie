@@ -1,24 +1,25 @@
 // ui.js — navigatie tussen pagina's en het onthouden van de actieve pagina.
 
-import { renderBank } from './bank.js?v=20261023e';
-import { renderBelasting } from './belasting.js?v=20261023e';
-import { renderBtw } from './btw.js?v=20261023e';
-import { renderCrediteuren } from './crediteuren.js?v=20261023e';
-import { renderDebiteuren } from './debiteuren.js?v=20261023e';
-import { renderHome } from './dashboard.js?v=20261023e';
-import { renderPortaal } from './home.js?v=20261023e';
-import { renderGrootboek } from './grootboek.js?v=20261023e';
-import { renderHNVI } from './hnvi.js?v=20261023e';
-import { renderControle } from './controle.js?v=20261023e';
-import { renderCovers } from './voorraad.js?v=20261023e';
-import { renderFacturen } from './facturen-ui.js?v=20261023e';
-import { renderKm } from './km-ui.js?v=20261023e';
-import { renderActiva } from './activa-ui.js?v=20261023e';
-import { renderVeiling } from './veiling-ui.js?v=20261023e';
-import { renderPeriode } from './periode.js?v=20261023e';
-import { renderJaarafsluiting } from './jaarafsluiting.js?v=20261023e';
-import { renderBeheer } from './beheer.js?v=20261023e';
-import { toonGroepVan } from './navgroepen.js?v=20261023e';
+import { state } from './storage.js?v=20261023f';
+import { renderBank } from './bank.js?v=20261023f';
+import { renderBelasting } from './belasting.js?v=20261023f';
+import { renderBtw } from './btw.js?v=20261023f';
+import { renderCrediteuren } from './crediteuren.js?v=20261023f';
+import { renderDebiteuren } from './debiteuren.js?v=20261023f';
+import { renderHome } from './dashboard.js?v=20261023f';
+import { renderPortaal } from './home.js?v=20261023f';
+import { renderGrootboek } from './grootboek.js?v=20261023f';
+import { renderHNVI } from './hnvi.js?v=20261023f';
+import { renderControle } from './controle.js?v=20261023f';
+import { renderCovers } from './voorraad.js?v=20261023f';
+import { renderFacturen } from './facturen-ui.js?v=20261023f';
+import { renderKm } from './km-ui.js?v=20261023f';
+import { renderActiva } from './activa-ui.js?v=20261023f';
+import { renderVeiling } from './veiling-ui.js?v=20261023f';
+import { renderPeriode } from './periode.js?v=20261023f';
+import { renderJaarafsluiting } from './jaarafsluiting.js?v=20261023f';
+import { renderBeheer } from './beheer.js?v=20261023f';
+import { toonGroepVan } from './navgroepen.js?v=20261023f';
 
 const RENDERS = {
   home: renderPortaal,      // de startpagina: tegels naar de onderdelen
@@ -94,12 +95,30 @@ export function nav(p, btn) {
   document.getElementById('nav-backdrop')?.classList.remove('open');
   window.scrollTo({ top: 0 });
 
-  RENDERS[p]();
+  tekenPagina(p);
 }
 
 /** Tekent de pagina die nu open staat opnieuw (na thema- of datawijziging). */
 export function hertekenHuidigePagina() {
-  RENDERS[huidigePagina]?.();
+  if (RENDERS[huidigePagina]) tekenPagina(huidigePagina);
+}
+
+/**
+ * Tekent een pagina, maar pas als alle gegevens binnen zijn. Anders zou je
+ * cijfers zien van een half geladen administratie (bijvoorbeeld zonder de
+ * oude jaren), en die lijken dan gewoon te kloppen.
+ */
+function tekenPagina(p) {
+  if (!state.dataKlaar) {
+    const doel = document.getElementById('p-' + p);
+    if (doel && !doel.querySelector('.laden-melding')) {
+      doel.insertAdjacentHTML('afterbegin', '<div class="card laden-melding"><p>Gegevens worden geladen…</p></div>');
+    }
+    setTimeout(() => { if (huidigePagina === p) tekenPagina(p); }, 500);
+    return;
+  }
+  document.querySelectorAll('.laden-melding').forEach(x => x.remove());
+  RENDERS[p]();
 }
 
 /** Springt naar een pagina zonder dat er een knop is aangeklikt. */

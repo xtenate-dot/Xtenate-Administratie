@@ -19,7 +19,7 @@ import {
   saveAppData,
   loadAppData,
   laatsteAppDataFout
-} from './supabase-client-v2.js?v=20261023e';
+} from './supabase-client-v2.js?v=20261023f';
 
 /**
  * Stuurt een los lijstje (groepen, facturen, tellers) naar de cloud zonder
@@ -114,6 +114,7 @@ function appDataWaarde(sleutel) {
   if (sleutel === 'activa') return { lijst: state.ACTIVA, volgende: state.nxtActivum };
   if (sleutel === 'veiling') return state.VEILING;
   if (sleutel === 'hnvi_datums') return state.HNVI_DATUMS;
+  if (sleutel === 'vergrendeld') return state.VERGRENDELD;
   if (sleutel === 'tellers') return { tx: state.nxtTx, cover: state.nxtCover, hnvi: state.nxtHnvi };
   return undefined;
 }
@@ -124,6 +125,7 @@ export function duwTellers() {
 }
 
 export const state = {
+  dataKlaar: false,   // pas true als het laden van alle gegevens is afgerond
   TX: [],
   COVERS: [],
   HNVI_LOTS: [],
@@ -646,6 +648,25 @@ export function saveActiva() {
 // vervangt deze kopie; er wordt niets in HNVI of Voorraad aangepast.
 state.VEILING = load('xtenate_veiling', null);
 
+// ─── VERGRENDELDE JAREN ────────────────────────────────────────────────────
+// Jaren waarvan de aangifte is ingediend. Boekingen van zo'n jaar wijzig je
+// pas na een extra bevestiging, zodat ingediende cijfers niet ongemerkt
+// verschuiven.
+state.VERGRENDELD = load('xtenate_vergrendeld', []);
+
+export function jaarIsVergrendeld(datum) {
+  const j = String(datum || '').slice(0, 4);
+  return !!j && (state.VERGRENDELD || []).includes(j);
+}
+
+export function zetJaarVergrendeld(jaar, aan) {
+  const nu = new Set(state.VERGRENDELD || []);
+  if (aan) nu.add(String(jaar)); else nu.delete(String(jaar));
+  state.VERGRENDELD = [...nu].sort();
+  save('xtenate_vergrendeld', state.VERGRENDELD);
+  duwAppData('vergrendeld', state.VERGRENDELD);
+}
+
 export function saveVeiling() {
   save('xtenate_veiling', state.VEILING);
   duwAppData('veiling', state.VEILING);
@@ -829,6 +850,10 @@ export async function loadDataHybrid() {
           save('xtenate_hnvi_datums', state.HNVI_DATUMS);
         }
         pasHnviDatumsToe();
+        if (Array.isArray(extra.vergrendeld)) {
+          state.VERGRENDELD = [...new Set([...extra.vergrendeld, ...(state.VERGRENDELD || [])])].sort();
+          save('xtenate_vergrendeld', state.VERGRENDELD);
+        }
         if (extra.veiling && typeof extra.veiling === 'object') {
           state.VEILING = extra.veiling;
           save('xtenate_veiling', state.VEILING);
@@ -856,5 +881,6 @@ export async function loadDataHybrid() {
     );
   }
   
+  state.dataKlaar = true;
   console.log('✅ Data loading complete');
 }

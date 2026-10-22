@@ -10,9 +10,9 @@
 // de bestaande id's blijven staan. Dat scheelt niet alleen risico, het houdt
 // ook je weggeklikte controlemeldingen werkend, want die verwijzen naar id's.
 
-import { backupBestand } from './opslagdiagnose.js?v=20261023e';
-import { bouwMeldingen } from './gegevenscontrole.js?v=20261023e';
-import { state, CONTROLE_INSTELLINGEN } from './storage.js?v=20261023e';
+import { backupBestand } from './opslagdiagnose.js?v=20261023f';
+import { bouwMeldingen } from './gegevenscontrole.js?v=20261023f';
+import { state, CONTROLE_INSTELLINGEN } from './storage.js?v=20261023f';
 
 export const STAP = {
   BACKUP: 1, PREVIEW: 2, BEVESTIGING: 3, UITVOEREN: 4, CONTROLE: 5
