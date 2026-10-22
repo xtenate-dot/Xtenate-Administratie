@@ -2,10 +2,11 @@
 // controlelijst, de inkoop die wel en niet meetelt, het resultaat en de
 // aangifte. Alleen kijken; er wordt niets aangepast.
 
-import { state } from './storage.js?v=20261023j';
-import { esc, fmt, MND_KORT } from './helpers.js?v=20261023j';
-import { aangifteModel, inkoopOverzicht, ibOver, hnviLotenVanJaar, hnviOmzetBuitenBank } from './belasting.js?v=20261023j';
-import { draaiControles } from './controle.js?v=20261023j';
+import { state } from './storage.js?v=20261023k';
+import { esc, fmt, MND_KORT } from './helpers.js?v=20261023k';
+import { aangifteModel, inkoopOverzicht, ibOver, hnviLotenVanJaar, hnviOmzetBuitenBank } from './belasting.js?v=20261023k';
+import { korStatus } from './kor.js?v=20261023k';
+import { draaiControles } from './controle.js?v=20261023k';
 
 const el = id => document.getElementById(id);
 const HUIDIG = '2026';
@@ -116,6 +117,7 @@ export function renderJaarafsluiting() {
         <div class="kpi kpi--secondary"><div class="kpi-lbl">Fiscale winst</div><div class="kpi-val">${fmt(winst)}</div></div>
         <div class="kpi kpi--secondary"><div class="kpi-lbl">Geschatte inkomstenbelasting</div><div class="kpi-val">${fmt(ib)}</div></div>
       </div>
+      ${korKaart(jaar)}
       <div class="section-head"><div class="section-titel">Vergrendelen</div></div>
       <div class="card" style="display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap">
         <div>${(state.VERGRENDELD || []).includes(jaar)
@@ -140,4 +142,16 @@ export function wisselVergrendeling(jaar) {
   if (!aan && !window.confirm(`${jaar} ontgrendelen? Daarna kun je boekingen weer zonder extra vraag wijzigen.`)) return;
   zetJaarVergrendeld(jaar, aan);
   renderJaarafsluiting();
+}
+
+function korKaart(jaar) {
+  const k = korStatus(jaar);
+  const eur = n => fmt(Math.round(n));
+  const kleur = k.niveau === 'over' ? 'var(--semantic-danger-bright)' : k.niveau === 'let-op' ? 'var(--semantic-warning-bright, #d98a00)' : 'var(--semantic-success-bright)';
+  return `<div class="section-head"><div class="section-titel">KOR-omzetgrens</div></div>
+    <div class="card"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><strong>${eur(k.omzet)} van ${eur(k.grens)}</strong><span style="color:${kleur};font-weight:600">${Math.round(k.pct * 100)}%</span></div>
+    <div style="height:10px;border-radius:5px;background:var(--accent-softer);margin:8px 0;overflow:hidden"><div style="height:100%;width:${Math.min(100, k.pct * 100)}%;background:${kleur}"></div></div>
+    <div class="muted" style="font-size:12px">${k.niveau === 'over' ? `Je zit ${eur(-k.ruimte)} boven de grens.` : `Nog ${eur(k.ruimte)} ruimte.`}
+    ${k.prognose !== null ? ` Op dit tempo kom je dit jaar uit op ongeveer ${eur(k.prognose)}.` : ''}
+    Indicatie op basis van de omzet in de aangifte; welke omzet precies meetelt, stem je af met je boekhouder of de Belastingdienst.</div></div>`;
 }

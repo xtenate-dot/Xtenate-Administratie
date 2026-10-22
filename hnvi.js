@@ -1,14 +1,14 @@
 // hnvi.js — HNVI/Xtenate voorraadbeheer, inclusief AI-factuurimport.
 
-import { bedragUit, ddmm, esc, fmt, leegVlak } from './helpers.js?v=20261023j';
-import { maakSorteerbaar } from './tables.js?v=20261023j';
-import { openApiKeyModal } from './modals.js?v=20261023j';
-import { saveHnviData, state } from './storage.js?v=20261023j';
+import { bedragUit, ddmm, esc, fmt, leegVlak } from './helpers.js?v=20261023k';
+import { maakSorteerbaar } from './tables.js?v=20261023k';
+import { openApiKeyModal } from './modals.js?v=20261023k';
+import { saveHnviData, state } from './storage.js?v=20261023k';
 
 /** Globaal boekjaar vertaald naar het hnvi-filter: 'all' betekent hier ''. */
 const hnviJaar = () => (state.huidigJaar === 'all' ? '' : (state.huidigJaar || ''));
-import { saveHnviToSupabase, deleteFromSupabase, addToPendingQueue } from './supabase-client-v2.js?v=20261023j';
-import { downloadModelPdf } from './pdf.js?v=20261023j';
+import { saveHnviToSupabase, deleteFromSupabase, addToPendingQueue } from './supabase-client-v2.js?v=20261023k';
+import { downloadModelPdf } from './pdf.js?v=20261023k';
 
 /** De loten zoals ze nu op het scherm staan: status- en jaarfilter meegenomen. */
 function zichtbareLoten() {

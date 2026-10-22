@@ -1,16 +1,17 @@
 // dashboard.js — Home: het financiële dashboard.
 
-import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261023j';
+import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261023k';
 import {
   BEGINSALDO_2026, calcIB, ddmm, esc, fmt, fmtKort, isInkomst, isKostenBoeking, isOmzet, isUitgave,
   maandLabel, rekBadge, saldoDelta, typeBadge, weergaveNaam
-} from './helpers.js?v=20261023j';
-import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261023j';
-import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261023j';
-import { draaiControles } from './controle.js?v=20261023j';
-import { aangifteModel, ibOver } from './belasting.js?v=20261023j';
-import { maakSorteerbaar } from './tables.js?v=20261023j';
-import { hertekenHuidigePagina } from './ui.js?v=20261023j';
+} from './helpers.js?v=20261023k';
+import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261023k';
+import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261023k';
+import { draaiControles } from './controle.js?v=20261023k';
+import { aangifteModel, ibOver } from './belasting.js?v=20261023k';
+import { korStatus } from './kor.js?v=20261023k';
+import { maakSorteerbaar } from './tables.js?v=20261023k';
+import { hertekenHuidigePagina } from './ui.js?v=20261023k';
 
 const HOOFDREKENING = '1010'; // de bankrekening waarop het beginsaldo staat
 
@@ -194,6 +195,18 @@ function leegVlak(titel, tekst) {
  */
 function aandachtspunten() {
   const punten = [];
+  try {
+    const jr = state.huidigJaar && state.huidigJaar !== 'all' ? state.huidigJaar : '2026';
+    const k = korStatus(jr);
+    const eur = n => fmt(Math.round(n));
+    punten.push({
+      kleur: k.niveau === 'over' ? 'red' : k.niveau === 'let-op' ? 'amber' : 'accent',
+      titel: `KOR ${jr}: ${eur(k.omzet)} van ${eur(k.grens)} (${Math.round(k.pct * 100)}%)`,
+      tekst: k.niveau === 'over' ? `Je zit ${eur(-k.ruimte)} boven de grens. Overleg met je boekhouder.`
+        : `Nog ${eur(k.ruimte)} ruimte${k.prognose !== null ? `. Op dit tempo kom je dit jaar uit op ongeveer ${eur(k.prognose)}.` : '.'}`,
+      actie: "nav('jaarafsluiting')", knop: 'Jaarafsluiting'
+    });
+  } catch (e) { console.warn('KOR-bewaking mislukt:', e); }
   const min = (c) => Number.isFinite(Number(c.minVoorraad)) ? Number(c.minVoorraad) : 3;
 
   const uitverkocht = state.COVERS.filter(c => (Number(c.voorraad) || 0) <= 0);

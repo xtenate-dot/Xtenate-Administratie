@@ -5,10 +5,10 @@
 // niet nog eens voorgesteld. Grootboek en soort worden afgeleid uit eerdere
 // boekingen met dezelfde naam; wat onbekend is kies je zelf.
 
-import { state, saveTxData } from './storage.js?v=20261023j';
-import { esc, fmt } from './helpers.js?v=20261023j';
-import { addToPendingQueue } from './supabase-client-v2.js?v=20261023j';
-import { maakHerstelpunt } from './herstelpunt.js?v=20261023j';
+import { state, saveTxData } from './storage.js?v=20261023k';
+import { esc, fmt } from './helpers.js?v=20261023k';
+import { addToPendingQueue } from './supabase-client-v2.js?v=20261023k';
+import { maakHerstelpunt } from './herstelpunt.js?v=20261023k';
 
 const REK = '1010';          // zo staat Revolut nu in je administratie
 const HUIDIG = '2026';
