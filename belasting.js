@@ -1,11 +1,11 @@
 // belasting.js — Belasting-pagina (indicatieve IB-berekening).
 
-import { charts, dc, kleurVoorGb } from './charts.js?v=20261022a';
-import { ddmm, fmt, gbCode, isInkomst, isOmzet, isUitgave } from './helpers.js?v=20261022a';
-import { downloadModelPdf } from './pdf.js?v=20261022a';
-import { state, grootboekNamen } from './storage.js?v=20261022a';
-import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261022a';
-import { totaalAfschrijvingVanJaar } from './activa.js?v=20261022a';
+import { charts, dc, kleurVoorGb } from './charts.js?v=20261022b';
+import { ddmm, fmt, gbCode, isInkomst, isOmzet, isUitgave } from './helpers.js?v=20261022b';
+import { downloadModelPdf } from './pdf.js?v=20261022b';
+import { state, grootboekNamen } from './storage.js?v=20261022b';
+import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261022b';
+import { totaalAfschrijvingVanJaar } from './activa.js?v=20261022b';
 
 const HUIDIG_JAAR = '2026';
 
@@ -895,6 +895,77 @@ export function aangifteVelden(belTX, { cogs = 0, hnviInkoop = 0, handmatig = []
   return VELD_VOLGORDE
     .filter(v => velden[v]?.bedrag > 0)
     .map(v => ({ veld: v, bedrag: velden[v].bedrag, bronnen: velden[v].bronnen }));
+}
+
+
+/**
+ * Inkoop van een jaar in één overzicht: wat is er ingekocht, hoeveel daarvan
+ * telt dit jaar als kosten (omdat het verkocht is), hoeveel ligt nog als
+ * voorraad (telt nog niet), en wat is nog niet aan artikelen toegewezen.
+ *
+ * Voorraadrekeningen (AliExpress, MijnMagie): kosten = prijs per stuk x
+ * verkochte stuks, met de prijs per stuk als gemiddelde uit de bank. Zijn er
+ * nog geen artikelen met aantallen ingevoerd, dan blijft alles "nog te
+ * verdelen" en telt die inkoop dus nog nergens mee.
+ */
+export function inkoopOverzicht(jaar = gekozenJaar()) {
+  const alleTX = [...state.HIST_TX, ...state.TX];
+  const belTX = jaar === 'all' ? alleTX
+    : (jaar === HUIDIG_JAAR ? state.TX : state.HIST_TX.filter(t => t.datum.startsWith(jaar)));
+  const namen = grootboekNamen();
+  const bank = gb => belTX.filter(t => isUitgave(t) && gbCode(t.gb) === gb).reduce((s, t) => s + (Number(t.bedrag) || 0), 0);
+  const rijen = [];
+
+  // Voorraadrekeningen via de artikelen
+  const prijzen = inkoopprijzenUitBank(alleTX, state.COVERS);
+  const artikelen = (state.COVERS || []).filter(isHandelsvoorraad);
+  for (const gb of voorraadRekeningen()) {
+    const eigen = artikelen.filter(a => inkoopRekeningVan(a) === gb);
+    let kosten = 0, voorraad = 0, stuksVerkocht = 0, stuksVoorraad = 0;
+    for (const art of eigen) {
+      const prijs = prijsPerStuk(art, prijzen, jaar);
+      if (!(prijs > 0)) continue;
+      const verkocht = jaar === 'all'
+        ? Object.values(art.jaren || {}).reduce((n, j) => n + (Number(j?.verkocht) || 0), 0)
+        : Number(art.jaren?.[jaar]?.verkocht) || 0;
+      const over = jaar === 'all' || jaar === HUIDIG_JAAR ? Number(art.voorraad) || 0 : Number(art.jaren?.[jaar]?.eind ?? 0);
+      kosten += prijs * verkocht; voorraad += prijs * over;
+      stuksVerkocht += verkocht; stuksVoorraad += over;
+    }
+    const ingekocht = bank(gb);
+    if (!ingekocht && !kosten && !voorraad) continue;
+    rijen.push({
+      rekening: gb, naam: namen[gb] || gb, soort: 'voorraad', ingekocht, aftrekbaar: kosten, voorraad,
+      teVerdelen: ingekocht - kosten - voorraad,
+      opmerking: eigen.length ? `${stuksVerkocht} stuks verkocht, ${stuksVoorraad} op voorraad` : 'geen artikelen met aantallen ingevoerd: deze inkoop telt nog nergens mee'
+    });
+  }
+
+  // HNVI via de loten
+  const lotenJaar = jaar === 'all' ? state.HNVI_LOTS : state.HNVI_LOTS.filter(i => i.datum && i.datum.startsWith(jaar));
+  const hnviBank = bank('7010');
+  if (hnviBank || lotenJaar.length) {
+    const verkocht = lotenJaar.filter(i => i.status === 'verkocht').reduce((s, i) => s + (Number(i.inkoop) || 0), 0);
+    const op = lotenJaar.filter(i => i.status === 'voorraad').reduce((s, i) => s + (Number(i.inkoop) || 0), 0);
+    rijen.push({
+      rekening: '7010', naam: namen['7010'] || 'Inkoop HNVI', soort: 'hnvi', ingekocht: hnviBank, aftrekbaar: verkocht, voorraad: op,
+      teVerdelen: hnviBank - verkocht - op,
+      opmerking: `${lotenJaar.filter(i => i.status === 'verkocht').length} loten verkocht, ${lotenJaar.filter(i => i.status === 'voorraad').length} op voorraad (lot-jaar = jaar van inkoop)`
+    });
+  }
+
+  // Overige inkoop is direct aftrekbaar
+  for (const gb of ['7100', '7900']) {
+    const ingekocht = bank(gb);
+    if (!ingekocht) continue;
+    rijen.push({ rekening: gb, naam: namen[gb] || gb, soort: 'direct', ingekocht, aftrekbaar: ingekocht, voorraad: 0, teVerdelen: 0, opmerking: 'direct aftrekbaar' });
+  }
+
+  const totaal = rijen.reduce((s, r) => ({
+    ingekocht: s.ingekocht + r.ingekocht, aftrekbaar: s.aftrekbaar + r.aftrekbaar,
+    voorraad: s.voorraad + r.voorraad, teVerdelen: s.teVerdelen + r.teVerdelen
+  }), { ingekocht: 0, aftrekbaar: 0, voorraad: 0, teVerdelen: 0 });
+  return { jaar, rijen, totaal };
 }
 
 export function aangifteModel(jaar = gekozenJaar()) {

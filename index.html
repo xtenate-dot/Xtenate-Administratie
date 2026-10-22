@@ -21,10 +21,10 @@
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<link rel="stylesheet" href="theme.css?v=20261022a">
-<link rel="stylesheet" href="layout.css?v=20261022a">
-<link rel="stylesheet" href="components.css?v=20261022a">
-<link rel="stylesheet" href="responsive.css?v=20261022a">
+<link rel="stylesheet" href="theme.css?v=20261022b">
+<link rel="stylesheet" href="layout.css?v=20261022b">
+<link rel="stylesheet" href="components.css?v=20261022b">
+<link rel="stylesheet" href="responsive.css?v=20261022b">
 </head>
 <body>
 
@@ -1270,7 +1270,8 @@
     <div class="form-group full"><label>Omschrijving</label><input type="text" id="hn-o" placeholder="bijv. HNVI lot 482 — sieradenset"></div>
     <div class="form-group"><label>Datum</label><input type="date" id="hn-d"></div>
     <div class="form-group full"><label>Notitie <span style="font-size:10px;color:var(--text-secondary)">(optioneel)</span></label><input type="text" id="hn-noot" placeholder="bijv. defect, ophalen dinsdag..."></div>
-    <div class="form-group full" id="hn-vk-wrap" style="display:none"><label>Verkoopprijs (€)</label><input type="text" inputmode="decimal" id="hn-vk" placeholder="0,00"></div>
+    <div class="form-group" id="hn-vk-wrap"><label>Verkoopprijs (€) <span style="font-size:10px;color:var(--text-secondary)">leeg = nog niet verkocht</span></label><input type="text" inputmode="decimal" id="hn-vk" placeholder="0,00"></div>
+    <div class="form-group" id="hn-vd-wrap"><label>Verkoopdatum</label><input type="date" id="hn-vd"></div>
   </div>
   <div class="modal-actions">
     <button class="btn" onclick="closeHNVIModal()">Annuleren</button>
@@ -1324,6 +1325,6 @@
 </div>
 </div>
 
-<script type="module" src="app.js?v=20261022a"></script>
+<script type="module" src="app.js?v=20261022b"></script>
 </body>
 </html>

@@ -1,14 +1,14 @@
 // hnvi.js — HNVI/Xtenate voorraadbeheer, inclusief AI-factuurimport.
 
-import { bedragUit, ddmm, esc, fmt, leegVlak } from './helpers.js?v=20261022a';
-import { maakSorteerbaar } from './tables.js?v=20261022a';
-import { openApiKeyModal } from './modals.js?v=20261022a';
-import { saveHnviData, state } from './storage.js?v=20261022a';
+import { bedragUit, ddmm, esc, fmt, leegVlak } from './helpers.js?v=20261022b';
+import { maakSorteerbaar } from './tables.js?v=20261022b';
+import { openApiKeyModal } from './modals.js?v=20261022b';
+import { saveHnviData, state } from './storage.js?v=20261022b';
 
 /** Globaal boekjaar vertaald naar het hnvi-filter: 'all' betekent hier ''. */
 const hnviJaar = () => (state.huidigJaar === 'all' ? '' : (state.huidigJaar || ''));
-import { saveHnviToSupabase, deleteFromSupabase, addToPendingQueue } from './supabase-client-v2.js?v=20261022a';
-import { downloadModelPdf } from './pdf.js?v=20261022a';
+import { saveHnviToSupabase, deleteFromSupabase, addToPendingQueue } from './supabase-client-v2.js?v=20261022b';
+import { downloadModelPdf } from './pdf.js?v=20261022b';
 
 /** De loten zoals ze nu op het scherm staan: status- en jaarfilter meegenomen. */
 function zichtbareLoten() {
@@ -188,7 +188,7 @@ export function openHNVIModal() {
   document.getElementById('hn-o').value = '';
   document.getElementById('hn-noot').value = '';
   document.getElementById('hn-vk').value = '';
-  document.getElementById('hn-vk-wrap').style.display = 'none';
+  document.getElementById('hn-vd').value = '';
   document.getElementById('modal-hnvi').classList.add('open');
 }
 
@@ -203,7 +203,7 @@ export function openHNVISell(id) {
   document.getElementById('hn-o').value = i.omschr;
   document.getElementById('hn-noot').value = i.noot || '';
   document.getElementById('hn-vk').value = i.verkoop || '';
-  document.getElementById('hn-vk-wrap').style.display = '';
+  document.getElementById('hn-vd').value = i.verkoopDatum || '';
   document.getElementById('modal-hnvi').classList.add('open');
 }
 
@@ -212,18 +212,21 @@ export function closeHNVIModal() { document.getElementById('modal-hnvi').classLi
 export async function saveHNVI() {
   let gewijzigdLot = null;
   
+  const vk = bedragUit('hn-vk');
+  const vd = document.getElementById('hn-vd').value || null;
   if (state.hnviSellId) {
-    const vk = bedragUit('hn-vk');
     const noot = document.getElementById('hn-noot').value;
-    const nieuweStatus = vk > 0 ? 'verkocht' : 'voorraad';
-    const nieuweInkoop = bedragUit('hn-ik');
+    const bestaand = state.HNVI_LOTS.find(i => String(i.id)===String(state.hnviSellId)) || {};
+    // Bestaande velden (factuur, _key, ...) blijven staan; alleen wat in het scherm staat verandert.
     gewijzigdLot = {
+      ...bestaand,
       id: state.hnviSellId,
       datum: document.getElementById('hn-d').value,
       omschr: document.getElementById('hn-o').value,
-      inkoop: nieuweInkoop,
+      inkoop: bedragUit('hn-ik'),
       verkoop: vk > 0 ? vk : null,
-      status: nieuweStatus,
+      verkoopDatum: vk > 0 ? vd : null,
+      status: vk > 0 ? 'verkocht' : 'voorraad',
       noot
     };
     state.HNVI_LOTS = state.HNVI_LOTS.map(i => String(i.id)===String(state.hnviSellId) ? gewijzigdLot : i);
@@ -236,8 +239,9 @@ export async function saveHNVI() {
       datum: state.hnviLaatsteDatum,
       omschr: document.getElementById('hn-o').value,
       inkoop: bedragUit('hn-ik'),
-      verkoop: null,
-      status: 'voorraad',
+      verkoop: vk > 0 ? vk : null,
+      verkoopDatum: vk > 0 ? vd : null,
+      status: vk > 0 ? 'verkocht' : 'voorraad',
       noot: document.getElementById('hn-noot').value
     };
     state.HNVI_LOTS.push(gewijzigdLot);
@@ -263,7 +267,7 @@ export async function wisHNVIVerkoop(id) {
   const gewijzigd = state.HNVI_LOTS.find(i => String(i.id)===String(id));
   if (!gewijzigd) return;
   
-  const bijgewerkt = {...gewijzigd, verkoop:null, status:'voorraad'};
+  const bijgewerkt = {...gewijzigd, verkoop:null, verkoopDatum:null, status:'voorraad'};
   state.HNVI_LOTS = state.HNVI_LOTS.map(i => String(i.id)===String(id) ? bijgewerkt : i);
   saveHnviData();
   
