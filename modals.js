@@ -1,6 +1,6 @@
 // modals.js — beheer-acties: Excel-import, cloud sync, API-sleutel, data wissen.
 
-import { renderHome } from './dashboard.js?v=20261023a';
+import { renderHome } from './dashboard.js?v=20261023b';
 
 // De omzetrekeningen. Deze stond eerder binnen `reader.onload`, maar wordt ook
 // door `bevestigImport` gebruikt — een andere functie, dus een ander bereik.
@@ -10,8 +10,8 @@ const OMZET_GB = ['8000', '8010', '8020'];
 import {
   HIST_TX_DEFAULT, HOME_TOTALS, HOME_TOTALS_DEFAULT, MAAND_SALDOS, normaliseerVoorraad, save,
   saveCoversData, saveHnviData, saveTxData, state, voegJaarcijfersToe, rekeningNamen
-} from './storage.js?v=20261023a';
-import { addToPendingQueue, deleteFromSupabase, previewWisJaren, vervangBoekingenInSupabase, wisJarenInSupabase } from './supabase-client-v2.js?v=20261023a';
+} from './storage.js?v=20261023b';
+import { addToPendingQueue, deleteFromSupabase, previewWisJaren, vervangBoekingenInSupabase, wisJarenInSupabase } from './supabase-client-v2.js?v=20261023b';
 
 // Leest het "Per Periode"-tabblad (indien aanwezig): een pivot-overzicht per grootboekrekening
 // met een kolom "Totaal" voor het hele boekjaar. Dit is de brontabel van de boekhouding zelf,
@@ -310,7 +310,7 @@ export function importExcel(input) {
         // staat er een lege regel boven. Zoek de rij die de kolomnamen bevat.
         const normaliseer = v => String(v ?? '').toLowerCase().replace(/[^a-z]/g, '');
         let kopRij = -1;
-        for (let r = 0; r < Math.min(8, rows.length); r++) {
+        for (let r = 0; r < Math.min(40, rows.length); r++) {
           const cellen = (rows[r] || []).map(normaliseer);
           if (cellen.some(c => c === 'product' || c === 'omschrijving') &&
               cellen.some(c => c.includes('inkoop'))) { kopRij = r; break; }
@@ -337,7 +337,7 @@ export function importExcel(input) {
           inkDatum:  zoekKolom('inkdatum', 'inkoopdatum', 'datum'),
           inkoop:    zoekKolom('inkoop'),
           verkDatum: zoekKolom('verkdatum', 'verkoopdatum'),
-          verkoop:   zoekKolom('verkoop'),
+          verkoop:   zoekKolom('verkoopprijs', 'verkoop'),
           status:    zoekKolom('status'),
           notitie:   zoekKolom('notitie', 'noot', 'opmerking'),
           id:        zoekKolom('id')
@@ -347,7 +347,15 @@ export function importExcel(input) {
         // zodat een bestaand exportbestand blijft werken.
         const oudeVolgorde = { product: 1, factuur: -1, inkDatum: 0, inkoop: 2,
                                verkDatum: -1, verkoop: 3, status: 5, notitie: 6, id: 7 };
-        const k = (kolom && kolom.product >= 0 && kolom.inkoop >= 0) ? kolom : oudeVolgorde;
+        // Een blad van de veiling zonder herkenbare kopregel lezen we liever niet
+        // dan dat we de oude vaste volgorde op een nieuwe indeling loslaten: dat
+        // gaf eerder rommelregels in plaats van loten.
+        const isVeilingBlad = /veiling/i.test(lotBlad);
+        const kopOk = kolom && kolom.product >= 0 && kolom.inkoop >= 0;
+        if (isVeilingBlad && !kopOk) {
+          console.warn(`Tabblad "${lotBlad}": geen kopregel met Omschrijving en Inkoop gevonden; loten niet gelezen.`);
+        }
+        const k = kopOk ? kolom : oudeVolgorde;
         const startRij = kopRij >= 0 ? kopRij + 1 : 1;
 
         const haal = (row, index) => (index >= 0 ? row[index] : null);
@@ -358,7 +366,7 @@ export function importExcel(input) {
         // import nieuwe id's verzint en alles dubbel zet.
         const gezien = {};
 
-        for (let r = startRij; r < rows.length; r++) {
+        for (let r = startRij; r < rows.length && !(isVeilingBlad && !kopOk); r++) {
           const row = rows[r] || [];
           const product = haal(row, k.product);
           const inkoopRuw = haal(row, k.inkoop);
@@ -613,7 +621,13 @@ export async function bevestigImport() {
       const jaarLabel = p.gevondenJaren.join(', ') || 'onbekend jaar';
 
       // HNVI-loten: gelezen in de leesfase, maar pas hier toegepast.
-      if (p.nieuweLoten && p.nieuweLoten.length) {
+      // Veiligheid: levert het bestand veel minder loten op dan er nu staan, dan is
+      // er waarschijnlijk iets mis met het blad. Dan laten we de loten ongemoeid.
+      const veelMinderLoten = state.HNVI_LOTS.length >= 5 && p.nieuweLoten && p.nieuweLoten.length < state.HNVI_LOTS.length / 2;
+      if (veelMinderLoten) {
+        console.warn(`Excel levert ${p.nieuweLoten.length} loten op tegen ${state.HNVI_LOTS.length} nu: HNVI-loten niet vervangen.`);
+      }
+      if (p.nieuweLoten && p.nieuweLoten.length && !veelMinderLoten) {
         // Het blad vervangt de hele lijst. De loten die er niet meer in staan
         // moeten ook uit de cloud, anders blijven ze daar staan en komen ze bij
         // de volgende synchronisatie gewoon weer terug.
