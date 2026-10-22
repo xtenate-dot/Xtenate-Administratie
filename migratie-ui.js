@@ -4,9 +4,9 @@
 // Controleren, Geslaagd. Een fase gaat pas open als de vorige is afgerond.
 // Migreren is in deze versie nog niet gebouwd en blijft dus op slot.
 
-import { maakVolledigeReservekopie, beschikbareJaren } from './export.js?v=20261023i';
-import { alsTekst, diagnose, diagnoseAlsTekst, dryRun } from './migratie.js?v=20261023i';
-import { herstelPreview } from './herstel.js?v=20261023i';
+import { maakVolledigeReservekopie, beschikbareJaren } from './export.js?v=20261023j';
+import { alsTekst, diagnose, diagnoseAlsTekst, dryRun } from './migratie.js?v=20261023j';
+import { herstelPreview } from './herstel.js?v=20261023j';
 
 const el = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>

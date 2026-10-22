@@ -1,15 +1,15 @@
 // bank.js — Bank: alle mutaties per rekening, inclusief transactie-modal.
 
 import {
-  bedragUit, ddmm, esc, fmt, isInkomst, isUitgave, leegVlak, maandLabel, rekBadge,
+  bedragUit, ddmm, esc, fmt, isInkomst, isUitgave, leegVlak, maandLabel, MND_KORT, rekBadge,
   typeBadge, vulMaandSelect, weergaveNaam
-} from './helpers.js?v=20261023i';
+} from './helpers.js?v=20261023j';
 import {
   MAAND_SALDOS, saveHistTxData, saveTxData, state, isBtwPlichtig,
   grootboekNamen, rekeningNamen, grootboekOptgroepen, rekeningenLijst
-, jaarIsVergrendeld} from './storage.js?v=20261023i';
-import { maakSorteerbaar } from './tables.js?v=20261023i';
-import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking } from './facturen.js?v=20261023i';
+, jaarIsVergrendeld} from './storage.js?v=20261023j';
+import { maakSorteerbaar } from './tables.js?v=20261023j';
+import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking } from './facturen.js?v=20261023j';
 
 // Fase 3A: Supabase pending queue
 import {
@@ -17,7 +17,7 @@ import {
   syncPendingQueue,
   pendingQueue,
   isSupabaseReady
-} from './supabase-client-v2.js?v=20261023i';
+} from './supabase-client-v2.js?v=20261023j';
 
 const el = id => document.getElementById(id);
 
@@ -75,15 +75,78 @@ function vulRekeningFilter() {
   if ([...select.options].some(o => o.value === huidig)) select.value = huidig;
 }
 
+// Per jaar één keer: begin op de laatste maand met boekingen, zodat je niet
+// door het hele jaar hoeft te scrollen. 'Totaal' toont het overzicht per maand.
+const bankBegonnen = new Set();
+let toonAlleBoekingen = false;
+
+export function kiesBankMaand(m) {
+  const sel = el('f-maand');
+  if (sel) sel.value = m;
+  toonAlleBoekingen = false;
+  renderBank();
+}
+
+export function toonAlleBankBoekingen() { toonAlleBoekingen = true; renderBank(); }
+
+/** Tabbladen per maand en, bij 'Totaal', een overzicht met één regel per maand. */
+function tekenMaandNavigatie(bron, maand) {
+  const tabs = el('bank-maandtabs');
+  const ov = el('bank-maandoverzicht');
+  const kaart = el('bank-lijstkaart');
+  if (!tabs || !ov) return;
+  const perMaand = new Map();
+  for (const t of bron) {
+    const m = t.datum.slice(0, 7);
+    if (!perMaand.has(m)) perMaand.set(m, { n: 0, ink: 0, uit: 0, prive: 0 });
+    const g = perMaand.get(m); g.n++;
+    if (isInkomst(t)) g.ink += t.bedrag;
+    else if (isUitgave(t)) g.uit += t.bedrag;
+    else if (t.type === 'prive_storting') g.prive += t.bedrag;
+    else if (t.type === 'prive_opname') g.prive -= t.bedrag;
+  }
+  const maanden = [...perMaand.keys()].sort();
+  const kort = m => `${MND_KORT[Number(m.slice(5, 7)) - 1]}${maanden.some(x => x.slice(0, 4) !== m.slice(0, 4)) ? ' ' + m.slice(2, 4) : ''}`;
+  tabs.innerHTML = `<button class="vtab${maand === '' ? ' active' : ''}" type="button" onclick="kiesBankMaand('')">Totaal</button>` +
+    maanden.map(m => `<button class="vtab${m === maand ? ' active' : ''}" type="button" onclick="kiesBankMaand('${m}')" title="${perMaand.get(m).n} boekingen">${kort(m)}</button>`).join('');
+
+  if (maand === '') {
+    const tot = { n: 0, ink: 0, uit: 0, prive: 0 };
+    maanden.forEach(m => { const g = perMaand.get(m); tot.n += g.n; tot.ink += g.ink; tot.uit += g.uit; tot.prive += g.prive; });
+    const rij = (label, g, klik, vet = false) => `<tr${klik ? ` class="row-click" onclick="kiesBankMaand('${klik}')" style="cursor:pointer"` : ' style="font-weight:600;background:var(--accent-softer)"'}>
+      <td style="padding-left:16px${vet ? ';font-weight:600' : ''}">${label}</td><td style="text-align:right">${g.n}</td>
+      <td style="text-align:right" class="pos">${fmt(g.ink)}</td><td style="text-align:right" class="neg">${fmt(g.uit)}</td>
+      <td style="text-align:right" class="${g.ink - g.uit >= 0 ? 'pos' : 'neg'}">${fmt(g.ink - g.uit)}</td>
+      <td style="text-align:right;padding-right:16px">${fmt(g.prive)}</td></tr>`;
+    ov.innerHTML = `<div class="card card-flush" style="margin-bottom:var(--spacing-4)"><div class="table-wrap"><table class="tbl-compact">
+      <thead><tr><th style="padding-left:16px">Maand</th><th style="text-align:right">Boekingen</th><th style="text-align:right">Inkomsten</th>
+        <th style="text-align:right">Uitgaven</th><th style="text-align:right">Resultaat</th><th style="text-align:right;padding-right:16px">Privé (netto)</th></tr></thead>
+      <tbody>${maanden.map(m => rij(maandLabel(m), perMaand.get(m), m)).join('')}${rij('Totaal', tot, '')}</tbody></table></div></div>
+      ${toonAlleBoekingen ? '' : `<div style="margin-bottom:var(--spacing-4)"><button class="btn" onclick="toonAlleBankBoekingen()">Alle ${tot.n} boekingen tonen</button>
+      <span class="muted" style="font-size:12px;margin-left:8px">Of klik op een maand.</span></div>`}`;
+    if (kaart) kaart.style.display = toonAlleBoekingen ? '' : 'none';
+  } else {
+    ov.innerHTML = '';
+    if (kaart) kaart.style.display = '';
+  }
+}
+
 export function renderBank() {
   const jaar = state.huidigJaar || '2026';
   const bron = bronVoorJaar(jaar);
   vulMaandSelect(el('f-maand'), bron);
+  if (!bankBegonnen.has(jaar) && el('f-maand').value === '') {
+    bankBegonnen.add(jaar);
+    const laatste = [...new Set(bron.map(t => t.datum.slice(0, 7)))].sort().pop();
+    if (laatste && jaar !== 'all') el('f-maand').value = laatste;
+  }
   vulRekeningFilter();
 
   const maand = el('f-maand').value;
   const rek = el('f-rek').value;
   const typeF = el('f-type').value;
+
+  tekenMaandNavigatie(bron, maand);
 
   const lijst = bron.filter(t => {
     if (maand && !t.datum.startsWith(maand)) return false;

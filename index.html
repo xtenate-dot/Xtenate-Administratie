@@ -21,10 +21,10 @@
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<link rel="stylesheet" href="theme.css?v=20261023i">
-<link rel="stylesheet" href="layout.css?v=20261023i">
-<link rel="stylesheet" href="components.css?v=20261023i">
-<link rel="stylesheet" href="responsive.css?v=20261023i">
+<link rel="stylesheet" href="theme.css?v=20261023j">
+<link rel="stylesheet" href="layout.css?v=20261023j">
+<link rel="stylesheet" href="components.css?v=20261023j">
+<link rel="stylesheet" href="responsive.css?v=20261023j">
 </head>
 <body>
 
@@ -374,7 +374,9 @@
       <div class="page-title">Bank</div>
       <div class="page-sub">Alle bankboekingen, gekoppeld aan het juiste grootboek.</div>
     </div>
+    <button class="btn btn-primary" onclick="nav('bankimport')">Revolut-afschrift importeren</button>
   </div>
+  <div class="vtabs" id="bank-maandtabs" role="tablist" aria-label="Maand"></div>
   <div class="toolbar">
     
     <select id="f-maand" onchange="renderBank()" aria-label="Maand"></select>
@@ -388,7 +390,8 @@
     <button class="btn btn-primary btn-ml" onclick="openTxModal()">+ Transactie toevoegen</button>
   </div>
   <div class="metrics" id="bank-metrics"></div>
-  <div class="card card-flush">
+  <div id="bank-maandoverzicht"></div>
+  <div class="card card-flush" id="bank-lijstkaart">
     <div class="table-wrap"><table id="tbl-bank" class="js-sorteerbaar">
       <thead><tr>
         <th style="width:78px;padding-left:16px" data-sort="datum">Datum</th>
@@ -1356,6 +1359,6 @@
 </div>
 </div>
 
-<script type="module" src="app.js?v=20261023i"></script>
+<script type="module" src="app.js?v=20261023j"></script>
 </body>
 </html>
