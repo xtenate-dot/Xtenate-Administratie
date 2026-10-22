@@ -1,11 +1,11 @@
 // belasting.js — Belasting-pagina (indicatieve IB-berekening).
 
-import { charts, dc, kleurVoorGb } from './charts.js?v=20261023g';
-import { ddmm, fmt, gbCode, isInkomst, isKostenBoeking, isOmzet, isPriveBetaaldeKost, isUitgave } from './helpers.js?v=20261023g';
-import { downloadModelPdf } from './pdf.js?v=20261023g';
-import { state, grootboekNamen } from './storage.js?v=20261023g';
-import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261023g';
-import { totaalAfschrijvingVanJaar } from './activa.js?v=20261023g';
+import { charts, dc, kleurVoorGb } from './charts.js?v=20261023h';
+import { ddmm, fmt, gbCode, isInkomst, isKostenBoeking, isOmzet, isPriveBetaaldeKost, isUitgave } from './helpers.js?v=20261023h';
+import { downloadModelPdf } from './pdf.js?v=20261023h';
+import { state, grootboekNamen } from './storage.js?v=20261023h';
+import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261023h';
+import { totaalAfschrijvingVanJaar } from './activa.js?v=20261023h';
 
 const HUIDIG_JAAR = '2026';
 
