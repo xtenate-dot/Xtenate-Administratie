@@ -5,10 +5,10 @@
 // niet nog eens voorgesteld. Grootboek en soort worden afgeleid uit eerdere
 // boekingen met dezelfde naam; wat onbekend is kies je zelf.
 
-import { state, saveTxData } from './storage.js?v=20261023h';
-import { esc, fmt } from './helpers.js?v=20261023h';
-import { addToPendingQueue } from './supabase-client-v2.js?v=20261023h';
-import { maakHerstelpunt } from './herstelpunt.js?v=20261023h';
+import { state, saveTxData } from './storage.js?v=20261023i';
+import { esc, fmt } from './helpers.js?v=20261023i';
+import { addToPendingQueue } from './supabase-client-v2.js?v=20261023i';
+import { maakHerstelpunt } from './herstelpunt.js?v=20261023i';
 
 const REK = '1010';          // zo staat Revolut nu in je administratie
 const HUIDIG = '2026';
@@ -72,20 +72,33 @@ const sleutel = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 const richtingPlus = t => t.type === 'inkomst' || t.type === 'prive_storting';
 const eigen = t => `${t.datum}|${Math.round(t.bedrag * 100)}|${richtingPlus(t) ? '+' : '-'}`;
 
-/** Wat weten we van eerdere boekingen met dezelfde naam? Nieuwste wint. */
+/** Alle eerdere boekingen op deze rekening met een naam, oud naar nieuw. */
 function geleerd() {
-  const kaart = new Map();
   const alle = [...state.HIST_TX, ...state.TX].filter(t => t.rek === REK && t.naam && t.gb);
   alle.sort((a, b) => String(a.datum).localeCompare(String(b.datum)));
-  for (const t of alle) kaart.set(sleutel(t.naam), { naam: t.naam, gb: String(t.gb), type: t.type });
-  return kaart;
+  return alle.map(t => ({ sleutel: sleutel(t.naam), eerste: sleutel(String(t.naam).split(/[\s*]/)[0]), naam: t.naam, gb: String(t.gb), type: t.type, plus: richtingPlus(t) }));
 }
 
-function zoekGeleerd(kaart, naam) {
+/**
+ * Zoekt een eerdere boeking met dezelfde naam. Alleen boekingen in dezelfde
+ * richting (bij of af) tellen mee, en de beste overeenkomst wint: eerst
+ * dezelfde naam, dan een naam die erin zit, dan hetzelfde eerste woord. Bij
+ * gelijke overeenkomst de nieuwste.
+ */
+function zoekGeleerd(lijst, naam, plus) {
   const s = sleutel(naam);
   if (!s) return null;
-  if (kaart.has(s)) return kaart.get(s);
-  for (const [k, v] of kaart) if (k.length >= 5 && s.length >= 5 && (k.includes(s) || s.includes(k))) return v;
+  const eerste = sleutel(String(naam).split(/[\s*]/)[0]);
+  const passend = lijst.filter(x => x.plus === plus);
+  const trap = [
+    x => x.sleutel === s,
+    x => x.sleutel.length >= 5 && s.length >= 5 && (x.sleutel.includes(s) || s.includes(x.sleutel)),
+    x => eerste.length >= 5 && x.eerste === eerste
+  ];
+  for (const ok of trap) {
+    const raak = passend.filter(ok);
+    if (raak.length) return raak[raak.length - 1];
+  }
   return null;
 }
 
@@ -119,7 +132,7 @@ export function maakVoorstel(uit, bestaand = [...state.TX, ...state.HIST_TX], be
   for (const o of uit.rijen) {
     const vast = VASTE_REGELS.find(r => r.test(o));
     const naamBron = tegenpartij(o);
-    const leer = vast ? null : zoekGeleerd(kaart, naamBron);
+    const leer = vast ? null : zoekGeleerd(kaart, naamBron, o.totaal > 0);
     const naam = vast ? vast.naam : (leer ? leer.naam : naamBron);
     let gb = vast ? vast.gb : (leer ? leer.gb : '');
     let type = vast ? vast.type : (leer ? leer.type : (o.totaal > 0 ? 'inkomst' : 'uitgave'));
