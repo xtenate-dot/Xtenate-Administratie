@@ -1,11 +1,11 @@
 // belasting.js — Belasting-pagina (indicatieve IB-berekening).
 
-import { charts, dc, kleurVoorGb } from './charts.js?v=20261023f';
-import { ddmm, fmt, gbCode, isInkomst, isKostenBoeking, isOmzet, isPriveBetaaldeKost, isUitgave } from './helpers.js?v=20261023f';
-import { downloadModelPdf } from './pdf.js?v=20261023f';
-import { state, grootboekNamen } from './storage.js?v=20261023f';
-import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261023f';
-import { totaalAfschrijvingVanJaar } from './activa.js?v=20261023f';
+import { charts, dc, kleurVoorGb } from './charts.js?v=20261023g';
+import { ddmm, fmt, gbCode, isInkomst, isKostenBoeking, isOmzet, isPriveBetaaldeKost, isUitgave } from './helpers.js?v=20261023g';
+import { downloadModelPdf } from './pdf.js?v=20261023g';
+import { state, grootboekNamen } from './storage.js?v=20261023g';
+import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261023g';
+import { totaalAfschrijvingVanJaar } from './activa.js?v=20261023g';
 
 const HUIDIG_JAAR = '2026';
 
@@ -77,22 +77,34 @@ export function hnviLotenVanJaar(jaar) {
  * alleen wat nergens in de bank te vinden is, komt er als omzet bij.
  */
 export function hnviOmzetBuitenBank(hnviJaar, belTX) {
-  const vrij = belTX.filter(t => isInkomst(t) && isOmzet(t.gb)).map(t => Number(t.bedrag) || 0);
+  const vrij = belTX.filter(t => isInkomst(t) && isOmzet(t.gb)).map(t => ({ b: Number(t.bedrag) || 0, datum: t.datum }));
   const lijst = hnviJaar.filter(i => i.status === 'verkocht' && Number(i.verkoop) > 0);
   const gekoppeld = new Set();
   let alInBank = 0, aantalAlInBank = 0, bedrag = 0;
   const koppel = (lot, plek) => { vrij.splice(plek, 1); gekoppeld.add(lot); alInBank += Number(lot.verkoop); aantalAlInBank++; };
+  const dagen = (a, b) => Math.round((Date.parse(a) - Date.parse(b)) / 86400000);
 
   // Eerst alleen exact dezelfde bedragen, zodat een zekere koppeling nooit
-  // wordt weggekaapt door een ruime. Daarna de rest tot één euro verschil:
-  // dan heeft de bank bijvoorbeeld een klein bedrag aan kosten ingehouden.
+  // wordt weggekaapt door een ruime.
   for (const lot of lijst) {
-    const plek = vrij.findIndex(b => Math.abs(b - Number(lot.verkoop)) < 0.005);
+    const plek = vrij.findIndex(x => Math.abs(x.b - Number(lot.verkoop)) < 0.005);
     if (plek >= 0) koppel(lot, plek);
   }
+  // Daarna een bijna gelijk bedrag, voor als de bank iets heeft ingehouden.
+  // Dat telt alleen als het verschil klein is (ten hoogste € 1 én 5%) en het
+  // geld kort na de verkoop binnenkwam (van 3 dagen ervoor tot 30 dagen erna).
+  // Zonder die datumgrens koppel je een verkoop aan een toevallig bedrag
+  // van een heel andere maand.
   for (const lot of lijst.filter(l => !gekoppeld.has(l))) {
-    let beste = -1, kleinste = 1.0001;
-    vrij.forEach((b, k) => { const v = Math.abs(b - Number(lot.verkoop)); if (v < kleinste) { kleinste = v; beste = k; } });
+    const prijs = Number(lot.verkoop);
+    const verkocht = lot.verkoopDatum || lot.datum;
+    if (!verkocht) continue;
+    let beste = -1, kleinste = Infinity;
+    vrij.forEach((x, k) => {
+      const v = Math.abs(x.b - prijs);
+      const d = x.datum ? dagen(x.datum, verkocht) : NaN;
+      if (v <= 1 && v <= prijs * 0.05 && d >= -3 && d <= 30 && v < kleinste) { kleinste = v; beste = k; }
+    });
     if (beste >= 0) koppel(lot, beste);
   }
   const buitenBank = lijst.filter(l => !gekoppeld.has(l));

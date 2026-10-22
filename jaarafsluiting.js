@@ -2,10 +2,10 @@
 // controlelijst, de inkoop die wel en niet meetelt, het resultaat en de
 // aangifte. Alleen kijken; er wordt niets aangepast.
 
-import { state } from './storage.js?v=20261023f';
-import { esc, fmt, MND_KORT } from './helpers.js?v=20261023f';
-import { aangifteModel, inkoopOverzicht, ibOver, hnviLotenVanJaar, hnviOmzetBuitenBank } from './belasting.js?v=20261023f';
-import { draaiControles } from './controle.js?v=20261023f';
+import { state } from './storage.js?v=20261023g';
+import { esc, fmt, MND_KORT } from './helpers.js?v=20261023g';
+import { aangifteModel, inkoopOverzicht, ibOver, hnviLotenVanJaar, hnviOmzetBuitenBank } from './belasting.js?v=20261023g';
+import { draaiControles } from './controle.js?v=20261023g';
 
 const el = id => document.getElementById(id);
 const HUIDIG = '2026';
