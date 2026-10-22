@@ -2,11 +2,11 @@
 // attributen in index.html blijven werken, regelt de globale interacties
 // (detailpaneel, zoeken, sneltoetsen) en start de app op.
 
-import { state } from './storage.js?v=20261022d';
-import { nav, gaNaar, hertekenHuidigePagina, paginaUitHash } from './ui.js?v=20261022d';
-import { startAutosync, syncNu } from './autosync.js?v=20261022d';
-import { wisselJaar, renderHome } from './dashboard.js?v=20261022d';
-import { renderBank, openTxModal, closeTx, saveTx, syncTxGrootboek, syncTxBtw, bewerkBoeking, deleteTx } from './bank.js?v=20261022d';
+import { state } from './storage.js?v=20261022e';
+import { nav, gaNaar, hertekenHuidigePagina, paginaUitHash } from './ui.js?v=20261022e';
+import { startAutosync, syncNu } from './autosync.js?v=20261022e';
+import { wisselJaar, renderHome } from './dashboard.js?v=20261022e';
+import { renderBank, openTxModal, closeTx, saveTx, syncTxGrootboek, syncTxBtw, bewerkBoeking, deleteTx } from './bank.js?v=20261022e';
 import {
   renderFacturen, kiesFactuurTab,
   openFactuurModal, sluitFactuurModal, syncFactuurVervaldatum, factVervaldatumHandmatig,
@@ -14,27 +14,27 @@ import {
   sluitKoppelModal, zoekFactuurBoeking,
   zoekFactuurRelatie, sluitFactuurRelatieSuggesties,
   openRelatiesBeheerModal, sluitRelatiesBeheerModal, voegNieuweRelatieToe, bewaarRelatiesBeheer
-} from './facturen-ui.js?v=20261022d';
-import { openIbanClusterScherm } from './boekingen-relaties-ui.js?v=20261022d';
-import { renderKm, openRitModal, sluitRitModal, saveRit, verwijderRitUi, verwijderRitUitModal } from './km-ui.js?v=20261022d';
-import { kiesPeriodeSoort, kiesPeriodeJaar, kiesPeriodeWeergave, downloadPeriodeExcel } from './periode.js?v=20261022d';
-import { kiesVeilingBestand, importeerVeiling } from './veiling-ui.js?v=20261022d';
-import { renderActiva, openActivumModal, sluitActivumModal, saveActivum, verwijderActivumUi, verwijderActivumUitModal } from './activa-ui.js?v=20261022d';
-import { renderBeheer, bewaarMinVoorraad, bewaarReferentiePriveSt2022, herprobeerSynchronisatie, bewaarBtwVanaf, bewaarBedrijfsgegevens, bewaarKmTarief, bewaarFactuurInstellingen, bewaarBankKoppelingRek } from './beheer.js?v=20261022d';
-import { renderPortaal } from './home.js?v=20261022d';
+} from './facturen-ui.js?v=20261022e';
+import { openIbanClusterScherm } from './boekingen-relaties-ui.js?v=20261022e';
+import { renderKm, openRitModal, sluitRitModal, saveRit, verwijderRitUi, verwijderRitUitModal } from './km-ui.js?v=20261022e';
+import { kiesPeriodeSoort, kiesPeriodeJaar, kiesPeriodeWeergave, downloadPeriodeExcel } from './periode.js?v=20261022e';
+import { kiesVeilingBestand, importeerVeiling } from './veiling-ui.js?v=20261022e';
+import { renderActiva, openActivumModal, sluitActivumModal, saveActivum, verwijderActivumUi, verwijderActivumUitModal } from './activa-ui.js?v=20261022e';
+import { renderBeheer, bewaarMinVoorraad, bewaarReferentiePriveSt2022, herprobeerSynchronisatie, bewaarBtwVanaf, bewaarBedrijfsgegevens, bewaarKmTarief, bewaarFactuurInstellingen, bewaarBankKoppelingRek } from './beheer.js?v=20261022e';
+import { renderPortaal } from './home.js?v=20261022e';
 import {
   renderGrootboek, wisFiltersGrootboek, openGrootboekRekening, sluitGrootboekRekening,
   openGrootboekBeheerModal, sluitGrootboekBeheerModal, voegGrootboekToe, verwijderGrootboek,
   voegRekeningToe, verwijderRekening, bewaarGrootboekBeheer
-} from './grootboek.js?v=20261022d';
-import { renderBelasting, openExtraKosten, openPercentages, openInkomenssoort, controlereBelasting, openControleDialog, kopieerAangifte, downloadAangifte, downloadAangiftePdf } from './belasting.js?v=20261022d';
-import { wisselBtwKwartaal, downloadBtwPdf } from './btw.js?v=20261022d';
-import { renderCrediteuren, wisselJaarCrediteuren } from './crediteuren.js?v=20261022d';
-import { renderDebiteuren, wisselJaarDebiteuren } from './debiteuren.js?v=20261022d';
+} from './grootboek.js?v=20261022e';
+import { renderBelasting, openExtraKosten, openPercentages, openInkomenssoort, controlereBelasting, openControleDialog, kopieerAangifte, downloadAangifte, downloadAangiftePdf } from './belasting.js?v=20261022e';
+import { wisselBtwKwartaal, downloadBtwPdf } from './btw.js?v=20261022e';
+import { renderCrediteuren, wisselJaarCrediteuren } from './crediteuren.js?v=20261022e';
+import { renderDebiteuren, wisselJaarDebiteuren } from './debiteuren.js?v=20261022e';
 import {
   renderControle, klapControleUit, toonAlleControleRegels, verbergControleMelding,
   zetControleUitVanaf, herstelControleMelding, herstelControleReeks, herstelAlleMeldingen
-} from './controle.js?v=20261022d';
+} from './controle.js?v=20261022e';
 import {
   renderCovers, openCoverModal, openCoverEdit, closeCoverModal, saveCover, kiesVoorraadTab,
   wisselVoorraadDetails, wisselDetailKolommen, filterVoorraadStatus,
@@ -44,36 +44,36 @@ import {
   draaiActieTerug, openGroepenModal, sluitGroepenModal, voegGroepToe, verwijderGroep, bewaarGroepen,
   kiesVoorraadJaar, legVoorraadVast, verwijderArtikel, verwijderVoorraadSelectie,
   openImportModalVoorraad, sluitImportModal, handleImportVoorraad, exporteerVoorraadPdf
-} from './voorraad.js?v=20261022d';
+} from './voorraad.js?v=20261022e';
 import {
   renderHNVI, berekenHNVIInkoop, openHNVIModal, openHNVISell, closeHNVIModal, saveHNVI,
   wisHNVIVerkoop, verwijderHNVIItem, toggleAllHNVI, updateHNVIDeleteBtn, verwijderGeselecteerdeHNVI,
   importHNVIFactuur, bevestigHNVIImport, exporteerHnviPdf
-} from './hnvi.js?v=20261022d';
+} from './hnvi.js?v=20261022e';
 import {
   importExcel, openWisModal, doWis, toonWisPreview, openSyncModal, saveSyncUrl, syncUpload, syncDownload,
   openApiKeyModal, saveApiKey, bevestigImport, annuleerImport
-} from './modals.js?v=20261022d';
-import { initUiVoorkeuren, wisselThema, wisselMenu, wisselMobielMenu, sluitMobielMenu } from './theme.js?v=20261022d';
-import { wisselNavGroep, initNavGroepen } from './navgroepen.js?v=20261022d';
-import { initZoek, focusZoek, sluitZoek } from './search.js?v=20261022d';
-import { openExportModal, sluitExportModal, toonExportSamenvatting, doeExport } from './excel-ui.js?v=20261022d';
-import { openZelftestModal, sluitZelftestModal, startZelftest } from './zelftest-ui.js?v=20261022d';
+} from './modals.js?v=20261022e';
+import { initUiVoorkeuren, wisselThema, wisselMenu, wisselMobielMenu, sluitMobielMenu } from './theme.js?v=20261022e';
+import { wisselNavGroep, initNavGroepen } from './navgroepen.js?v=20261022e';
+import { initZoek, focusZoek, sluitZoek } from './search.js?v=20261022e';
+import { openExportModal, sluitExportModal, toonExportSamenvatting, doeExport } from './excel-ui.js?v=20261022e';
+import { openZelftestModal, sluitZelftestModal, startZelftest } from './zelftest-ui.js?v=20261022e';
 import {
   openOpslagDiagnose, sluitOpslagDiagnose, voerOpslagDiagnoseUit, kopieerOpslagDiagnose,
   maakOpslagSnapshot, toonOverrides, toonNegeerlijst, downloadBackup, downloadNegeerBestanden
-} from './opslagdiagnose-ui.js?v=20261022d';
+} from './opslagdiagnose-ui.js?v=20261022e';
 import {
   openGegevenscontrole, sluitGegevenscontrole, herlaadGegevenscontrole,
   kiesGc, annuleerGc, bevestigGc, maakKeuzeOngedaan,
   exporteerGcMeldingen, controleerGcSchrijfacties
-} from './gegevenscontrole-ui.js?v=20261022d';
+} from './gegevenscontrole-ui.js?v=20261022e';
 import {
   openUitvoeren, sluitUitvoeren, doeStapBackup, zetBegrepen, doeStapUitvoeren
-} from './uitvoeren-ui.js?v=20261022d';
-import { vertraag } from './helpers.js?v=20261022d';
-import { toonBoeking, sluitDrawer, openBoeking } from './drawer.js?v=20261022d';
-import { start as startAuth, login, uitloggen, opnieuwVerbinden, toonRegistreren, toonInloggen, signUp } from './auth.js?v=20261022d';
+} from './uitvoeren-ui.js?v=20261022e';
+import { vertraag } from './helpers.js?v=20261022e';
+import { toonBoeking, sluitDrawer, openBoeking } from './drawer.js?v=20261022e';
+import { start as startAuth, login, uitloggen, opnieuwVerbinden, toonRegistreren, toonInloggen, signUp } from './auth.js?v=20261022e';
 
 // Zoeken tijdens typen wacht kort: anders wordt bij elke aanslag de hele
 // tabel opnieuw opgebouwd, wat bij honderden regels merkbaar hapert.

@@ -6,9 +6,9 @@
 // bedrijfskosten (geen balansposten, geen HNVI- of voorraadinkoop).
 // HNVI-inkoop staat apart, omdat die pas bij verkoop een kostenpost is.
 
-import { state } from './storage.js?v=20261022d';
-import { esc, fmt, isInkomst, isOmzet, isUitgave, MND_KORT } from './helpers.js?v=20261022d';
-import { isKostenpost, inkoopOverzicht } from './belasting.js?v=20261022d';
+import { state } from './storage.js?v=20261022e';
+import { esc, fmt, isInkomst, isOmzet, isUitgave, MND_KORT } from './helpers.js?v=20261022e';
+import { isKostenpost, inkoopOverzicht } from './belasting.js?v=20261022e';
 
 const el = id => document.getElementById(id);
 let stand = 'maand';          // 'maand' | 'kwartaal' | 'jaar'
@@ -223,7 +223,6 @@ export function downloadPeriodeExcel() {
     return rijen;
   };
   for (const j of [...jaren].reverse()) voeg(`Grootboek ${j}`, matrixBlad('maand', j), [8, 30, ...Array(13).fill(11)]);
-  voeg('Grootboek per jaar', matrixBlad('jaar', null), [8, 30, ...Array(jaren.length + 1).fill(12)]);
 
   const gb = Object.fromEntries((state.GROOTBOEK || []).map(g => [String(g.nummer), g.naam]));
   const boek = [['Datum', 'Rekening', 'Soort', 'Bedrag', 'Naam', 'Omschrijving', 'Grootboek', 'Grootboeknaam']];
@@ -264,7 +263,7 @@ export function renderPeriode() {
   }), { omzet: 0, kosten: 0, hnviInkoop: 0, resultaat: 0, priveSt: 0, priveOp: 0, aantal: 0 });
 
   const knop = (id, naam) => `<div class="vtab${stand === id ? ' active' : ''}" onclick="kiesPeriodeSoort('${id}')" role="tab" tabindex="0" aria-selected="${stand === id}">${naam}</div>`;
-  const jaarKeuze = stand === 'jaar' ? '' : `<select onchange="kiesPeriodeJaar(this.value)" aria-label="Jaar">${jaren.map(j => `<option value="${j}"${j === gekozenJaar ? ' selected' : ''}>${j}</option>`).join('')}</select>`;
+  const jaarKeuze = stand === 'jaar' && weergave !== 'grootboek' ? '' : `<select onchange="kiesPeriodeJaar(this.value)" aria-label="Jaar">${jaren.map(j => `<option value="${j}"${j === gekozenJaar ? ' selected' : ''}>${j}</option>`).join('')}</select>`;
 
   const weergaveKnop = (id, naam) => `<div class="vtab${weergave === id ? ' active' : ''}" onclick="kiesPeriodeWeergave('${id}')" role="tab" tabindex="0" aria-selected="${weergave === id}">${naam}</div>`;
   const kpi = (l, w, k = '') => `<div class="kpi kpi--secondary"><div class="kpi-lbl">${esc(l)}</div><div class="kpi-val"${k ? ` style="color:${k}"` : ''}>${w}</div></div>`;
@@ -304,8 +303,11 @@ export function renderPeriode() {
       daar telt HNVI-inkoop pas mee zodra het lot is verkocht.</p>
     ${stand === 'jaar' ? '' : inkoopSectie(gekozenJaar)}`;
 
+  // Het grootboek toont altijd de maanden (of kwartalen) van één jaar, ook als
+  // de samenvatting op "Per jaar" staat.
+  const gbSoort = stand === 'jaar' ? 'maand' : stand;
   const inhoud = weergave === 'grootboek'
-    ? matrixHtml(grootboekMatrix(zichtbaar, stand, gekozenJaar), stand)
+    ? matrixHtml(grootboekMatrix(alles.filter(t => (t.datum || '').startsWith(gekozenJaar)), gbSoort, gekozenJaar), gbSoort)
     : samenvatting;
 
   doel.innerHTML = `

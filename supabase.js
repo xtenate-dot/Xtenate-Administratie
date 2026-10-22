@@ -4,7 +4,7 @@
 // Alle foutafhandeling rond het verbinden zit hier, zodat de rest van de app
 // alleen met een werkende client of met een duidelijke melding te maken heeft.
 
-import { SESSIE_SLEUTEL, SUPABASE_LIB, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL, configProbleem, isGeconfigureerd } from './config.js?v=20261022d';
+import { SESSIE_SLEUTEL, SUPABASE_LIB, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL, configProbleem, isGeconfigureerd } from './config.js?v=20261022e';
 
 let client = null;
 let bezig = null;

@@ -19,7 +19,7 @@ import {
   saveAppData,
   loadAppData,
   laatsteAppDataFout
-} from './supabase-client-v2.js?v=20261022d';
+} from './supabase-client-v2.js?v=20261022e';
 
 /**
  * Stuurt een los lijstje (groepen, facturen, tellers) naar de cloud zonder
