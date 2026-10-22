@@ -1,11 +1,11 @@
 // belasting.js — Belasting-pagina (indicatieve IB-berekening).
 
-import { charts, dc, kleurVoorGb } from './charts.js?v=20261022e';
-import { ddmm, fmt, gbCode, isInkomst, isOmzet, isUitgave } from './helpers.js?v=20261022e';
-import { downloadModelPdf } from './pdf.js?v=20261022e';
-import { state, grootboekNamen } from './storage.js?v=20261022e';
-import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261022e';
-import { totaalAfschrijvingVanJaar } from './activa.js?v=20261022e';
+import { charts, dc, kleurVoorGb } from './charts.js?v=20261022f';
+import { ddmm, fmt, gbCode, isInkomst, isOmzet, isUitgave } from './helpers.js?v=20261022f';
+import { downloadModelPdf } from './pdf.js?v=20261022f';
+import { state, grootboekNamen } from './storage.js?v=20261022f';
+import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261022f';
+import { totaalAfschrijvingVanJaar } from './activa.js?v=20261022f';
 
 const HUIDIG_JAAR = '2026';
 
@@ -171,17 +171,19 @@ export function isKostenpost(t) {
 }
 
 /**
- * Welke inkooprekeningen artikel-voorraad dragen: AliExpress (7000) en MijnMagie (7020).
+ * Welke inkooprekening artikel-voorraad draagt: 7000 (AliExpress en Alibaba, ook voor
+ * de artikelen van Bol.com en Helmetcoverstore). MijnMagie (7020) doet niet mee: dat is
+ * een directe kostenpost.
  * HNVI (7010) gaat volledig via loten. Verzendartikelen (7100) zijn directe kosten.
  */
 export function voorraadRekeningen() {
-  return ['7000', '7020'];
+  return ['7000'];
 }
 
 export function isHandelsvoorraad(art) {
   if (art?.handelsvoorraad === false) return false;
   const gb = gbCode(art?.inkoopGb) || '7000';
-  return gb === '7000' || gb === '7020';
+  return gb === '7000';
 }
 
 export function inkoopRekeningVan(art) {
@@ -972,7 +974,7 @@ export function inkoopOverzicht(jaar = gekozenJaar()) {
   }
 
   // Overige inkoop is direct aftrekbaar
-  for (const gb of ['7100', '7900']) {
+  for (const gb of ['7020', '7100', '7900']) {
     const ingekocht = bank(gb);
     if (!ingekocht) continue;
     rijen.push({ rekening: gb, naam: namen[gb] || gb, soort: 'direct', ingekocht, aftrekbaar: ingekocht, voorraad: 0, teVerdelen: 0, opmerking: 'direct aftrekbaar' });
