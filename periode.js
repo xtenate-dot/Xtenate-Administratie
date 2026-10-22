@@ -6,13 +6,14 @@
 // bedrijfskosten (geen balansposten, geen HNVI- of voorraadinkoop).
 // HNVI-inkoop staat apart, omdat die pas bij verkoop een kostenpost is.
 
-import { state } from './storage.js?v=20261022b';
-import { esc, fmt, isInkomst, isOmzet, isUitgave, MND_KORT } from './helpers.js?v=20261022b';
-import { isKostenpost, inkoopOverzicht } from './belasting.js?v=20261022b';
+import { state } from './storage.js?v=20261022c';
+import { esc, fmt, isInkomst, isOmzet, isUitgave, MND_KORT } from './helpers.js?v=20261022c';
+import { isKostenpost, inkoopOverzicht } from './belasting.js?v=20261022c';
 
 const el = id => document.getElementById(id);
 let stand = 'maand';          // 'maand' | 'kwartaal' | 'jaar'
 let gekozenJaar = null;
+let weergave = 'samenvatting';   // 'samenvatting' | 'grootboek'
 
 const alleBoekingen = () => [...(state.HIST_TX || []), ...(state.TX || [])];
 const bedrag = t => Number(t.bedrag) || 0;
@@ -57,11 +58,107 @@ export function kiesPeriodeSoort(s) {
   renderPeriode();
 }
 
+export function kiesPeriodeWeergave(w) {
+  if (!['samenvatting', 'grootboek'].includes(w)) return;
+  weergave = w;
+  renderPeriode();
+}
+
 export function kiesPeriodeJaar(j) {
   gekozenJaar = j;
   renderPeriode();
 }
 
+
+
+// ---------------------------------------------------------------- grootboekmatrix
+// Dezelfde opzet als het tabblad "Per Periode" in de Excel: alle rekeningen
+// onder elkaar, de periodes ernaast, met rubriektotalen. Tekens zoals in de
+// Excel: kosten en uitgaven positief, omzet en inkomsten negatief, privé
+// gestort positief en privé opgenomen negatief. Een negatief resultaat is winst.
+
+function matrixBedrag(t) {
+  const b = bedrag(t);
+  if (t.type === 'uitgave' || t.type === 'prive_storting') return b;
+  if (t.type === 'inkomst' || t.type === 'prive_opname') return -b;
+  return 0;
+}
+
+function kolomSleutels(soort, jaar, boekingen) {
+  if (soort === 'maand') return Array.from({ length: 12 }, (_, i) => `${jaar}-${String(i + 1).padStart(2, '0')}`);
+  if (soort === 'kwartaal') return [1, 2, 3, 4].map(k => `${jaar}-K${k}`);
+  return [...new Set(boekingen.map(t => (t.datum || '').slice(0, 4)).filter(Boolean))].sort();
+}
+
+/** Bouwt de matrix: rijen per rekening, per rubriek een totaal. */
+export function grootboekMatrix(boekingen, soort, jaar) {
+  const sleutels = kolomSleutels(soort, jaar, boekingen);
+  const n = sleutels.length;
+  const per = new Map();   // nummer -> waarden[]
+  for (const t of boekingen) {
+    if (!t.datum) continue;
+    const i = sleutels.indexOf(sleutelVan(t.datum, soort));
+    if (i < 0) continue;
+    const nr = String(t.gb ?? '').trim() || '—';
+    if (!per.has(nr)) per.set(nr, Array(n).fill(0));
+    per.get(nr)[i] += matrixBedrag(t);
+  }
+  const namen = new Map((state.GROOTBOEK || []).map(g => [String(g.nummer), g.naam]));
+  const alle = new Set([...namen.keys(), ...per.keys()]);
+  const nummers = [...alle].filter(x => x !== '9999' || per.has('9999')).sort((a, b) => (Number(a) || 1e9) - (Number(b) || 1e9));
+  const nul = () => Array(n).fill(0);
+  const tel = (a, b) => a.map((v, i) => v + b[i]);
+  const rij = nr => {
+    const w = per.get(nr) || nul();
+    return { nummer: nr, naam: namen.get(nr) || (per.has(nr) ? 'Onbekende rekening' : ''), waarden: w, totaal: w.reduce((s, v) => s + v, 0) };
+  };
+  const rubriek = (titel, test) => {
+    const rijen = nummers.filter(test).map(rij);
+    const w = rijen.reduce((s, r) => tel(s, r.waarden), nul());
+    return { titel, rijen, waarden: w, totaal: w.reduce((s, v) => s + v, 0) };
+  };
+  const num = x => Number(x);
+  const prive = rubriek('Totaal rubriek 0 (privé)', x => num(x) < 1000);
+  const balans = rubriek('Totaal rubriek 1 en 2', x => num(x) >= 1000 && num(x) < 3000);
+  const kosten4 = rubriek('Totaal rubriek 4', x => num(x) >= 4000 && num(x) < 5000);
+  const inkoop = rubriek('Totaal inkopen', x => num(x) >= 7000 && num(x) < 8000);
+  const omzet = rubriek('Brutowinst (omzet)', x => num(x) >= 8000 && num(x) < 9000);
+  const overig = rubriek('Overig', x => !(num(x) < 3000) ? !(num(x) >= 4000 && num(x) < 5000) && !(num(x) >= 7000 && num(x) < 9000) : !Number.isFinite(num(x)));
+  const totaalBalans = tel(prive.waarden, balans.waarden);
+  const kosten = tel(kosten4.waarden, inkoop.waarden);
+  const resultaat = tel(omzet.waarden, kosten);
+  const som = a => a.reduce((s, v) => s + v, 0);
+  return {
+    sleutels, n,
+    rubrieken: [prive, balans, kosten4, inkoop, omzet, ...(overig.rijen.length ? [overig] : [])],
+    samen: [
+      { titel: 'Totaal balans', waarden: totaalBalans, totaal: som(totaalBalans), na: balans },
+      { titel: 'Kosten (rubriek 4 + inkopen)', waarden: kosten, totaal: som(kosten) },
+      { titel: 'Resultaat (min = winst)', waarden: resultaat, totaal: som(resultaat), vet: true }
+    ]
+  };
+}
+
+const matrixLabel = (k, soort) => soort === 'jaar' ? k : soort === 'kwartaal' ? k.slice(5) : MND_KORT[Number(k.slice(5, 7)) - 1];
+const getal = n => Math.abs(n) < 0.005 ? '' : n.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+function matrixHtml(m, soort) {
+  const kop = `<tr><th>Nr</th><th>Rekening</th>${m.sleutels.map(k => `<th style="text-align:right">${esc(matrixLabel(k, soort))}</th>`).join('')}<th style="text-align:right">Totaal</th></tr>`;
+  const cellen = (w, t) => w.map(v => `<td style="text-align:right">${getal(v)}</td>`).join('') + `<td style="text-align:right"><strong>${getal(t)}</strong></td>`;
+  const totaalRij = (titel, w, t, vet) => `<tr style="font-weight:600;background:var(--accent-softer)"><td></td><td>${esc(titel)}</td>${cellen(w, t)}</tr>`;
+  let body = '';
+  for (const r of m.rubrieken) {
+    body += r.rijen.map(x => `<tr><td>${esc(x.nummer)}</td><td>${esc(x.naam)}</td>${cellen(x.waarden, x.totaal)}</tr>`).join('');
+    body += totaalRij(r.titel, r.waarden, r.totaal);
+    if (r.titel.startsWith('Totaal rubriek 1')) body += totaalRij(m.samen[0].titel, m.samen[0].waarden, m.samen[0].totaal);
+  }
+  body += totaalRij(m.samen[1].titel, m.samen[1].waarden, m.samen[1].totaal);
+  body += totaalRij(m.samen[2].titel, m.samen[2].waarden, m.samen[2].totaal);
+  return `<div class="card card-flush"><div class="table-wrap"><table class="tbl-compact" style="font-size:12px">
+    <thead>${kop}</thead><tbody>${body}</tbody></table></div></div>
+    <p class="muted" style="font-size:12px;margin-top:var(--spacing-2)">
+      Zoals in je Excel: omzet en inkomsten zijn negatief, kosten positief. Een negatief resultaat betekent winst. HNVI- en AliExpress-inkoop staan hier voor het volle bankbedrag; wat fiscaal meetelt staat op Belasting.</p>`;
+}
 
 function inkoopSectie(jaar) {
   let o;
@@ -113,6 +210,21 @@ export function downloadPeriodeExcel() {
   }
   voeg('Inkoop per jaar', inkoop, [8, 10, 24, 16, 16, 18, 14, 60]);
 
+  const matrixBlad = (soort, jaar) => {
+    const m = grootboekMatrix(jaar ? alles.filter(t => (t.datum || '').startsWith(jaar)) : alles, soort, jaar);
+    const rijen = [['Nr', 'Rekening', ...m.sleutels.map(k => matrixLabel(k, soort)), 'Totaal']];
+    for (const r of m.rubrieken) {
+      r.rijen.forEach(x => rijen.push([x.nummer, x.naam, ...x.waarden, x.totaal]));
+      rijen.push(['', r.titel, ...r.waarden, r.totaal]);
+      if (r.titel.startsWith('Totaal rubriek 1')) rijen.push(['', m.samen[0].titel, ...m.samen[0].waarden, m.samen[0].totaal]);
+    }
+    rijen.push(['', m.samen[1].titel, ...m.samen[1].waarden, m.samen[1].totaal]);
+    rijen.push(['', m.samen[2].titel, ...m.samen[2].waarden, m.samen[2].totaal]);
+    return rijen;
+  };
+  for (const j of [...jaren].reverse()) voeg(`Grootboek ${j}`, matrixBlad('maand', j), [8, 30, ...Array(13).fill(11)]);
+  voeg('Grootboek per jaar', matrixBlad('jaar', null), [8, 30, ...Array(jaren.length + 1).fill(12)]);
+
   const gb = Object.fromEntries((state.GROOTBOEK || []).map(g => [String(g.nummer), g.naam]));
   const boek = [['Datum', 'Rekening', 'Soort', 'Bedrag', 'Naam', 'Omschrijving', 'Grootboek', 'Grootboeknaam']];
   [...alles].sort((a, b) => (a.datum < b.datum ? -1 : 1)).forEach(t =>
@@ -154,6 +266,7 @@ export function renderPeriode() {
   const knop = (id, naam) => `<div class="vtab${stand === id ? ' active' : ''}" onclick="kiesPeriodeSoort('${id}')" role="tab" tabindex="0" aria-selected="${stand === id}">${naam}</div>`;
   const jaarKeuze = stand === 'jaar' ? '' : `<select onchange="kiesPeriodeJaar(this.value)" aria-label="Jaar">${jaren.map(j => `<option value="${j}"${j === gekozenJaar ? ' selected' : ''}>${j}</option>`).join('')}</select>`;
 
+  const weergaveKnop = (id, naam) => `<div class="vtab${weergave === id ? ' active' : ''}" onclick="kiesPeriodeWeergave('${id}')" role="tab" tabindex="0" aria-selected="${weergave === id}">${naam}</div>`;
   const kpi = (l, w, k = '') => `<div class="kpi kpi--secondary"><div class="kpi-lbl">${esc(l)}</div><div class="kpi-val"${k ? ` style="color:${k}"` : ''}>${w}</div></div>`;
 
   const lijst = rijen.map(r => `<tr>
@@ -167,12 +280,7 @@ export function renderPeriode() {
       <td style="text-align:right">${r.aantal}</td>
     </tr>`).join('');
 
-  doel.innerHTML = `
-    <div style="display:flex;align-items:center;gap:var(--spacing-3);flex-wrap:wrap;margin-bottom:var(--spacing-4)">
-      <div class="vtabs" role="tablist">${knop('maand', 'Per maand')}${knop('kwartaal', 'Per kwartaal')}${knop('jaar', 'Per jaar')}</div>
-      ${jaarKeuze}
-      <button class="btn btn-primary" style="margin-left:auto" onclick="downloadPeriodeExcel()">Download alles als Excel</button>
-    </div>
+  const samenvatting = `
     <div class="kpi-grid" style="margin-bottom:var(--spacing-4)">
       ${kpi('Omzet', fmt(tot.omzet))}
       ${kpi('Kosten', fmt(tot.kosten))}
@@ -195,4 +303,17 @@ export function renderPeriode() {
       Resultaat (kas) = omzet min kosten min HNVI-inkoop zoals die in de bank staat. Het fiscale resultaat staat op de pagina Belasting:
       daar telt HNVI-inkoop pas mee zodra het lot is verkocht.</p>
     ${stand === 'jaar' ? '' : inkoopSectie(gekozenJaar)}`;
+
+  const inhoud = weergave === 'grootboek'
+    ? matrixHtml(grootboekMatrix(zichtbaar, stand, gekozenJaar), stand)
+    : samenvatting;
+
+  doel.innerHTML = `
+    <div style="display:flex;align-items:center;gap:var(--spacing-3);flex-wrap:wrap;margin-bottom:var(--spacing-4)">
+      <div class="vtabs" role="tablist">${knop('maand', 'Per maand')}${knop('kwartaal', 'Per kwartaal')}${knop('jaar', 'Per jaar')}</div>
+      <div class="vtabs" role="tablist">${weergaveKnop('samenvatting', 'Samenvatting')}${weergaveKnop('grootboek', 'Alle grootboekrekeningen')}</div>
+      ${jaarKeuze}
+      <button class="btn btn-primary" style="margin-left:auto" onclick="downloadPeriodeExcel()">Download alles als Excel</button>
+    </div>
+    ${inhoud}`;
 }
