@@ -19,7 +19,7 @@ import {
   saveAppData,
   loadAppData,
   laatsteAppDataFout
-} from './supabase-client-v2.js?v=20261023b';
+} from './supabase-client-v2.js?v=20261023c';
 
 /**
  * Stuurt een los lijstje (groepen, facturen, tellers) naar de cloud zonder
@@ -113,6 +113,7 @@ function appDataWaarde(sleutel) {
   if (sleutel === 'ritten') return { lijst: state.RITTEN, volgende: state.nxtRit };
   if (sleutel === 'activa') return { lijst: state.ACTIVA, volgende: state.nxtActivum };
   if (sleutel === 'veiling') return state.VEILING;
+  if (sleutel === 'hnvi_datums') return state.HNVI_DATUMS;
   if (sleutel === 'tellers') return { tx: state.nxtTx, cover: state.nxtCover, hnvi: state.nxtHnvi };
   return undefined;
 }
@@ -464,7 +465,40 @@ export function saveHistTxData() { save('xtenate_hist_tx_override', state.HIST_T
 
 export function saveCoversData() { save('xtenate_covers', state.COVERS); save('xtenate_nxtCover', state.nxtCover); duwTellers(); }
 
-export function saveHnviData() { save('xtenate_hnvi', state.HNVI_LOTS); save('xtenate_nxtHnvi', state.nxtHnvi); duwTellers(); }
+// Verkoopdatums van HNVI-loten staan ook los in app_data. De tabel hnvi_loten
+// heeft daar mogelijk nog geen kolom voor; zonder deze kopie verdwijnt de datum
+// zodra de loten opnieuw uit de database komen. Sleutel = lot-sleutel.
+state.HNVI_DATUMS = load('xtenate_hnvi_datums', {});
+
+/** Zet de datums van de loten in de aparte lijst; een lot op voorraad verliest zijn datum. */
+function werkHnviDatumsBij() {
+  let gewijzigd = false;
+  for (const l of state.HNVI_LOTS || []) {
+    const sleutel = String(l._key || l.id);
+    if (l.status === 'verkocht' && l.verkoopDatum) {
+      if (state.HNVI_DATUMS[sleutel] !== l.verkoopDatum) { state.HNVI_DATUMS[sleutel] = l.verkoopDatum; gewijzigd = true; }
+    } else if (l.status === 'voorraad' && sleutel in state.HNVI_DATUMS) {
+      delete state.HNVI_DATUMS[sleutel]; gewijzigd = true;
+    }
+  }
+  return gewijzigd;
+}
+
+/** Vult ontbrekende verkoopdatums van de loten aan uit de aparte lijst. */
+export function pasHnviDatumsToe() {
+  for (const l of state.HNVI_LOTS || []) {
+    const d = state.HNVI_DATUMS[String(l._key || l.id)];
+    if (d && !l.verkoopDatum && l.status === 'verkocht') l.verkoopDatum = d;
+  }
+}
+
+pasHnviDatumsToe();
+
+export function saveHnviData() {
+  save('xtenate_hnvi', state.HNVI_LOTS); save('xtenate_nxtHnvi', state.nxtHnvi);
+  if (werkHnviDatumsBij()) { save('xtenate_hnvi_datums', state.HNVI_DATUMS); duwAppData('hnvi_datums', state.HNVI_DATUMS); }
+  duwTellers();
+}
 
 // ─── FACTUREN (fase 7) ─────────────────────────────────────────────────────
 // Debiteuren en crediteuren staan naast de boekingen, niet erin. Er is geen
@@ -790,6 +824,11 @@ export async function loadDataHybrid() {
           if (Number(extra.activa.volgende) > 0) state.nxtActivum = Number(extra.activa.volgende);
           console.log(`✅ Activa uit Supabase: ${state.ACTIVA.length}`);
         }
+        if (extra.hnvi_datums && typeof extra.hnvi_datums === 'object') {
+          state.HNVI_DATUMS = { ...extra.hnvi_datums, ...state.HNVI_DATUMS };
+          save('xtenate_hnvi_datums', state.HNVI_DATUMS);
+        }
+        pasHnviDatumsToe();
         if (extra.veiling && typeof extra.veiling === 'object') {
           state.VEILING = extra.veiling;
           save('xtenate_veiling', state.VEILING);
