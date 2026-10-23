@@ -9,13 +9,13 @@
 
 import {
   BEGINSALDO_2026, calcIB, isInkomst, isOmzet, isUitgave, teltBij
-} from './helpers.js?v=20261023p';
+} from './helpers.js?v=20261023q';
 import {
   HIST_TX_DEFAULT, HOME_TOTALS, HOME_TOTALS_DEFAULT, MAAND_SALDOS, state,
   grootboekNamen, rekeningNamen
-} from './storage.js?v=20261023p';
-import { verborgenOverzicht } from './negeren.js?v=20261023p';
-import { getClient, leesbareFout } from './supabase.js?v=20261023p';
+} from './storage.js?v=20261023q';
+import { verborgenOverzicht } from './negeren.js?v=20261023q';
+import { getClient, leesbareFout } from './supabase.js?v=20261023q';
 
 const HOOFDREKENING = '1010';
 

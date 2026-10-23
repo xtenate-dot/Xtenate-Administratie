@@ -1,7 +1,8 @@
 // drawer.js — detailpaneel rechts met alle gegevens van één boeking.
 
-import { esc, fmt, isInkomst, rekBadge, weergaveNaam } from './helpers.js?v=20261023p';
-import { state, grootboekNamen, rekeningNamen } from './storage.js?v=20261023p';
+import { esc, fmt, isInkomst, rekBadge, weergaveNaam } from './helpers.js?v=20261023q';
+import { state, grootboekNamen, rekeningNamen } from './storage.js?v=20261023q';
+import { bonnetjesRegelHtml } from './bonnetjes.js?v=20261023q';
 
 const TYPE_LABEL = {
   inkomst: 'Inkomst',
@@ -43,6 +44,7 @@ export function openBoeking(id) {
     <div class="dl-row"><span class="dl-key">Omschrijving</span><span class="dl-val">${esc(t.omschr) || '—'}</span></div>
     <div class="dl-row"><span class="dl-key">Tegenpartij (ruw)</span><span class="dl-val">${esc(t.naam) || '—'}</span></div>
     <div class="dl-row"><span class="dl-key">Boekingsnummer</span><span class="dl-val gbnr">${esc(t.id)}</span></div>
+    ${bonnetjesRegelHtml(t.id)}
     ${anderen > 0 ? `<div class="dl-row"><span class="dl-key">Zelfde tegenpartij</span><span class="dl-val">${anderen} andere boeking${anderen === 1 ? '' : 'en'}</span></div>` : ''}
     <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:var(--spacing-5)"
             data-bewerk-tx="${esc(t.id)}">Deze boeking bewerken</button>

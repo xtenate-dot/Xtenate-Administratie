@@ -5,14 +5,14 @@
 // ongewijzigd: elke tegel roept dezelfde globale functie aan als het
 // zijbalk-item, dus er verandert niets aan wat ze doen.
 
-import { herstelpuntenBlok } from './herstelpunt.js?v=20261023p';
-import { draaiControles } from './controle.js?v=20261023p';
-import { esc } from './helpers.js?v=20261023p';
-import { saveVoorraadInstellingen, standaardMinVoorraad, saveControleInstellingen, CONTROLE_INSTELLINGEN, saveBtwInstellingen, BTW_INSTELLINGEN, saveBedrijfsgegevens, BEDRIJFSGEGEVENS, saveKmInstellingen, KM_INSTELLINGEN, saveFactuurInstellingen, FACTUUR_INSTELLINGEN, appDataStatus, state, rekeningenLijst, bankKoppelingDagenTotVerval } from './storage.js?v=20261023p';
-import { werkBankKoppelingRekBijInSupabase } from './supabase-client-v2.js?v=20261023p';
-import { hertekenHuidigePagina } from './ui.js?v=20261023p';
-import { getPendingItems } from './supabase-client-v2.js?v=20261023p';
-import { syncNu } from './autosync.js?v=20261023p';
+import { herstelpuntenBlok } from './herstelpunt.js?v=20261023q';
+import { draaiControles } from './controle.js?v=20261023q';
+import { esc } from './helpers.js?v=20261023q';
+import { saveVoorraadInstellingen, standaardMinVoorraad, saveControleInstellingen, CONTROLE_INSTELLINGEN, saveBtwInstellingen, BTW_INSTELLINGEN, saveBedrijfsgegevens, BEDRIJFSGEGEVENS, saveKmInstellingen, KM_INSTELLINGEN, saveFactuurInstellingen, FACTUUR_INSTELLINGEN, appDataStatus, state, rekeningenLijst, bankKoppelingDagenTotVerval } from './storage.js?v=20261023q';
+import { werkBankKoppelingRekBijInSupabase } from './supabase-client-v2.js?v=20261023q';
+import { hertekenHuidigePagina } from './ui.js?v=20261023q';
+import { getPendingItems } from './supabase-client-v2.js?v=20261023q';
+import { syncNu } from './autosync.js?v=20261023q';
 
 const el = id => document.getElementById(id);
 
@@ -90,6 +90,14 @@ export function renderBeheer() {
       tegel({
         titel: 'Volledige back-up downloaden', uitleg: 'Eén bestand met alle gegevens uit deze browser, inclusief checksums',
         icoon: I.herstel, actie: 'downloadBackup()'
+      }),
+      tegel({
+        titel: 'Bonnetjes: back-up downloaden', uitleg: 'Alle bijlagen bij boekingen als één bestand (staan alleen in deze browser)',
+        icoon: I.herstel, actie: 'downloadBonnetjesBackup()'
+      }),
+      tegel({
+        titel: 'Bonnetjes: back-up terugzetten', uitleg: 'Bijlagen uit een eerdere back-up weer inlezen',
+        icoon: I.import, actie: 'kiesBonnetjesBackup()'
       }),
       tegel({
         titel: 'Cloud sync', uitleg: 'Gegevens uitwisselen met de cloud',

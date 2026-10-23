@@ -3,13 +3,14 @@
 import {
   bedragUit, ddmm, esc, fmt, isInkomst, isUitgave, leegVlak, maandLabel, MND_KORT, rekBadge,
   typeBadge, vulMaandSelect, weergaveNaam
-} from './helpers.js?v=20261023p';
+} from './helpers.js?v=20261023q';
 import {
   MAAND_SALDOS, saveHistTxData, saveTxData, state, isBtwPlichtig,
   grootboekNamen, rekeningNamen, grootboekOptgroepen, rekeningenLijst
-, jaarIsVergrendeld} from './storage.js?v=20261023p';
-import { maakSorteerbaar } from './tables.js?v=20261023p';
-import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking } from './facturen.js?v=20261023p';
+, jaarIsVergrendeld} from './storage.js?v=20261023q';
+import { maakSorteerbaar } from './tables.js?v=20261023q';
+import { heeftBonnetje, startModalBonnetjes, sluitModalBonnetjes, bewaarWachtende } from './bonnetjes.js?v=20261023q';
+import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking } from './facturen.js?v=20261023q';
 
 // Fase 3A: Supabase pending queue
 import {
@@ -17,7 +18,7 @@ import {
   syncPendingQueue,
   pendingQueue,
   isSupabaseReady
-} from './supabase-client-v2.js?v=20261023p';
+} from './supabase-client-v2.js?v=20261023q';
 
 const el = id => document.getElementById(id);
 
@@ -219,7 +220,7 @@ export function renderBank() {
   el('bank-body').innerHTML = lijst.length
     ? lijst.map(t => `<tr class="row-click" data-id="${esc(t.id)}">
         <td class="muted" style="padding-left:16px" data-v="${t.datum}">${ddmm(t.datum)}</td>
-        <td class="td-trunc">${esc(weergaveNaam(t))}${t.omschr && t.omschr !== t.naam
+        <td class="td-trunc">${esc(weergaveNaam(t))}${heeftBonnetje(t.id) ? ' <span title="Heeft een bijlage" aria-label="Heeft een bijlage">📎</span>' : ''}${t.omschr && t.omschr !== t.naam
           ? ` <span style="color:var(--text-muted);font-size:10px">· ${esc(t.omschr)}</span>` : ''}</td>
         <td data-v="${esc(t.gb)}"><span class="gbnr">${esc(t.gb)}</span> ${esc(GBNM[t.gb] || '')}</td>
         <td data-v="${esc(t.rek)}">${rekBadge(t.rek, REKNM[t.rek])}</td>
@@ -267,6 +268,7 @@ export function bewerkBoeking(id) {
   el('tx-btw-pct').value = tx.btw_percentage != null ? String(tx.btw_percentage) : '21';
   el('tx-fout').textContent = '';
   el('modal-tx').classList.add('open');
+  startModalBonnetjes();
   syncTxBtw();
   el('tx-b').focus();
 }
@@ -285,11 +287,12 @@ export function openTxModal() {
   el('tx-btw-pct').value = '21';
   el('tx-fout').textContent = '';
   el('modal-tx').classList.add('open');
+  startModalBonnetjes();
   syncTxBtw();
   el('tx-d').focus();
 }
 
-export function closeTx() { el('modal-tx').classList.remove('open'); }
+export function closeTx() { el('modal-tx').classList.remove('open'); sluitModalBonnetjes(); }
 
 /**
  * Fase 2 van BTW-plichtig maken: het BTW-blok in het boeking-formulier
@@ -493,6 +496,7 @@ export function saveTx() {
     addToPendingQueue(tx, 'create', false);
   }
   
+  bewaarWachtende(tx.id);   // bonnetjes die bij een nieuwe boeking zijn gekozen
   closeTx();
   
   // Fase 3A: Try Supabase sync (async, non-blocking)

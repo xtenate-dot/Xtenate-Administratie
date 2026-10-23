@@ -14,6 +14,8 @@ Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
 - Mailen: knop deelt pdf als bijlage (telefoon/Mac/Windows) of downloadt pdf + opent mailto met tekst; echt automatisch versturen vereist een backend (Supabase Edge Function + mailservice), nog niet gedaan.
 - Factuur maken (factuurmaker.js, nav 'Factuur maken'): klant, regels uit voorraad of eigen regel, KOR of 21% BTW, live voorbeeld, afdrukken/PDF, bewaren in Facturen (veld `regels`). Indeling: titel, kleur, logo, kolommen aan/uit. Instellingen staan alleen in de browser (localStorage). Voorraad wordt niet afgeboekt.
 
+- Bonnetjes bij boekingen (bonnetjes.js): bijlage toevoegen in boekingsvenster, paperclip in banklijst + detailpaneel, back-up/terugzetten in Beheer. Alleen in IndexedDB van de browser (keuze gebruiker); koppeling via boeking-id.
+
 ## Wensen van de gebruiker (nog te doen)
 1. **Bankimport: verwijderen.** Bij het importeren van de bank geen verwijderknop. Gewenst: regels (dubbel, storno) uit het voorstel kunnen halen, én een al geïmporteerde boeking makkelijk kunnen verwijderen. (Een vinkje om een regel over te slaan bestaat al.)
 2. **HNVI: deel van een lot verkocht.** Voorbeeld: "Vier Hitster spellen", één verkocht, drie nog niet. Nu telt de hele inkoop mee zodra het lot als verkocht staat, dus ontstaat een schijnverlies. Voorstel: aantal stuks per lot, inkoop per stuk, verkochte stuks; kosten = inkoop per stuk × verkochte stuks. Daarnaast optie om een lot te splitsen. Keuze met de gebruiker bespreken (aantal-veld versus splitsen in Excel).
