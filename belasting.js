@@ -1,11 +1,12 @@
 // belasting.js — Belasting-pagina (indicatieve IB-berekening).
 
-import { charts, dc, kleurVoorGb } from './charts.js?v=20261023k';
-import { ddmm, fmt, gbCode, isInkomst, isKostenBoeking, isOmzet, isPriveBetaaldeKost, isUitgave } from './helpers.js?v=20261023k';
-import { downloadModelPdf } from './pdf.js?v=20261023k';
-import { state, grootboekNamen } from './storage.js?v=20261023k';
-import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261023k';
-import { totaalAfschrijvingVanJaar } from './activa.js?v=20261023k';
+import { splitsLoten } from './hnvilot.js?v=20261023l';
+import { charts, dc, kleurVoorGb } from './charts.js?v=20261023l';
+import { ddmm, fmt, gbCode, isInkomst, isKostenBoeking, isOmzet, isPriveBetaaldeKost, isUitgave } from './helpers.js?v=20261023l';
+import { downloadModelPdf } from './pdf.js?v=20261023l';
+import { state, grootboekNamen } from './storage.js?v=20261023l';
+import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261023l';
+import { totaalAfschrijvingVanJaar } from './activa.js?v=20261023l';
 
 const HUIDIG_JAAR = '2026';
 
@@ -59,7 +60,7 @@ export function nettoOmzet(belTX) {
  * vanaf hun inkoop: ze liggen er nog, maar tellen pas bij verkoop als kosten.
  */
 export function hnviLotenVanJaar(jaar) {
-  const alle = state.HNVI_LOTS || [];
+  const alle = splitsLoten(state.HNVI_LOTS || []);
   if (jaar === 'all') return alle;
   const jr = x => String(x || '').slice(0, 4);
   return alle.filter(l => l.status === 'verkocht'
@@ -78,7 +79,8 @@ export function hnviLotenVanJaar(jaar) {
  */
 export function hnviOmzetBuitenBank(hnviJaar, belTX) {
   const vrij = belTX.filter(t => isInkomst(t) && isOmzet(t.gb)).map(t => ({ b: Number(t.bedrag) || 0, datum: t.datum }));
-  const lijst = hnviJaar.filter(i => i.status === 'verkocht' && Number(i.verkoop) > 0);
+  // Loten waarvan de opbrengst al in de bank staat (bijv. in meerdere betalingen) tellen niet nog eens mee.
+  const lijst = hnviJaar.filter(i => i.status === 'verkocht' && Number(i.verkoop) > 0 && !i.opbrengstInBank);
   const gekoppeld = new Set();
   let alInBank = 0, aantalAlInBank = 0, bedrag = 0;
   const koppel = (lot, plek) => { vrij.splice(plek, 1); gekoppeld.add(lot); alInBank += Number(lot.verkoop); aantalAlInBank++; };

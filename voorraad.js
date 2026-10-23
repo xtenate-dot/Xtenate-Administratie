@@ -1,20 +1,20 @@
 // voorraad.js — Voorraad: kerncijfers, groepen per tab en voorraad per jaar.
 
-import { esc, fmt, gbCode } from './helpers.js?v=20261023k';
-import { REDENEN, legVast, logVan, verschilTekst, datumTekst } from './voorraadlog.js?v=20261023k';
+import { esc, fmt, gbCode } from './helpers.js?v=20261023l';
+import { REDENEN, legVast, logVan, verschilTekst, datumTekst } from './voorraadlog.js?v=20261023l';
 import {
   standaardMinVoorraad, groepId, groepNaam, saveCoversData, saveGroepen, standaardGroep, state,
   grootboekNamen
-} from './storage.js?v=20261023k';
-import { maakSorteerbaar } from './tables.js?v=20261023k';
-import { factorVan, heeftHandmatigePrijs, isHandelsvoorraad } from './belasting.js?v=20261023k';
+} from './storage.js?v=20261023l';
+import { maakSorteerbaar } from './tables.js?v=20261023l';
+import { factorVan, heeftHandmatigePrijs, isHandelsvoorraad } from './belasting.js?v=20261023l';
 import {
   bankPrijzenNu, inkoopprijsVan as _inkoopprijsVan, verkoopprijsVan,
   inkoopwaardeVan as _inkoopwaardeVan, verkoopwaardeVan as _verkoopwaardeVan,
   margeVan as _margeVan, omzetVan as _omzetVan, totalenVan
-} from './voorraadwaarde.js?v=20261023k';
-import { saveCoverToSupabase, deleteFromSupabase, addToPendingQueue, syncAllesNaarSupabase } from './supabase-client-v2.js?v=20261023k';
-import { downloadModelPdf } from './pdf.js?v=20261023k';
+} from './voorraadwaarde.js?v=20261023l';
+import { saveCoverToSupabase, deleteFromSupabase, addToPendingQueue, syncAllesNaarSupabase } from './supabase-client-v2.js?v=20261023l';
+import { downloadModelPdf } from './pdf.js?v=20261023l';
 
 const el = id => document.getElementById(id);
 const HUIDIG_JAAR = '2026';
@@ -233,8 +233,6 @@ function renderKerncijfers(lijst) {
   if (gekozenJaar === 'nu') {
     const laag = tel.laag;
     const uit = tel.uit;
-    const beide = metMarge;
-
     el('voorraad-kpi').innerHTML = `
       <div class="kpi">
         <div class="kpi-lbl">Voorraadwaarde (inkoop)</div>
@@ -242,20 +240,6 @@ function renderKerncijfers(lijst) {
         <div class="kpi-sub">${zonderPrijs > 0
           ? `${zonderPrijs} artikel${zonderPrijs === 1 ? '' : 'en'} zonder inkoopprijs`
           : `${tabNaam} · tegen inkoopprijs`}</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-lbl">Verkoopwaarde</div>
-        <div class="kpi-val pos">${fmt(verkoopwaarde)}</div>
-        <div class="kpi-sub">${zonderVk > 0
-          ? `${zonderVk} artikel${zonderVk === 1 ? '' : 'en'} zonder verkoopprijs`
-          : 'als alles verkocht wordt'}</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-lbl">Verwachte marge</div>
-        <div class="kpi-val ${marge >= 0 ? 'pos' : 'neg'}">${beide.length ? fmt(marge) : '—'}</div>
-        <div class="kpi-sub">${beide.length
-          ? `${margePct != null ? margePct + '% · ' : ''}over ${beide.length} artikel${beide.length === 1 ? '' : 'en'}`
-          : 'nog geen prijzen bekend'}</div>
       </div>
       <div class="kpi">
         <div class="kpi-lbl">Aantal producten</div>
@@ -281,20 +265,6 @@ function renderKerncijfers(lijst) {
       <div class="kpi-lbl">Inkoopwaarde 31-12-${gekozenJaar}</div>
       <div class="kpi-val">${fmt(waarde)}</div>
       <div class="kpi-sub">${zonderPrijs > 0 ? `${zonderPrijs} artikel${zonderPrijs === 1 ? '' : 'en'} zonder inkoopprijs` : 'tegen inkoopprijs'}</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-lbl">Verkoopwaarde</div>
-      <div class="kpi-val pos">${fmt(verkoopwaarde)}</div>
-      <div class="kpi-sub">${zonderVk > 0
-        ? `${zonderVk} artikel${zonderVk === 1 ? '' : 'en'} zonder verkoopprijs`
-        : 'als alles verkocht wordt'}</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-lbl">Potentiële marge</div>
-      <div class="kpi-val ${marge >= 0 ? 'pos' : 'neg'}">${metMarge.length ? fmt(marge) : '—'}</div>
-      <div class="kpi-sub">${metMarge.length
-        ? `${margePct != null ? margePct + '% · ' : ''}over ${metMarge.length} artikel${metMarge.length === 1 ? '' : 'en'}`
-        : 'nog geen prijzen bekend'}</div>
     </div>
     <div class="kpi">
       <div class="kpi-lbl">Vastgelegd</div>
@@ -468,8 +438,6 @@ export function renderCovers() {
                        : `${fmt(ip)}${handmatigeIp ? '' : '<span class="muted" style="font-size:10px"> ~</span>'}`}</td>
           <td style="text-align:right" data-label="Verkoopprijs" data-v="${vk ?? -1}">${g(vk)}</td>
           <td style="text-align:right" data-label="Inkoopwaarde" data-v="${inkoopwaarde ?? -1}">${g(inkoopwaarde)}</td>
-          <td style="text-align:right" data-label="Verkoopwaarde" class="${verkoopwaarde ? 'pos' : ''}" data-v="${verkoopwaarde ?? -1}">${g(verkoopwaarde)}</td>
-          <td style="text-align:right" data-label="Potentiële marge" class="${marge == null ? '' : marge >= 0 ? 'pos' : 'neg'}" data-v="${marge ?? -999999}">${g(marge)}</td>
           <td style="text-align:right" class="kol-detail" data-label="Ingekocht" data-v="${stand.inkoop ?? -1}">${stand.inkoop || '—'}</td>
           <td style="text-align:right" class="kol-detail" data-label="Verkocht" data-v="${stand.verkocht ?? -1}">${stand.verkocht || '—'}</td>
           <td style="text-align:right" data-label="${jaarModus ? 'Retour' : 'Omzet'}" class="${!jaarModus && omzet ? 'pos' : ''}" data-v="${jaarModus ? (stand.retour || 0) : (omzet ?? 0)}">${rechts}</td>
@@ -483,7 +451,7 @@ export function renderCovers() {
           </td>
         </tr>`;
       }).join('')
-    : `<tr data-geen-sort="1"><td colspan="${toonGroep ? 15 : 14}"><div class="empty">
+    : `<tr data-geen-sort="1"><td colspan="${toonGroep ? 13 : 12}"><div class="empty">
         <div class="empty-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg></div>
         <div class="empty-title">${basis.length ? 'Geen artikelen binnen deze filters' : 'Nog geen artikelen in deze groep'}</div>
         <div class="empty-text">${basis.length
@@ -527,8 +495,7 @@ function renderTotaalregel(lijst, toonGroep, jaarModus) {
   const zonderIp = standen.filter(x => x.s.voorraad > 0 && waardeVan(x.c, x.s) == null).length;
   const zonderVk = standen.filter(x => x.s.voorraad > 0 && verkoopwaardeVan(x.c, x.s) == null).length;
   const noot = [
-    zonderIp ? `${zonderIp} zonder inkoopprijs` : '',
-    zonderVk ? `${zonderVk} zonder verkoopprijs` : ''
+    zonderIp ? `${zonderIp} zonder inkoopprijs` : ''
   ].filter(Boolean).join(' · ');
 
   // data-tot draagt het label mee; op desktop is het ongebruikt, op mobiel
@@ -545,8 +512,6 @@ function renderTotaalregel(lijst, toonGroep, jaarModus) {
     <td></td>
     <td></td>
     ${r('Inkoopwaarde', fmt(inkoopwaarde))}
-    ${r('Verkoopwaarde', fmt(verkoopwaarde), 'color:var(--semantic-success)')}
-    ${r('Potentiële marge', fmt(marge), `color:var(--semantic-${marge >= 0 ? 'success' : 'danger'})`)}
     ${r('Ingekocht', ingekocht, '', 'kol-detail')}
     ${r('Verkocht', verkocht, '', 'kol-detail')}
     ${r(jaarModus ? 'Retour' : 'Omzet', jaarModus ? retour : fmt(omzet))}

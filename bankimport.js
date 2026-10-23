@@ -5,10 +5,10 @@
 // niet nog eens voorgesteld. Grootboek en soort worden afgeleid uit eerdere
 // boekingen met dezelfde naam; wat onbekend is kies je zelf.
 
-import { state, saveTxData } from './storage.js?v=20261023k';
-import { esc, fmt } from './helpers.js?v=20261023k';
-import { addToPendingQueue } from './supabase-client-v2.js?v=20261023k';
-import { maakHerstelpunt } from './herstelpunt.js?v=20261023k';
+import { state, saveTxData } from './storage.js?v=20261023l';
+import { esc, fmt } from './helpers.js?v=20261023l';
+import { addToPendingQueue } from './supabase-client-v2.js?v=20261023l';
+import { maakHerstelpunt } from './herstelpunt.js?v=20261023l';
 
 const REK = '1010';          // zo staat Revolut nu in je administratie
 const HUIDIG = '2026';
@@ -185,6 +185,13 @@ export function zetBankimportKeuze(i, veld, waarde) {
   renderBankimport();
 }
 
+/** Haalt een regel helemaal uit het voorstel (bijvoorbeeld een dubbele of een storno). */
+export function verwijderBankimportRegel(i) {
+  if (!voorstel || !voorstel.rijen[i]) return;
+  voorstel.rijen.splice(i, 1);
+  renderBankimport();
+}
+
 export function importeerRevolut() {
   if (!voorstel) return;
   const teDoen = voorstel.rijen.filter(r => r.kies && !r.staatAl);
@@ -230,13 +237,14 @@ export function renderBankimport() {
   const kies = nieuw.filter(r => r.kies);
   const rijen = voorstel.rijen.map((r, i) => r.staatAl
     ? `<tr style="opacity:.55"><td></td><td>${esc(r.datum.slice(8, 10) + '-' + r.datum.slice(5, 7))}</td><td>${esc(r.naam)}</td>
-        <td style="text-align:right">${fmt(r.bedrag)}</td><td colspan="2" class="muted">staat al in de administratie</td></tr>`
+        <td style="text-align:right">${fmt(r.bedrag)}</td><td colspan="2" class="muted">staat al in de administratie</td><td></td></tr>`
     : `<tr><td><input type="checkbox" ${r.kies ? 'checked' : ''} onchange="zetBankimportKeuze(${i},'kies',this.checked)"></td>
         <td>${esc(r.datum.slice(8, 10) + '-' + r.datum.slice(5, 7))}</td>
         <td>${esc(r.naam)}<div class="muted" style="font-size:11px">${esc(r.herkomst)}</div></td>
         <td style="text-align:right">${fmt(r.bedrag)}</td>
         <td><select onchange="zetBankimportKeuze(${i},'gb',this.value)" style="font-size:12px;max-width:190px"${!r.gb ? ' class="input-fout"' : ''}>${optGb(r.gb)}</select></td>
-        <td><select onchange="zetBankimportKeuze(${i},'type',this.value)" style="font-size:12px">${optType(r.type)}</select></td></tr>`).join('');
+        <td><select onchange="zetBankimportKeuze(${i},'type',this.value)" style="font-size:12px">${optType(r.type)}</select></td>
+        <td><button class="btn btn-sm btn-ghost" title="Deze regel uit het voorstel halen" onclick="verwijderBankimportRegel(${i})">Verwijder</button></td></tr>`).join('');
 
   const ontbreekt = voorstel.ontbreekt.length
     ? `<div class="section-head"><div class="section-titel">Staat in de administratie, niet in het bestand (${voorstel.ontbreekt.length})</div></div>
@@ -255,7 +263,7 @@ export function renderBankimport() {
       <div class="kpi kpi--secondary"><div class="kpi-lbl">Nog zonder rekening</div><div class="kpi-val">${kies.filter(r => !r.gb).length}</div></div>
     </div>
     <div class="card card-flush"><div class="table-wrap"><table class="tbl-compact">
-      <thead><tr><th></th><th>Datum</th><th>Naam</th><th style="text-align:right">Bedrag</th><th>Grootboek</th><th>Soort</th></tr></thead>
+      <thead><tr><th></th><th>Datum</th><th>Naam</th><th style="text-align:right">Bedrag</th><th>Grootboek</th><th>Soort</th><th></th></tr></thead>
       <tbody>${rijen}</tbody></table></div></div>
     <div style="margin:var(--spacing-4) 0"><button class="btn btn-primary" onclick="importeerRevolut()">Importeer ${kies.length} geselecteerde boekingen</button></div>
     ${overg}${ontbreekt}`;

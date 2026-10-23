@@ -21,10 +21,10 @@
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<link rel="stylesheet" href="theme.css?v=20261023k">
-<link rel="stylesheet" href="layout.css?v=20261023k">
-<link rel="stylesheet" href="components.css?v=20261023k">
-<link rel="stylesheet" href="responsive.css?v=20261023k">
+<link rel="stylesheet" href="theme.css?v=20261023l">
+<link rel="stylesheet" href="layout.css?v=20261023l">
+<link rel="stylesheet" href="components.css?v=20261023l">
+<link rel="stylesheet" href="responsive.css?v=20261023l">
 </head>
 <body>
 
@@ -746,8 +746,6 @@
         <th style="width:92px;text-align:right" data-sort="getal" title="Inkoopprijs per stuk. Een ~ betekent: afgeleid uit de bank.">Inkoopprijs</th>
         <th style="width:92px;text-align:right" data-sort="getal" title="Verkoopprijs per stuk">Verkoopprijs</th>
         <th style="width:100px;text-align:right" data-sort="getal" title="Voorraad x inkoopprijs: wat er ligt heeft gekost">Inkoopwaarde</th>
-        <th style="width:104px;text-align:right" data-sort="getal" title="Voorraad x verkoopprijs: wat er ligt kan opbrengen">Verkoopwaarde</th>
-        <th style="width:96px;text-align:right" data-sort="getal" title="Verkoopwaarde min inkoopwaarde. Alleen als beide prijzen bekend zijn.">Pot. marge</th>
         <th class="kol-detail" style="width:88px;text-align:right" data-sort="getal" id="voorraad-kop-ingekocht" title="Aantal ingekochte stuks">Ingekocht</th>
         <th class="kol-detail" style="width:88px;text-align:right" data-sort="getal" id="voorraad-kop-verkocht" title="Aantal verkochte stuks">Verkocht</th>
         <th style="width:96px;text-align:right" data-sort="getal" id="voorraad-kop-omzet" title="Verkocht x verkoopprijs: wat er werkelijk is verkocht">Omzet</th>
@@ -1306,6 +1304,9 @@
     <div class="form-group full"><label>Notitie <span style="font-size:10px;color:var(--text-secondary)">(optioneel)</span></label><input type="text" id="hn-noot" placeholder="bijv. defect, ophalen dinsdag..."></div>
     <div class="form-group" id="hn-vk-wrap"><label>Verkoopprijs (€) <span style="font-size:10px;color:var(--text-secondary)">leeg = nog niet verkocht</span></label><input type="text" inputmode="decimal" id="hn-vk" placeholder="0,00"></div>
     <div class="form-group" id="hn-vd-wrap"><label>Verkoopdatum</label><input type="date" id="hn-vd"></div>
+    <div class="form-group"><label>Aantal stuks in dit lot</label><input type="number" min="1" step="1" id="hn-aantal" value="1"></div>
+    <div class="form-group"><label>Hiervan verkocht <span style="font-size:10px;color:var(--text-secondary)">leeg = alles</span></label><input type="number" min="0" step="1" id="hn-vaantal"></div>
+    <div class="form-group full"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="hn-inbank"> Opbrengst staat al in de bank <span style="font-size:10px;color:var(--text-secondary)">(bijv. in meerdere betalingen of na aftrek van kosten)</span></label></div>
   </div>
   <div class="modal-actions">
     <button class="btn" onclick="closeHNVIModal()">Annuleren</button>
@@ -1359,6 +1360,6 @@
 </div>
 </div>
 
-<script type="module" src="app.js?v=20261023k"></script>
+<script type="module" src="app.js?v=20261023l"></script>
 </body>
 </html>

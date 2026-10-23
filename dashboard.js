@@ -1,17 +1,18 @@
 // dashboard.js — Home: het financiële dashboard.
 
-import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261023k';
+import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261023l';
 import {
   BEGINSALDO_2026, calcIB, ddmm, esc, fmt, fmtKort, isInkomst, isKostenBoeking, isOmzet, isUitgave,
   maandLabel, rekBadge, saldoDelta, typeBadge, weergaveNaam
-} from './helpers.js?v=20261023k';
-import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261023k';
-import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261023k';
-import { draaiControles } from './controle.js?v=20261023k';
-import { aangifteModel, ibOver } from './belasting.js?v=20261023k';
-import { korStatus } from './kor.js?v=20261023k';
-import { maakSorteerbaar } from './tables.js?v=20261023k';
-import { hertekenHuidigePagina } from './ui.js?v=20261023k';
+} from './helpers.js?v=20261023l';
+import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261023l';
+import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261023l';
+import { draaiControles } from './controle.js?v=20261023l';
+import { aangifteModel, ibOver } from './belasting.js?v=20261023l';
+import { splitsLoten } from './hnvilot.js?v=20261023l';
+import { korStatus } from './kor.js?v=20261023l';
+import { maakSorteerbaar } from './tables.js?v=20261023l';
+import { hertekenHuidigePagina } from './ui.js?v=20261023l';
 
 const HOOFDREKENING = '1010'; // de bankrekening waarop het beginsaldo staat
 
@@ -71,7 +72,7 @@ function berekenVoorraad() {
   const jaarFilter = state.huidigJaar && state.huidigJaar !== 'all' && state.huidigJaar !== 'nu'
     ? state.huidigJaar : null;
 
-  const inVoorraad = state.HNVI_LOTS.filter(l => l.status === 'voorraad');
+  const inVoorraad = splitsLoten(state.HNVI_LOTS).filter(l => l.status === 'voorraad');
   const lotenWaarde = inVoorraad.reduce((s, l) => s + (Number(l.inkoop) || 0), 0);
 
   // De inkoopprijs komt uit dezelfde bron als de Voorraadpagina en de aangifte:

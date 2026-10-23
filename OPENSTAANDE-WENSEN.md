@@ -2,6 +2,12 @@
 
 Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
 
+## Gedaan op 23-10-2026 (nog door de gebruiker te testen)
+- HNVI: aantal per lot + verkochte stuks + "opbrengst staat al in de bank" (hnvilot.js, HNVI_EXTRA in app_data).
+- Voorraadpagina zonder verkoopwaarde en marge.
+- Kilometers (ritten × tarief) in Per periode (samenvatting + grootboekmatrix onder Reiskosten 4640).
+- Bankimport: verwijderknop per regel in het voorstel.
+
 ## Wensen van de gebruiker (nog te doen)
 1. **Bankimport: verwijderen.** Bij het importeren van de bank geen verwijderknop. Gewenst: regels (dubbel, storno) uit het voorstel kunnen halen, én een al geïmporteerde boeking makkelijk kunnen verwijderen. (Een vinkje om een regel over te slaan bestaat al.)
 2. **HNVI: deel van een lot verkocht.** Voorbeeld: "Vier Hitster spellen", één verkocht, drie nog niet. Nu telt de hele inkoop mee zodra het lot als verkocht staat, dus ontstaat een schijnverlies. Voorstel: aantal stuks per lot, inkoop per stuk, verkochte stuks; kosten = inkoop per stuk × verkochte stuks. Daarnaast optie om een lot te splitsen. Keuze met de gebruiker bespreken (aantal-veld versus splitsen in Excel).

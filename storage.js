@@ -19,7 +19,7 @@ import {
   saveAppData,
   loadAppData,
   laatsteAppDataFout
-} from './supabase-client-v2.js?v=20261023k';
+} from './supabase-client-v2.js?v=20261023l';
 
 /**
  * Stuurt een los lijstje (groepen, facturen, tellers) naar de cloud zonder
@@ -114,6 +114,7 @@ function appDataWaarde(sleutel) {
   if (sleutel === 'activa') return { lijst: state.ACTIVA, volgende: state.nxtActivum };
   if (sleutel === 'veiling') return state.VEILING;
   if (sleutel === 'hnvi_datums') return state.HNVI_DATUMS;
+  if (sleutel === 'hnvi_extra') return state.HNVI_EXTRA;
   if (sleutel === 'vergrendeld') return state.VERGRENDELD;
   if (sleutel === 'tellers') return { tx: state.nxtTx, cover: state.nxtCover, hnvi: state.nxtHnvi };
   return undefined;
@@ -496,9 +497,47 @@ export function pasHnviDatumsToe() {
 
 pasHnviDatumsToe();
 
+// Aantal stuks, verkochte stuks en "opbrengst staat al in de bank" staan op dezelfde
+// manier los bewaard, omdat de tabel hnvi_loten daar geen kolommen voor heeft.
+state.HNVI_EXTRA = load('xtenate_hnvi_extra', {});
+const EXTRA_VELDEN = ['aantal', 'verkochtAantal', 'opbrengstInBank'];
+
+function extraVan(l) {
+  const e = {};
+  if (Number(l.aantal) > 1) e.aantal = Math.floor(Number(l.aantal));
+  if (l.verkochtAantal != null && l.verkochtAantal !== '' && Number.isFinite(Number(l.verkochtAantal))) e.verkochtAantal = Math.floor(Number(l.verkochtAantal));
+  if (l.opbrengstInBank) e.opbrengstInBank = true;
+  return e;
+}
+
+function werkHnviExtraBij() {
+  let gewijzigd = false;
+  for (const l of state.HNVI_LOTS || []) {
+    const sleutel = String(l._key || l.id);
+    const e = extraVan(l);
+    const oud = state.HNVI_EXTRA[sleutel];
+    if (Object.keys(e).length) {
+      if (JSON.stringify(oud) !== JSON.stringify(e)) { state.HNVI_EXTRA[sleutel] = e; gewijzigd = true; }
+    } else if (oud) { delete state.HNVI_EXTRA[sleutel]; gewijzigd = true; }
+  }
+  return gewijzigd;
+}
+
+/** Vult ontbrekende extra velden van de loten aan uit de aparte lijst (na laden uit de database). */
+export function pasHnviExtraToe() {
+  for (const l of state.HNVI_LOTS || []) {
+    const e = state.HNVI_EXTRA[String(l._key || l.id)];
+    if (!e) continue;
+    for (const v of EXTRA_VELDEN) if (l[v] == null && e[v] != null) l[v] = e[v];
+  }
+}
+
+pasHnviExtraToe();
+
 export function saveHnviData() {
   save('xtenate_hnvi', state.HNVI_LOTS); save('xtenate_nxtHnvi', state.nxtHnvi);
   if (werkHnviDatumsBij()) { save('xtenate_hnvi_datums', state.HNVI_DATUMS); duwAppData('hnvi_datums', state.HNVI_DATUMS); }
+  if (werkHnviExtraBij()) { save('xtenate_hnvi_extra', state.HNVI_EXTRA); duwAppData('hnvi_extra', state.HNVI_EXTRA); }
   duwTellers();
 }
 
@@ -850,6 +889,11 @@ export async function loadDataHybrid() {
           save('xtenate_hnvi_datums', state.HNVI_DATUMS);
         }
         pasHnviDatumsToe();
+        if (extra.hnvi_extra && typeof extra.hnvi_extra === 'object') {
+          state.HNVI_EXTRA = { ...extra.hnvi_extra, ...state.HNVI_EXTRA };
+          save('xtenate_hnvi_extra', state.HNVI_EXTRA);
+        }
+        pasHnviExtraToe();
         if (Array.isArray(extra.vergrendeld)) {
           state.VERGRENDELD = [...new Set([...extra.vergrendeld, ...(state.VERGRENDELD || [])])].sort();
           save('xtenate_vergrendeld', state.VERGRENDELD);

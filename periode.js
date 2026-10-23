@@ -6,9 +6,10 @@
 // bedrijfskosten (geen balansposten, geen HNVI- of voorraadinkoop).
 // HNVI-inkoop staat apart, omdat die pas bij verkoop een kostenpost is.
 
-import { state } from './storage.js?v=20261023k';
-import { esc, fmt, isInkomst, isOmzet, isUitgave, MND_KORT } from './helpers.js?v=20261023k';
-import { isKostenpost, inkoopOverzicht } from './belasting.js?v=20261023k';
+import { state } from './storage.js?v=20261023l';
+import { esc, fmt, isInkomst, isOmzet, isUitgave, MND_KORT } from './helpers.js?v=20261023l';
+import { isKostenpost, inkoopOverzicht } from './belasting.js?v=20261023l';
+import { kmTarief } from './km.js?v=20261023l';
 
 const el = id => document.getElementById(id);
 let stand = 'maand';          // 'maand' | 'kwartaal' | 'jaar'
@@ -31,6 +32,29 @@ function labelVan(sleutel, soort) {
   return `${MND_KORT[Number(sleutel.slice(5, 7)) - 1]} ${sleutel.slice(0, 4)}`;
 }
 
+/**
+ * Kilometervergoeding per periode: de kilometers uit de ritten maal het
+ * ingestelde tarief. Ritten zijn geen bankboeking, dus ze moeten er hier apart
+ * bij, anders ontbreken ze in de maandcijfers terwijl ze in de aangifte wel
+ * meetellen. Geeft per periodesleutel { km, bedrag }. Alleen voor de jaren
+ * waarvoor boekingen zijn meegegeven.
+ */
+export function kmPerPeriode(boekingen, soort) {
+  const tarief = kmTarief();
+  const jaren = new Set(boekingen.map(t => String(t.datum || '').slice(0, 4)).filter(Boolean));
+  const uit = new Map();
+  for (const r of state.RITTEN || []) {
+    const d = String(r.datum || '');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || !jaren.has(d.slice(0, 4))) continue;
+    const k = sleutelVan(d, soort);
+    const e = uit.get(k) || { km: 0, bedrag: 0 };
+    e.km += Number(r.km) || 0;
+    e.bedrag += (Number(r.km) || 0) * (tarief || 0);
+    uit.set(k, e);
+  }
+  return uit;
+}
+
 /** Groepeert de boekingen en rekent per periode de kerncijfers uit. */
 export function perPeriode(boekingen, soort) {
   const groepen = new Map();
@@ -46,6 +70,11 @@ export function perPeriode(boekingen, soort) {
     if (isUitgave(t) && String(t.gb) === '7010') g.hnviInkoop += bedrag(t);
     if (t.type === 'prive_storting') g.priveSt += bedrag(t);
     if (t.type === 'prive_opname') g.priveOp += bedrag(t);
+  }
+  for (const [k, e] of kmPerPeriode(boekingen, soort)) {
+    if (!groepen.has(k)) groepen.set(k, { sleutel: k, omzet: 0, kosten: 0, hnviInkoop: 0, priveSt: 0, priveOp: 0, aantal: 0 });
+    const g = groepen.get(k);
+    g.kosten += e.bedrag; g.km = e.km; g.kmBedrag = e.bedrag;
   }
   return [...groepen.values()]
     .map(g => ({ ...g, resultaat: g.omzet - g.kosten - g.hnviInkoop }))
@@ -121,6 +150,19 @@ export function grootboekMatrix(boekingen, soort, jaar) {
   const prive = rubriek('Totaal rubriek 0 (privé)', x => num(x) < 1000);
   const balans = rubriek('Totaal rubriek 1 en 2', x => num(x) >= 1000 && num(x) < 3000);
   const kosten4 = rubriek('Totaal rubriek 4', x => num(x) >= 4000 && num(x) < 5000);
+  // Kilometervergoeding hoort bij Reiskosten (4640): als eigen regel eronder.
+  const kmKaart = kmPerPeriode(boekingen, soort);
+  if (kmKaart.size && kmTarief()) {
+    const w = sleutels.map(k => (kmKaart.get(k) || { bedrag: 0 }).bedrag);
+    const km = sleutels.reduce((s, k) => s + ((kmKaart.get(k) || { km: 0 }).km), 0);
+    if (w.some(x => x)) {
+      const rij = { nummer: '4640', naam: `↳ kilometervergoeding (${km.toLocaleString('nl-NL')} km × € ${kmTarief().toLocaleString('nl-NL')})`, waarden: w, totaal: w.reduce((s, v) => s + v, 0) };
+      const i = kosten4.rijen.findIndex(x => x.nummer === '4640');
+      kosten4.rijen.splice(i >= 0 ? i + 1 : kosten4.rijen.length, 0, rij);
+      kosten4.waarden = tel(kosten4.waarden, w);
+      kosten4.totaal = kosten4.waarden.reduce((s, v) => s + v, 0);
+    }
+  }
   const inkoop = rubriek('Totaal inkopen', x => num(x) >= 7000 && num(x) < 8000);
   const omzet = rubriek('Brutowinst (omzet)', x => num(x) >= 8000 && num(x) < 9000);
   const overig = rubriek('Overig', x => !(num(x) < 3000) ? !(num(x) >= 4000 && num(x) < 5000) && !(num(x) >= 7000 && num(x) < 9000) : !Number.isFinite(num(x)));
@@ -276,6 +318,7 @@ export function renderPeriode() {
       <td style="text-align:right;color:${kleur(r.resultaat)}"><strong>${fmt(r.resultaat)}</strong></td>
       <td style="text-align:right">${fmt(r.priveSt)}</td>
       <td style="text-align:right">${fmt(r.priveOp)}</td>
+      <td style="text-align:right">${r.km ? r.km.toLocaleString('nl-NL') + ' km' : '—'}</td>
       <td style="text-align:right">${r.aantal}</td>
     </tr>`).join('');
 
@@ -290,16 +333,16 @@ export function renderPeriode() {
       <thead><tr><th>Periode</th><th style="text-align:right">Omzet</th><th style="text-align:right">Kosten</th>
         <th style="text-align:right">HNVI-inkoop</th><th style="text-align:right">Resultaat</th>
         <th style="text-align:right">Privé gestort</th><th style="text-align:right">Privé opgenomen</th>
-        <th style="text-align:right">Boekingen</th></tr></thead>
+        <th style="text-align:right">Kilometers</th><th style="text-align:right">Boekingen</th></tr></thead>
       <tbody>${lijst}</tbody>
       <tfoot><tr style="font-weight:600"><td>Totaal</td><td style="text-align:right">${fmt(tot.omzet)}</td>
         <td style="text-align:right">${fmt(tot.kosten)}</td><td style="text-align:right">${fmt(tot.hnviInkoop)}</td>
         <td style="text-align:right;color:${kleur(tot.resultaat)}">${fmt(tot.resultaat)}</td>
         <td style="text-align:right">${fmt(tot.priveSt)}</td><td style="text-align:right">${fmt(tot.priveOp)}</td>
-        <td style="text-align:right">${tot.aantal}</td></tr></tfoot></table></div></div>`
+        <td style="text-align:right">${rijen.reduce((s, r) => s + (r.km || 0), 0).toLocaleString('nl-NL')} km</td><td style="text-align:right">${tot.aantal}</td></tr></tfoot></table></div></div>`
       : '<div class="card"><p>Geen boekingen gevonden.</p></div>'}
     <p class="muted" style="font-size:12px;margin-top:var(--spacing-2)">
-      Resultaat (kas) = omzet min kosten min HNVI-inkoop zoals die in de bank staat. Het fiscale resultaat staat op de pagina Belasting:
+      Resultaat (kas) = omzet min kosten min HNVI-inkoop zoals die in de bank staat. De kosten bevatten de kilometervergoeding (kilometers × tarief uit de pagina Kilometers). Het fiscale resultaat staat op de pagina Belasting:
       daar telt HNVI-inkoop pas mee zodra het lot is verkocht.</p>
     ${stand === 'jaar' ? '' : inkoopSectie(gekozenJaar)}`;
 

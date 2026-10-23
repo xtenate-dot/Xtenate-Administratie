@@ -1,14 +1,15 @@
 // hnvi.js — HNVI/Xtenate voorraadbeheer, inclusief AI-factuurimport.
 
-import { bedragUit, ddmm, esc, fmt, leegVlak } from './helpers.js?v=20261023k';
-import { maakSorteerbaar } from './tables.js?v=20261023k';
-import { openApiKeyModal } from './modals.js?v=20261023k';
-import { saveHnviData, state } from './storage.js?v=20261023k';
+import { bedragUit, ddmm, esc, fmt, leegVlak } from './helpers.js?v=20261023l';
+import { maakSorteerbaar } from './tables.js?v=20261023l';
+import { openApiKeyModal } from './modals.js?v=20261023l';
+import { saveHnviData, state } from './storage.js?v=20261023l';
 
 /** Globaal boekjaar vertaald naar het hnvi-filter: 'all' betekent hier ''. */
 const hnviJaar = () => (state.huidigJaar === 'all' ? '' : (state.huidigJaar || ''));
-import { saveHnviToSupabase, deleteFromSupabase, addToPendingQueue } from './supabase-client-v2.js?v=20261023k';
-import { downloadModelPdf } from './pdf.js?v=20261023k';
+import { splitsLoten, lotAantal, lotVerkochtStuks } from './hnvilot.js?v=20261023l';
+import { saveHnviToSupabase, deleteFromSupabase, addToPendingQueue } from './supabase-client-v2.js?v=20261023l';
+import { downloadModelPdf } from './pdf.js?v=20261023l';
 
 /** De loten zoals ze nu op het scherm staan: status- en jaarfilter meegenomen. */
 function zichtbareLoten() {
@@ -101,10 +102,11 @@ export function renderHNVI() {
     return true;
   }).sort((a,b)=>b.datum.localeCompare(a.datum));
 
-  const vrd = state.HNVI_LOTS.filter(i=>i.status==='voorraad');
+  const delen = splitsLoten(state.HNVI_LOTS);   // gedeeltelijk verkochte loten in verkocht- en voorraaddeel
+  const vrd = delen.filter(i=>i.status==='voorraad');
 
   // Gefilterd op jaar voor inkoop/verkoop totalen
-  const gefilterdOpJaar = jaar ? state.HNVI_LOTS.filter(i=>i.datum.startsWith(jaar)) : state.HNVI_LOTS;
+  const gefilterdOpJaar = jaar ? delen.filter(i=>i.datum.startsWith(jaar)) : delen;
   const totInkoop = gefilterdOpJaar.reduce((s,i)=>s+(Number(i.inkoop)||0),0);
   const vktJaar = gefilterdOpJaar.filter(i=>i.status==='verkocht');
   const totVerkoop = vktJaar.reduce((s,i)=>s+(Number(i.verkoop)||0),0);
@@ -141,6 +143,8 @@ export function renderHNVI() {
         // Factuurnummer en notitie staan klein onder de naam. Het factuurnummer
         // komt uit het veilingblad en helpt een lot terugvinden op de factuur.
         const regels = [];
+        if (lotAantal(i) > 1) regels.push(`${lotAantal(i)} stuks · ${lotVerkochtStuks(i)} verkocht`);
+        if (i.opbrengstInBank) regels.push('opbrengst staat al in de bank');
         if (i.factuur) regels.push(`factuur ${esc(i.factuur)}`);
         if (i.noot) regels.push(esc(i.noot));
         return regels.length
@@ -153,7 +157,7 @@ export function renderHNVI() {
           ? `${fmt(i.verkoop)}${i.verkoopDatum?`<div style="font-size:10px;color:var(--text-secondary)">${ddmm(i.verkoopDatum)}</div>`:''}`
           : '—'}</td>
       <td style="text-align:right" data-v="${w||0}">${w!=null&&i.verkoop>0?`<span class="${w>=0?'pos':'neg'}">${w>=0?'+':''}${fmt(w)}</span><div style="font-size:10px;color:var(--text-secondary)">${pct}%</div>`:'—'}</td>
-      <td data-v="${esc(i.status)}">${i.status==='verkocht'?'<span class="badge badge-purple">verkocht</span>':'<span class="badge badge-gray">op voorraad</span>'}</td>
+      <td data-v="${esc(i.status)}">${i.status==='verkocht'?(lotVerkochtStuks(i) < lotAantal(i) ? '<span class="badge badge-purple">deels verkocht</span>' : '<span class="badge badge-purple">verkocht</span>'):'<span class="badge badge-gray">op voorraad</span>'}</td>
       <td style="white-space:nowrap">
         <span class="sell-link" onclick="openHNVISell('${esc(i.id)}')">${i.status==='voorraad'?'Verkoop':'Wijzig'}</span>
         ${i.status==='verkocht'?`<span class="sell-link" style="color:var(--text-secondary)" onclick="wisHNVIVerkoop('${esc(i.id)}')">Wis</span>`:''}
@@ -189,6 +193,9 @@ export function openHNVIModal() {
   document.getElementById('hn-noot').value = '';
   document.getElementById('hn-vk').value = '';
   document.getElementById('hn-vd').value = '';
+  document.getElementById('hn-aantal').value = '1';
+  document.getElementById('hn-vaantal').value = '';
+  document.getElementById('hn-inbank').checked = false;
   document.getElementById('modal-hnvi').classList.add('open');
 }
 
@@ -204,6 +211,9 @@ export function openHNVISell(id) {
   document.getElementById('hn-noot').value = i.noot || '';
   document.getElementById('hn-vk').value = i.verkoop || '';
   document.getElementById('hn-vd').value = i.verkoopDatum || '';
+  document.getElementById('hn-aantal').value = String(lotAantal(i));
+  document.getElementById('hn-vaantal').value = i.status === 'verkocht' ? String(lotVerkochtStuks(i)) : '';
+  document.getElementById('hn-inbank').checked = !!i.opbrengstInBank;
   document.getElementById('modal-hnvi').classList.add('open');
 }
 
@@ -214,6 +224,18 @@ export async function saveHNVI() {
   
   const vk = bedragUit('hn-vk');
   const vd = document.getElementById('hn-vd').value || null;
+  // Aantal stuks en hoeveel daarvan verkocht zijn. Alles verkocht (of leeg
+  // gelaten) is de gewone situatie en wordt niet apart bewaard.
+  const aantal = Math.max(1, Math.floor(Number(document.getElementById('hn-aantal').value) || 1));
+  const vRuw = document.getElementById('hn-vaantal').value;
+  let vAantal = vRuw === '' ? null : Math.max(0, Math.min(aantal, Math.floor(Number(vRuw) || 0)));
+  if (vk > 0 && vAantal === 0) vAantal = null;
+  const deels = vk > 0 && vAantal != null && vAantal < aantal;
+  const extra = {
+    aantal: aantal > 1 ? aantal : null,
+    verkochtAantal: deels ? vAantal : null,
+    opbrengstInBank: vk > 0 && document.getElementById('hn-inbank').checked ? true : null
+  };
   if (state.hnviSellId) {
     const noot = document.getElementById('hn-noot').value;
     const bestaand = state.HNVI_LOTS.find(i => String(i.id)===String(state.hnviSellId)) || {};
@@ -227,7 +249,8 @@ export async function saveHNVI() {
       verkoop: vk > 0 ? vk : null,
       verkoopDatum: vk > 0 ? vd : null,
       status: vk > 0 ? 'verkocht' : 'voorraad',
-      noot
+      noot,
+      ...extra
     };
     state.HNVI_LOTS = state.HNVI_LOTS.map(i => String(i.id)===String(state.hnviSellId) ? gewijzigdLot : i);
   } else {
@@ -242,7 +265,8 @@ export async function saveHNVI() {
       verkoop: vk > 0 ? vk : null,
       verkoopDatum: vk > 0 ? vd : null,
       status: vk > 0 ? 'verkocht' : 'voorraad',
-      noot: document.getElementById('hn-noot').value
+      noot: document.getElementById('hn-noot').value,
+      ...extra
     };
     state.HNVI_LOTS.push(gewijzigdLot);
   }
@@ -267,7 +291,7 @@ export async function wisHNVIVerkoop(id) {
   const gewijzigd = state.HNVI_LOTS.find(i => String(i.id)===String(id));
   if (!gewijzigd) return;
   
-  const bijgewerkt = {...gewijzigd, verkoop:null, verkoopDatum:null, status:'voorraad'};
+  const bijgewerkt = {...gewijzigd, verkoop:null, verkoopDatum:null, status:'voorraad', verkochtAantal:null, opbrengstInBank:null};
   state.HNVI_LOTS = state.HNVI_LOTS.map(i => String(i.id)===String(id) ? bijgewerkt : i);
   saveHnviData();
   
