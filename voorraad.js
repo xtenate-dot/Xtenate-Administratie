@@ -1,23 +1,23 @@
 // voorraad.js — Voorraad: kerncijfers, groepen per tab en voorraad per jaar.
 
-import { esc, fmt, gbCode } from './helpers.js?v=20261023s';
-import { REDENEN, legVast, logVan, verschilTekst, datumTekst } from './voorraadlog.js?v=20261023s';
+import { esc, fmt, gbCode } from './helpers.js?v=20261023t';
+import { REDENEN, legVast, logVan, verschilTekst, datumTekst } from './voorraadlog.js?v=20261023t';
 import {
   standaardMinVoorraad, groepId, groepNaam, saveCoversData, saveGroepen, standaardGroep, state,
   grootboekNamen
-} from './storage.js?v=20261023s';
-import { maakSorteerbaar } from './tables.js?v=20261023s';
-import { factorVan, heeftHandmatigePrijs, isHandelsvoorraad } from './belasting.js?v=20261023s';
+} from './storage.js?v=20261023t';
+import { maakSorteerbaar } from './tables.js?v=20261023t';
+import { factorVan, heeftHandmatigePrijs, isHandelsvoorraad } from './belasting.js?v=20261023t';
 import {
   bankPrijzenNu, inkoopprijsVan as _inkoopprijsVan, verkoopprijsVan,
   inkoopwaardeVan as _inkoopwaardeVan, verkoopwaardeVan as _verkoopwaardeVan,
   margeVan as _margeVan, omzetVan as _omzetVan, totalenVan
-} from './voorraadwaarde.js?v=20261023s';
-import { saveCoverToSupabase, deleteFromSupabase, addToPendingQueue, syncAllesNaarSupabase } from './supabase-client-v2.js?v=20261023s';
-import { downloadModelPdf } from './pdf.js?v=20261023s';
+} from './voorraadwaarde.js?v=20261023t';
+import { saveCoverToSupabase, deleteFromSupabase, addToPendingQueue, syncAllesNaarSupabase } from './supabase-client-v2.js?v=20261023t';
+import { downloadModelPdf } from './pdf.js?v=20261023t';
+import { lopendJaar } from './jaren.js?v=20261023t';
 
 const el = id => document.getElementById(id);
-const HUIDIG_JAAR = '2026';
 
 /** Welke tab er open staat: 'alle' of een groep-id. */
 let actieveTab = 'alle';
@@ -56,7 +56,7 @@ function drempel(c) {
 function standVan(c) {
   const jaren = c.jaren || {};
   if (gekozenJaar === 'nu') {
-    const j = jaren[HUIDIG_JAAR] || {};
+    const j = jaren[lopendJaar()] || {};
     return {
       voorraad: c.voorraad,
       inkoop: j.inkoop ?? c.inkoop ?? 0,
@@ -86,7 +86,7 @@ function standVan(c) {
  */
 let bankPrijzen = null;
 function ververBankPrijzen() { bankPrijzen = bankPrijzenNu(); }
-function prijsJaar() { return gekozenJaar === 'nu' ? HUIDIG_JAAR : gekozenJaar; }
+function prijsJaar() { return gekozenJaar === 'nu' ? lopendJaar() : gekozenJaar; }
 
 function inkoopprijsVan(c) { return _inkoopprijsVan(c, bankPrijzen, prijsJaar()); }
 function waardeVan(c, stand) { return _inkoopwaardeVan(c, stand, bankPrijzen, prijsJaar()); }
@@ -107,7 +107,7 @@ function artikelenVoorTab() {
 
 /** De boekjaren van de app, aangevuld met elk jaar waarvoor al iets vastligt. */
 function bekendeJaren() {
-  const jaren = new Set(['2022', '2023', '2024', '2025', '2026']);
+  const jaren = new Set(['2022', '2023', '2024', '2025', '2026', lopendJaar()]);
   state.COVERS.forEach(c => Object.keys(c.jaren || {}).forEach(j => jaren.add(j)));
   return [...jaren].sort().reverse();
 }
@@ -391,7 +391,7 @@ export function renderCovers() {
   el('voorraad-kop-aantal').textContent = jaarModus ? `Eind ${gekozenJaar}` : 'Voorraad';
   // Omzet en retour horen bij het gekozen tijdvak; verkoopwaarde staat los
   // van het jaar en heeft daarom een vaste kop.
-  el('voorraad-kop-omzet').textContent = jaarModus ? `Retour ${gekozenJaar}` : `Omzet ${HUIDIG_JAAR}`;
+  el('voorraad-kop-omzet').textContent = jaarModus ? `Retour ${gekozenJaar}` : `Omzet ${lopendJaar()}`;
   // De kolommen Ingekocht en Verkocht slaan in jaarweergave op dat boekjaar.
   const kopIn = el('voorraad-kop-ingekocht'), kopVer = el('voorraad-kop-verkocht');
   if (kopIn) kopIn.textContent = jaarModus ? `Ingekocht ${gekozenJaar}` : 'Ingekocht';
@@ -595,7 +595,7 @@ function renderWaardeDiagnose(lijst) {
 
   if (!metVoorraad.length || !zonder.length) { doel.style.display = 'none'; return; }
 
-  const jaar = gekozenJaar === 'nu' ? HUIDIG_JAAR : gekozenJaar;
+  const jaar = gekozenJaar === 'nu' ? lopendJaar() : gekozenJaar;
   const geenHandel = zonder.filter(x => x.c.handelsvoorraad === false).length;
 
   // Per inkooprekening: hoeveel stuks staan er, en hoeveel is er geboekt?
@@ -682,7 +682,7 @@ function tekenVerdeling(behoudFocus) {
   if (!doel) return;
 
   const pool = verdelingsPool();
-  const jaar = gekozenJaar === 'nu' ? HUIDIG_JAAR : gekozenJaar;
+  const jaar = gekozenJaar === 'nu' ? lopendJaar() : gekozenJaar;
   const rekeningen = Object.keys(pool).sort();
 
   if (!rekeningen.length) {
@@ -1063,7 +1063,7 @@ function zetKeuzeStandaarden() {
 }
 
 /** Het jaar waarvoor de modal de eindstand toont. */
-function modalJaar() { return gekozenJaar === 'nu' ? HUIDIG_JAAR : gekozenJaar; }
+function modalJaar() { return gekozenJaar === 'nu' ? lopendJaar() : gekozenJaar; }
 
 function zetJaarLabels() {
   const j = modalJaar();
@@ -1163,7 +1163,7 @@ export function openCoverEdit(id) {
   if (el('cv-notitie')) el('cv-notitie').value = '';
   if (el('cv-reden')) el('cv-reden').value = 'Correctie';
   toonVoorraadLog(c);
-  el('cv-26').value = (c.jaren || {})[j]?.verkocht ?? (j === HUIDIG_JAAR ? c.omzet2026 ?? '' : '');
+  el('cv-26').value = (c.jaren || {})[j]?.verkocht ?? (j === lopendJaar() ? c.omzet2026 ?? '' : '');
   el('cv-jaar-eind').value = (c.jaren || {})[j]?.eind ?? '';
   el('cv-zoek').value = c.zoekterm || '';
   el('cv-prijs').value = c.prijs ?? '';
@@ -1297,7 +1297,7 @@ export async function saveCover() {
     inkoop: getal('cv-ink') ?? 0,
     verkoop: getal('cv-vk') ?? 0,
     voorraad: getal('cv-vrd') ?? 0,
-    omzet2026: j === HUIDIG_JAAR ? (verkochtDitJaar ?? 0) : (bestaand?.omzet2026 ?? 0),
+    omzet2026: j === lopendJaar() ? (verkochtDitJaar ?? 0) : (bestaand?.omzet2026 ?? 0),
     zoekterm: el('cv-zoek').value.trim(),
     prijs: getal('cv-prijs', true),
     inkoopprijs: getal('cv-inkoopprijs', true),

@@ -1,6 +1,7 @@
 // excel-ui.js — het venster rond de Excel-export.
 
-import { beschikbareJaren, exportSamenvatting, exporteerNaarExcel } from './export.js?v=20261023s';
+import { beschikbareJaren, exportSamenvatting, exporteerNaarExcel } from './export.js?v=20261023t';
+import { lopendJaar } from './jaren.js?v=20261023t';
 
 const el = id => document.getElementById(id);
 
@@ -8,7 +9,7 @@ export function openExportModal() {
   const sel = el('export-jaar');
   const jaren = beschikbareJaren();
   sel.innerHTML = jaren.map(j => `<option value="${j}">${j}</option>`).join('');
-  sel.value = jaren.includes('2026') ? '2026' : jaren[0];
+  sel.value = jaren.includes(lopendJaar()) ? lopendJaar() : jaren[0];
   toonExportSamenvatting();
   el('modal-export').classList.add('open');
 }

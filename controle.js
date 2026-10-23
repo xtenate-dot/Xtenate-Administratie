@@ -8,13 +8,14 @@
 //   'gb:<nr>'  -> die grootboekrekening
 //   'pagina:<naam>' -> die pagina
 
-import { BEGINSALDO_2026, esc, fmt, isPriveBetaaldeKost, teltBij, weergaveNaam } from './helpers.js?v=20261023s';
-import { MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261023s';
-import { DREMPEL, vindDuplicaten } from './duplicaten.js?v=20261023s';
+import { BEGINSALDO_2026, esc, fmt, isPriveBetaaldeKost, teltBij, weergaveNaam } from './helpers.js?v=20261023t';
+import { txVanJaar, isTxJaar, banksaldoTot } from './jaren.js?v=20261023t';
+import { MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261023t';
+import { DREMPEL, vindDuplicaten } from './duplicaten.js?v=20261023t';
 import {
   REDEN_LABEL, aantalVerborgen, herstelAlles, herstelControle, herstelMelding,
   isControleUit, isVerborgen, verbergMelding, verborgenOverzicht, zetControleUit
-} from './negeren.js?v=20261023s';
+} from './negeren.js?v=20261023t';
 
 const el = id => document.getElementById(id);
 const HOOFDREKENING = '1010';
@@ -69,9 +70,7 @@ function meld(sleutel, velden) {
 
 function bepaalBron() {
   const jaar = state.huidigJaar || 'all';
-  if (jaar === 'all') return { tx: [...state.HIST_TX, ...state.TX], jaar };
-  if (jaar === '2026') return { tx: state.TX, jaar };
-  return { tx: state.HIST_TX.filter(t => t.datum.startsWith(jaar)), jaar };
+  return { tx: txVanJaar(jaar), jaar };
 }
 
 function controlesBoekingen(tx) {
@@ -208,13 +207,11 @@ function controlesAansluiting(tx, jaar) {
     'Geld dat je van je ene naar je andere rekening schuift, hoort twee keer in de administratie te staan: eraf én erop. Blijft er een verschil over, dan mist er een kant.'));
 
   // Berekend saldo naast het saldo dat de bank opgeeft
-  const eindHuidig = BEGINSALDO_2026 + state.TX
-    .filter(t => t.rek === HOOFDREKENING)
-    .reduce((s, t) => s + (teltBij(t) ? t.bedrag : -t.bedrag), 0);
+  const eindHuidig = banksaldoTot();
   const maandenMetSaldo = Object.keys(MAAND_SALDOS).sort();
   const laatste = maandenMetSaldo[maandenMetSaldo.length - 1];
   const items = [];
-  if (jaar !== 'all' && jaar !== '2026' && laatste && laatste.startsWith(jaar)) {
+  if (jaar !== 'all' && !isTxJaar(jaar) && laatste && laatste.startsWith(jaar)) {
     const eersteMaand = maandenMetSaldo.find(m => m.startsWith(jaar));
     const begin = eersteMaand ? MAAND_SALDOS[eersteMaand].begin : null;
     if (begin != null) {
@@ -235,7 +232,7 @@ function controlesAansluiting(tx, jaar) {
     () => 'Banksaldo sluit niet aan op de afschriften', 'fout',
     items,
     'Het saldo dat volgt uit je boekingen wordt vergeleken met het saldo op je afschrift. Loopt dat uiteen, dan mist er een mutatie of staat er een dubbel.',
-    jaar === 'all' || jaar === '2026'
+    jaar === 'all' || isTxJaar(jaar)
       ? `Berekend saldo van je bankrekening: ${fmt(eindHuidig)}. Kies een afgesloten jaar om te vergelijken met het afschrift.`
       : null));
 

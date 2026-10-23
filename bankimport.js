@@ -5,13 +5,13 @@
 // niet nog eens voorgesteld. Grootboek en soort worden afgeleid uit eerdere
 // boekingen met dezelfde naam; wat onbekend is kies je zelf.
 
-import { state, saveTxData } from './storage.js?v=20261023s';
-import { esc, fmt } from './helpers.js?v=20261023s';
-import { addToPendingQueue } from './supabase-client-v2.js?v=20261023s';
-import { maakHerstelpunt } from './herstelpunt.js?v=20261023s';
+import { state, saveTxData, jaarIsVergrendeld } from './storage.js?v=20261023t';
+import { isTxJaar, jaarVan, EERSTE_TX_JAAR } from './jaren.js?v=20261023t';
+import { esc, fmt } from './helpers.js?v=20261023t';
+import { addToPendingQueue } from './supabase-client-v2.js?v=20261023t';
+import { maakHerstelpunt } from './herstelpunt.js?v=20261023t';
 
 const REK = '1010';          // zo staat Revolut nu in je administratie
-const HUIDIG = '2026';
 const el = id => document.getElementById(id);
 let voorstel = null;         // { bestand, rijen, ontbreekt, overgeslagen }
 let melding = '';
@@ -197,10 +197,13 @@ export function importeerRevolut() {
   const teDoen = voorstel.rijen.filter(r => r.kies && !r.staatAl);
   const zonderGb = teDoen.filter(r => !r.gb);
   if (zonderGb.length) { melding = `❌ ${zonderGb.length} regels hebben nog geen grootboekrekening. Kies er een of haal het vinkje weg.`; renderBankimport(); return; }
-  const buitenJaar = teDoen.filter(r => !r.datum.startsWith(HUIDIG));
-  if (buitenJaar.length) { melding = `❌ ${buitenJaar.length} regels zijn niet van ${HUIDIG}. Importeren van oudere jaren doe je via de Excel-import.`; renderBankimport(); return; }
+  const buitenJaar = teDoen.filter(r => !isTxJaar(jaarVan(r.datum)));
+  if (buitenJaar.length) { melding = `❌ ${buitenJaar.length} regels zijn van vóór ${EERSTE_TX_JAAR}. Oudere jaren importeer je via de Excel-import.`; renderBankimport(); return; }
   if (!teDoen.length) { melding = 'Er is niets nieuws om te importeren.'; renderBankimport(); return; }
-  if (!window.confirm(`${teDoen.length} boekingen toevoegen aan ${HUIDIG}?`)) return;
+  const jarenTekst = [...new Set(teDoen.map(r => jaarVan(r.datum)))].sort().join(' en ');
+  const vergrendeld = [...new Set(teDoen.map(r => jaarVan(r.datum)))].filter(j => jaarIsVergrendeld(j));
+  if (vergrendeld.length && !window.confirm(`🔒 ${vergrendeld.join(' en ')} is vergrendeld (aangifte ingediend). Deze import verandert de cijfers van dat jaar. Toch doorgaan?`)) return;
+  if (!window.confirm(`${teDoen.length} boekingen toevoegen aan ${jarenTekst}?`)) return;
 
   maakHerstelpunt('vóór Revolut-import');
   for (const r of teDoen) {

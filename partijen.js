@@ -11,14 +11,15 @@
 //    op display:none en gaan alleen open via .open. Een eigen regel voor
 //    .modal-overlay zou dat overschrijven en elk venster tegelijk tonen.
 
-import { state, saveTxData, saveHistTxData } from './storage.js?v=20261023s';
-import { fmt } from './helpers.js?v=20261023s';
+import { state, saveTxData, saveHistTxData } from './storage.js?v=20261023t';
+import { fmt } from './helpers.js?v=20261023t';
 import {
   saveToSupabase,
   deleteFromSupabase,
   addToPendingQueue
-} from './supabase-client-v2.js?v=20261023s';
-import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking } from './facturen.js?v=20261023s';
+} from './supabase-client-v2.js?v=20261023t';
+import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking } from './facturen.js?v=20261023t';
+import { txVanJaar, lopendJaar } from './jaren.js?v=20261023t';
 
 export const veilig = s => String(s ?? '').replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -28,9 +29,7 @@ const isHistorisch = b => String(b?.id ?? '').startsWith('h');
 
 /** Alle boekingen van één jaar, uit het lopende jaar én de historie. */
 export function boekingenVoorJaar(jaar) {
-  const alles = [...(state.TX || []), ...(state.HIST_TX || [])];
-  if (jaar === 'all') return alles;
-  return alles.filter(t => String(t.datum || '').startsWith(jaar));
+  return txVanJaar(jaar);
 }
 
 const partijNaamVan = b => (b.naam || '').trim() || '(geen naam)';
@@ -52,7 +51,7 @@ export function tekenPartijen(o) {
   const totaalVeld = document.getElementById(o.totaalId);
   if (!lijst || !totaalVeld) return;
 
-  const jaar = state.huidigJaar || '2026';
+  const jaar = state.huidigJaar || lopendJaar();
   const boekingen = boekingenVoorJaar(jaar).filter(t => t.type === o.soort);
 
   if (boekingen.length === 0) {

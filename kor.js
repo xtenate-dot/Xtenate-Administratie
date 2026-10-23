@@ -5,7 +5,8 @@
 // je met de Belastingdienst of je boekhouder; deze indicatie gebruikt de omzet
 // zoals de aangifte die uitrekent.
 
-import { aangifteModel } from './belasting.js?v=20261023s';
+import { aangifteModel } from './belasting.js?v=20261023t';
+import { vandaagIso } from './jaren.js?v=20261023t';
 
 export const KOR_GRENS = 20000;
 
@@ -14,7 +15,7 @@ const dagenInJaar = j => (j % 4 === 0 && (j % 100 !== 0 || j % 400 === 0)) ? 366
 /** Omzet tot nu toe, ruimte tot de grens en een verwachting voor het hele jaar. */
 export function korStatus(jaar) {
   const omzet = aangifteModel(jaar).resultaat.omzet;
-  const nu = new Date();
+  const nu = new Date(vandaagIso() + 'T12:00:00');
   const lopend = String(nu.getFullYear()) === String(jaar);
   const j = Number(jaar);
   let prognose = null;

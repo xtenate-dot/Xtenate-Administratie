@@ -6,10 +6,11 @@
 // importfunctie leest; de overige kolommen zijn ingevuld met gegevens die het
 // bestand voor jou leesbaar maken maar bij het inlezen worden overgeslagen.
 
-import { isInkomst, maandLabel } from './helpers.js?v=20261023s';
-import { HOME_TOTALS, MAAND_SALDOS, groepNaam, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261023s';
-import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261023s';
-import { btwRelevant } from './btw.js?v=20261023s';
+import { isInkomst, maandLabel } from './helpers.js?v=20261023t';
+import { HOME_TOTALS, MAAND_SALDOS, groepNaam, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261023t';
+import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261023t';
+import { btwRelevant } from './btw.js?v=20261023t';
+import { txVanJaar, lopendJaar, berekendMaandSaldo } from './jaren.js?v=20261023t';
 
 const CREDITKAART = '1030';
 
@@ -22,8 +23,7 @@ const grootboekBedrag = t => (isInkomst(t) || t.type === 'prive_storting' ? -t.b
 const bankBedrag = t => (isInkomst(t) || t.type === 'prive_storting' ? t.bedrag : -t.bedrag);
 
 function boekingenVanJaar(jaar) {
-  const bron = jaar === '2026' ? state.TX : state.HIST_TX.filter(t => t.datum.startsWith(jaar));
-  return [...bron].sort((a, b) => a.datum.localeCompare(b.datum));
+  return txVanJaar(jaar).sort((a, b) => a.datum.localeCompare(b.datum));
 }
 
 // ------------------------------------------------------------ Bank JJJJ-MM
@@ -72,7 +72,7 @@ function bankBlad(maand, boekingen) {
 
   // Saldo's in kolom I en J. De import zoekt hier letterlijk naar de woorden
   // Beginsaldo en Eindsaldo.
-  const saldo = MAAND_SALDOS[maand];
+  const saldo = MAAND_SALDOS[maand] || berekendMaandSaldo(maand);
   if (saldo) {
     while (rijen.length < 3) rijen.push(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']);
     if (saldo.begin != null) { rijen[1][8] = 'Beginsaldo'; rijen[1][9] = saldo.begin; }
@@ -115,7 +115,7 @@ function voorraadBlad() {
   const rijen = [
     ['Voorraad & Mutaties', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
     ['Artikel', 'Groep', 'Voorraad', 'Inkoopprijs', 'Verkoopprijs', 'Voorraadwaarde', 'Meldgrens',
-     'Ingekocht', 'Verkocht', '', '', '', '', '', '', 'Verkopen 2026']
+     'Ingekocht', 'Verkocht', '', '', '', '', '', '', `Verkopen ${lopendJaar()}`]
   ];
   // Zelfde definitie als de Voorraadpagina en de aangifte: handmatige prijs
   // als die er staat, anders afgeleid uit de bankboekingen. Hier stond eerder
@@ -312,7 +312,8 @@ export function exportSamenvatting(jaar) {
 
 /** Welke jaren zitten er in de administratie? */
 export function beschikbareJaren() {
-  const jaren = new Set(['2026']);
+  const jaren = new Set([lopendJaar()]);
+  state.TX.forEach(t => jaren.add(t.datum.slice(0, 4)));
   state.HIST_TX.forEach(t => jaren.add(t.datum.slice(0, 4)));
   Object.keys(MAAND_SALDOS).forEach(m => jaren.add(m.slice(0, 4)));
   return [...jaren].sort().reverse();

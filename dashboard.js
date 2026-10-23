@@ -1,20 +1,20 @@
 // dashboard.js — Home: het financiële dashboard.
 
-import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261023s';
+import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261023t';
 import {
   BEGINSALDO_2026, calcIB, ddmm, esc, fmt, fmtKort, isInkomst, isKostenBoeking, isOmzet, isUitgave,
   maandLabel, rekBadge, saldoDelta, typeBadge, weergaveNaam
-} from './helpers.js?v=20261023s';
-import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261023s';
-import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261023s';
-import { draaiControles } from './controle.js?v=20261023s';
-import { aangifteModel, ibOver } from './belasting.js?v=20261023s';
-import { splitsLoten } from './hnvilot.js?v=20261023s';
-import { korStatus } from './kor.js?v=20261023s';
-import { maakSorteerbaar } from './tables.js?v=20261023s';
-import { hertekenHuidigePagina } from './ui.js?v=20261023s';
+} from './helpers.js?v=20261023t';
+import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261023t';
+import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261023t';
+import { draaiControles } from './controle.js?v=20261023t';
+import { aangifteModel, ibOver } from './belasting.js?v=20261023t';
+import { splitsLoten } from './hnvilot.js?v=20261023t';
+import { korStatus } from './kor.js?v=20261023t';
+import { maakSorteerbaar } from './tables.js?v=20261023t';
+import { hertekenHuidigePagina } from './ui.js?v=20261023t';
+import { txVanJaar, lopendJaar, isTxJaar, banksaldoTot } from './jaren.js?v=20261023t';
 
-const HOOFDREKENING = '1010'; // de bankrekening waarop het beginsaldo staat
 
 export function wisselJaar() {
   state.huidigJaar = document.getElementById('jaar-selector').value;
@@ -22,9 +22,7 @@ export function wisselJaar() {
 }
 
 export function getHomeTX() {
-  if (state.huidigJaar === 'all') return [...state.HIST_TX, ...state.TX];
-  if (state.huidigJaar === '2026') return state.TX;
-  return state.HIST_TX.filter(t => t.datum.startsWith(state.huidigJaar));
+  return txVanJaar(state.huidigJaar);
 }
 
 // Berekent de hoofdcijfers voor één jaar. Jaartotalen uit een Excel-import
@@ -53,15 +51,12 @@ function berekenJaarMetrics(jaar, txVanJaar) {
  * voor afgesloten jaren wordt het eindsaldo van de laatste maand gebruikt.
  */
 function berekenBanksaldo(jaar) {
-  const huidig = () => BEGINSALDO_2026 + state.TX
-    .filter(t => t.rek === HOOFDREKENING)
-    .reduce((s, t) => s + saldoDelta(t), 0);
-
-  if (jaar === '2026' || jaar === 'all') return { saldo: huidig(), label: 'Bank · nu' };
+  if (jaar === 'all' || jaar === lopendJaar()) return { saldo: banksaldoTot(), label: 'Bank · nu' };
 
   const maandenVanJaar = Object.keys(MAAND_SALDOS).filter(m => m.startsWith(jaar)).sort();
   const laatste = maandenVanJaar[maandenVanJaar.length - 1];
   if (laatste) return { saldo: MAAND_SALDOS[laatste].eind, label: `Bank · eind ${maandLabel(laatste)}` };
+  if (isTxJaar(jaar)) return { saldo: banksaldoTot(`${jaar}-12-31`), label: `Bank · eind ${jaar}` };
   return { saldo: null, label: 'geen saldo bekend' };
 }
 
@@ -197,7 +192,7 @@ function leegVlak(titel, tekst) {
 function aandachtspunten() {
   const punten = [];
   try {
-    const jr = state.huidigJaar && state.huidigJaar !== 'all' ? state.huidigJaar : '2026';
+    const jr = state.huidigJaar && state.huidigJaar !== 'all' ? state.huidigJaar : lopendJaar();
     const k = korStatus(jr);
     const eur = n => fmt(Math.round(n));
     punten.push({

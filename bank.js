@@ -3,14 +3,15 @@
 import {
   bedragUit, ddmm, esc, fmt, isInkomst, isUitgave, leegVlak, maandLabel, MND_KORT, rekBadge,
   typeBadge, vulMaandSelect, weergaveNaam
-} from './helpers.js?v=20261023s';
+} from './helpers.js?v=20261023t';
 import {
   MAAND_SALDOS, saveHistTxData, saveTxData, state, isBtwPlichtig,
   grootboekNamen, rekeningNamen, grootboekOptgroepen, rekeningenLijst
-, jaarIsVergrendeld} from './storage.js?v=20261023s';
-import { maakSorteerbaar } from './tables.js?v=20261023s';
-import { heeftBonnetje, startModalBonnetjes, sluitModalBonnetjes, bewaarWachtende } from './bonnetjes.js?v=20261023s';
-import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking } from './facturen.js?v=20261023s';
+, jaarIsVergrendeld} from './storage.js?v=20261023t';
+import { maakSorteerbaar } from './tables.js?v=20261023t';
+import { EERSTE_TX_JAAR, isTxJaar, lopendJaar, txVanJaar, banksaldoTot, jaarVan } from './jaren.js?v=20261023t';
+import { heeftBonnetje, startModalBonnetjes, sluitModalBonnetjes, bewaarWachtende } from './bonnetjes.js?v=20261023t';
+import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking } from './facturen.js?v=20261023t';
 
 // Fase 3A: Supabase pending queue
 import {
@@ -18,20 +19,33 @@ import {
   syncPendingQueue,
   pendingQueue,
   isSupabaseReady
-} from './supabase-client-v2.js?v=20261023s';
+} from './supabase-client-v2.js?v=20261023t';
 
 const el = id => document.getElementById(id);
 
 function bronVoorJaar(jaar) {
-  if (jaar === '2026') return state.TX;
-  if (jaar === 'all') return [...state.HIST_TX, ...state.TX];
-  return state.HIST_TX.filter(t => t.datum.startsWith(jaar));
+  return txVanJaar(jaar);
+}
+
+/** Laatste dag van een maand ("2027-02" -> "2027-02-28"). */
+function maandEinde(maand) {
+  const d = new Date(maand + '-01T00:00:00Z');
+  d.setUTCMonth(d.getUTCMonth() + 1, 0);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Saldo uit het afschrift (Excel), anders berekend uit de boekingen vanaf 2026. */
+function saldoEindeMaand(maand) {
+  const bekend = MAAND_SALDOS[maand]?.eind;
+  if (bekend != null) return bekend;
+  return maand >= EERSTE_TX_JAAR ? banksaldoTot(maandEinde(maand)) : null;
 }
 
 /** Laatst bekende eindsaldo van de bankrekening binnen een jaar. */
 function eindsaldoVanJaar(jaar) {
   const laatste = Object.keys(MAAND_SALDOS).filter(m => m.startsWith(jaar)).sort().pop();
-  return laatste ? MAAND_SALDOS[laatste].eind : null;
+  if (laatste) return MAAND_SALDOS[laatste].eind;
+  return isTxJaar(jaar) ? banksaldoTot(`${jaar}-12-31`) : null;
 }
 
 function vorigeMaand(maand) {
@@ -133,7 +147,7 @@ function tekenMaandNavigatie(bron, maand) {
 }
 
 export function renderBank() {
-  const jaar = state.huidigJaar || '2026';
+  const jaar = state.huidigJaar || lopendJaar();
   const bron = bronVoorJaar(jaar);
   vulMaandSelect(el('f-maand'), bron);
   if (!bankBegonnen.has(jaar) && el('f-maand').value === '') {
@@ -168,8 +182,8 @@ export function renderBank() {
   // afgebakende periode, dus dan blijven deze twee kaarten leeg.
   let saldo = null, vorigSaldo = null, saldoLabel, vorigLabel;
   if (maand) {
-    saldo = MAAND_SALDOS[maand]?.eind ?? null;
-    vorigSaldo = MAAND_SALDOS[vorigeMaand(maand)]?.eind ?? null;
+    saldo = saldoEindeMaand(maand);
+    vorigSaldo = saldoEindeMaand(vorigeMaand(maand));
     saldoLabel = `Saldo eind ${maandLabel(maand)}`;
     vorigLabel = 'Saldo vorige maand';
   } else if (jaar !== 'all') {
@@ -509,10 +523,11 @@ export function saveTx() {
   // Een nieuwe boeking valt in het lopende jaar; sta je in een ander jaar te
   // kijken, dan zou hij anders ongemerkt buiten beeld vallen. Dit stond vast
   // op 2026 en zou vanaf 1 januari verkeerd gaan.
-  const lopendJaar = String(new Date().getFullYear());
-  if (state.editTxId == null && state.huidigJaar !== lopendJaar && state.huidigJaar !== 'all') {
-    state.huidigJaar = lopendJaar;
-    if (el('jaar-selector')) el('jaar-selector').value = lopendJaar;
+  const nieuwJaar = jaarVan(tx.datum);
+  if (state.editTxId == null && state.huidigJaar !== nieuwJaar && state.huidigJaar !== 'all'
+      && el('jaar-selector') && [...el('jaar-selector').options].some(o => o.value === nieuwJaar)) {
+    state.huidigJaar = nieuwJaar;
+    el('jaar-selector').value = nieuwJaar;
     el('f-maand').value = '';
   }
   state.editTxId = null;

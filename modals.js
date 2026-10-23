@@ -1,6 +1,6 @@
 // modals.js — beheer-acties: Excel-import, cloud sync, API-sleutel, data wissen.
 
-import { renderHome } from './dashboard.js?v=20261023s';
+import { renderHome } from './dashboard.js?v=20261023t';
 
 // De omzetrekeningen. Deze stond eerder binnen `reader.onload`, maar wordt ook
 // door `bevestigImport` gebruikt — een andere functie, dus een ander bereik.
@@ -10,9 +10,10 @@ const OMZET_GB = ['8000', '8010', '8020'];
 import {
   HIST_TX_DEFAULT, HOME_TOTALS, HOME_TOTALS_DEFAULT, MAAND_SALDOS, normaliseerVoorraad, save,
   saveCoversData, saveHnviData, pasHnviDatumsToe, pasHnviExtraToe, saveTxData, state, voegJaarcijfersToe, rekeningNamen
-} from './storage.js?v=20261023s';
-import { maakHerstelpunt } from './herstelpunt.js?v=20261023s';
-import { addToPendingQueue, deleteFromSupabase, previewWisJaren, vervangBoekingenInSupabase, wisJarenInSupabase } from './supabase-client-v2.js?v=20261023s';
+} from './storage.js?v=20261023t';
+import { maakHerstelpunt } from './herstelpunt.js?v=20261023t';
+import { isTxJaar, jaarVan } from './jaren.js?v=20261023t';
+import { addToPendingQueue, deleteFromSupabase, previewWisJaren, vervangBoekingenInSupabase, wisJarenInSupabase } from './supabase-client-v2.js?v=20261023t';
 
 // Leest het "Per Periode"-tabblad (indien aanwezig): een pivot-overzicht per grootboekrekening
 // met een kolom "Totaal" voor het hele boekjaar. Dit is de brontabel van de boekhouding zelf,
@@ -500,16 +501,17 @@ const _esc = t => String(t ?? '').replace(/[&<>"']/g, c =>
 
 /** Wat de import zou doen, zonder het te doen. */
 export function bouwImportPlan(p) {
-  const is2026 = p.gevondenJaren.includes('2026');
+  const isHuidig = p.gevondenJaren.some(isTxJaar);   // het bestand hoort bij de huidige groep (2026 en later)
   const jarenMetRegels = [...new Set(p.newTx.map(t => t.datum.slice(0,4)))].sort();
+  const txJaren = p.gevondenJaren.filter(isTxJaar);
   const legeJaren = p.gevondenJaren.filter(j => !jarenMetRegels.includes(j));
 
   // Welke bestaande records verdwijnen? Bij een historische import worden de
   // jaren met regels volledig vervangen; bij 2026 de hele lijst.
   const bestaandHist = Array.isArray(state.HIST_TX) ? state.HIST_TX : [];
   const bestaandTx = Array.isArray(state.TX) ? state.TX : [];
-  const vervangen = is2026
-    ? bestaandTx.length
+  const vervangen = isHuidig
+    ? bestaandTx.filter(t => txJaren.includes(jaarVan(t.datum))).length
     : bestaandHist.filter(t => jarenMetRegels.some(j => String(t.datum).startsWith(j))).length;
 
   // Boekingen waarvan de datum buiten het tabblad valt waar ze vandaan komen:
@@ -520,9 +522,9 @@ export function bouwImportPlan(p) {
   const loten = Array.isArray(state.HNVI_LOTS) ? state.HNVI_LOTS : [];
 
   return {
-    is2026, jarenMetRegels, legeJaren, vervangen, buitenJaar,
+    isHuidig, is2026: isHuidig, jarenMetRegels, legeJaren, vervangen, buitenJaar,
     nieuw: p.newTx.length,
-    doelSleutel: is2026 ? 'xtenate_tx' : 'xtenate_hist_tx_override',
+    doelSleutel: isHuidig ? 'xtenate_tx' : 'xtenate_hist_tx_override',
     voorraadVervangen: p.newCovers.length > 0 ? { van: covers.length, naar: p.newCovers.length } : null,
     lotenVervangen: p.lotCount > 0 ? { van: loten.length, naar: p.lotCount } : null,
     saldoMaanden: Object.keys(p.newSaldos || {}).length,
@@ -619,7 +621,8 @@ export async function bevestigImport() {
   if (bevestigKnop) { bevestigKnop.disabled = true; bevestigKnop.textContent = 'Bezig...'; }
 
   try {
-      const is2026 = p.gevondenJaren.includes('2026');
+      const isHuidig = p.gevondenJaren.some(isTxJaar);
+      const txJaren = p.gevondenJaren.filter(isTxJaar);
       const jaarLabel = p.gevondenJaren.join(', ') || 'onbekend jaar';
 
       // HNVI-loten: gelezen in de leesfase, maar pas hier toegepast.
@@ -654,17 +657,27 @@ export async function bevestigImport() {
         p.nieuweLoten.forEach(l => addToPendingQueue(l, 'hnvi', false));
       }
 
-      if (is2026) {
-        // Sla op als huidige (2026) data. Handmatig aangemaakte boekingen die
+      if (isHuidig) {
+        // Sla op als huidige data (2026 en later); alleen de jaren uit dit bestand worden vervangen. Handmatig aangemaakte boekingen die
         // niet in het geïmporteerde bestand voorkomen, blijven staan — anders
         // verdwijnt een handmatige toevoeging zodra je later een Excel-bestand
         // voor hetzelfde jaar importeert.
+        const overigeJaren = state.TX.filter(t => !txJaren.includes(jaarVan(t.datum)));
         const teBehouden = state.TX.filter(t =>
+          txJaren.includes(jaarVan(t.datum)) &&
           t.bron === 'handmatig' && !p.newTx.some(nt => String(nt.id) === String(t.id)));
-        state.TX = [...p.newTx, ...teBehouden];
-        state.nxtTx = p.tid;
+        // Boekingen van andere jaren blijven staan. Het bestand telt zijn eigen
+        // nummers vanaf 500; die mogen niet botsen met wat er al is.
+        let volgendNr = p.tid;
+        if (overigeJaren.length) {
+          const hoogste = state.TX.reduce((m, t) => Math.max(m, Number(t.id) || 0), 0);
+          volgendNr = Math.max(p.tid, hoogste + 1, state.nxtTx || 0);
+          p.newTx.forEach(t => { t.id = volgendNr++; });
+        }
+        state.TX = [...overigeJaren, ...p.newTx, ...teBehouden];
+        state.nxtTx = Math.max(volgendNr, p.tid);
         if (p.newCovers.length > 0) { state.COVERS = normaliseerVoorraad(p.newCovers, state.COVERS); state.nxtCover = 300; }
-        Object.keys(MAAND_SALDOS).filter(m=>m.startsWith('2026')).forEach(m=>delete MAAND_SALDOS[m]);
+        Object.keys(MAAND_SALDOS).filter(m => txJaren.some(j => m.startsWith(j))).forEach(m=>delete MAAND_SALDOS[m]);
         Object.assign(MAAND_SALDOS, p.newSaldos);
         saveTxData();
         saveCoversData();
@@ -682,7 +695,7 @@ export async function bevestigImport() {
         // bevestigd, niet al zodra de lokale kant klaar is.
         document.getElementById('import-title').textContent = 'Bezig met opslaan...';
         document.getElementById('import-body').innerHTML =
-          `<div class="muted">De boekingen van 2026 worden naar de cloud geschreven, dit kan even duren…</div>`;
+          `<div class="muted">De boekingen van ${_esc(txJaren.join(', '))} worden naar de cloud geschreven, dit kan even duren…</div>`;
         document.getElementById('import-actions').style.display = 'none';
 
         const rHuidig = await vervangBoekingenInSupabase(state.TX, { isHistoric: false });
@@ -902,6 +915,14 @@ export async function doWis() {
     return;
   }
 
+  // "2026 wissen" maakt de hele huidige groep leeg (state.TX), ook de boekingen
+  // van latere jaren. Dat laten we niet toe zolang er zulke boekingen zijn.
+  const laterJaren = [...new Set(state.TX.map(t => jaarVan(t.datum)))].filter(j => isTxJaar(j) && !jaren.includes(j));
+  if (jaren.some(isTxJaar) && laterJaren.length) {
+    status.textContent = `Wissen van ${jaren.filter(isTxJaar).join(', ')} is nu niet mogelijk: het zou ook de boekingen van ${laterJaren.join(', ')} verwijderen.`;
+    window.alert(status.textContent);
+    return;
+  }
   const wistVoorraad = jaren.includes('2026');
   const waarschuwing = wistVoorraad
     ? '\n\nLet op: 2026 aanvinken verwijdert ook al je voorraadartikelen volledig, ' +

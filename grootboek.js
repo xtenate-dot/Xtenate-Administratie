@@ -1,9 +1,10 @@
 // grootboek.js — Grootboek: compacte saldotabel per rekening, met doorklik
 // naar de losse boekingen van één rekening.
 
-import { ddmm, esc, fmt, isInkomst, isUitgave, leegVlak, rekBadge, teltBij, typeBadge, vulMaandSelect, weergaveNaam } from './helpers.js?v=20261023s';
-import { state, grootboekNamen, rekeningNamen, rekeningenLijst, saveGrootboek, saveRekeningen } from './storage.js?v=20261023s';
-import { maakSorteerbaar } from './tables.js?v=20261023s';
+import { ddmm, esc, fmt, isInkomst, isUitgave, leegVlak, rekBadge, teltBij, typeBadge, vulMaandSelect, weergaveNaam } from './helpers.js?v=20261023t';
+import { state, grootboekNamen, rekeningNamen, rekeningenLijst, saveGrootboek, saveRekeningen } from './storage.js?v=20261023t';
+import { maakSorteerbaar } from './tables.js?v=20261023t';
+import { txVanJaar, lopendJaar } from './jaren.js?v=20261023t';
 
 const el = id => document.getElementById(id);
 const waarde = id => (el(id) ? el(id).value.trim() : '');
@@ -29,14 +30,12 @@ const RUBRIEK_VOLGORDE = ['balans', 'bedrijfskosten', 'inkoop', 'omzet', 'overig
 let geopendeRekening = null;
 
 function bronVoorJaar(jaar) {
-  if (jaar === '2026') return state.TX;
-  if (jaar === 'all') return [...state.HIST_TX, ...state.TX];
-  return state.HIST_TX.filter(t => t.datum.startsWith(jaar));
+  return txVanJaar(jaar);
 }
 
 /** De boekingen die binnen de huidige periodefilters vallen. */
 function gefilterdeBoekingen() {
-  const jaar = state.huidigJaar || '2026';
+  const jaar = state.huidigJaar || lopendJaar();
   const bron = bronVoorJaar(jaar);
   vulMaandSelect(el('f-maand-gb'), bron);
   const maand = waarde('f-maand-gb');

@@ -1,14 +1,14 @@
 // belasting.js — Belasting-pagina (indicatieve IB-berekening).
 
-import { splitsLoten } from './hnvilot.js?v=20261023s';
-import { charts, dc, kleurVoorGb } from './charts.js?v=20261023s';
-import { ddmm, fmt, gbCode, isInkomst, isKostenBoeking, isOmzet, isPriveBetaaldeKost, isUitgave } from './helpers.js?v=20261023s';
-import { downloadModelPdf } from './pdf.js?v=20261023s';
-import { state, grootboekNamen } from './storage.js?v=20261023s';
-import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261023s';
-import { totaalAfschrijvingVanJaar } from './activa.js?v=20261023s';
+import { splitsLoten } from './hnvilot.js?v=20261023t';
+import { lopendJaar, txVanJaar } from './jaren.js?v=20261023t';
+import { charts, dc, kleurVoorGb } from './charts.js?v=20261023t';
+import { ddmm, fmt, gbCode, isInkomst, isKostenBoeking, isOmzet, isPriveBetaaldeKost, isUitgave } from './helpers.js?v=20261023t';
+import { downloadModelPdf } from './pdf.js?v=20261023t';
+import { state, grootboekNamen } from './storage.js?v=20261023t';
+import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261023t';
+import { totaalAfschrijvingVanJaar } from './activa.js?v=20261023t';
 
-const HUIDIG_JAAR = '2026';
 
 /** Sleutel waaronder de handmatige posten van één jaar staan opgeslagen. */
 const kostenSleutel = jaar => `xtenate_aangifte_extra_${jaar}`;
@@ -331,7 +331,7 @@ export function controlereBelasting() {
   const jaar = gekozenJaar();
   const belTX = jaar === 'all'
     ? [...state.HIST_TX, ...state.TX]
-    : (jaar === HUIDIG_JAAR ? state.TX : state.HIST_TX.filter(t => t.datum.startsWith(jaar)));
+    : txVanJaar(jaar);
   
   const problemen = [];
   
@@ -405,8 +405,8 @@ export function openControleDialog() {
 
 export function renderBelasting() {
   const GBNM = grootboekNamen();
-  const jaar = state.huidigJaar || '2026';
-  const belTX = jaar === 'all' ? [...state.HIST_TX, ...state.TX] : (jaar === '2026' ? state.TX : state.HIST_TX.filter(t => t.datum.startsWith(jaar)));
+  const jaar = state.huidigJaar || lopendJaar();
+  const belTX = jaar === 'all' ? [...state.HIST_TX, ...state.TX] : txVanJaar(jaar);
 
   // Update card title
   const ct = document.getElementById('bel-card-title');
@@ -475,7 +475,7 @@ export function renderBelasting() {
   const voorraadEind = handelsartikelen.reduce((som, art) => {
     const prijs = prijsPerStuk(art, prijzenUitBank, jaar);
     if (!(prijs > 0)) return som;
-    const stuks = jaar === 'all' || jaar === HUIDIG_JAAR
+    const stuks = jaar === 'all' || jaar === lopendJaar()
       ? Number(art.voorraad) || 0
       : Number(art.jaren?.[jaar]?.eind ?? 0);
     return som + prijs * stuks;
@@ -861,7 +861,7 @@ const escHtml = s => String(s ?? '').replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 /** Het jaar dat nu in de jaarkiezer staat. */
-const gekozenJaar = () => state.huidigJaar || HUIDIG_JAAR;
+const gekozenJaar = () => state.huidigJaar || lopendJaar();
 
 /**
  * Dezelfde cijfers als de kaart, maar als platte tekst in de volgorde van het
@@ -963,7 +963,7 @@ export function aangifteVelden(belTX, { cogs = 0, hnviInkoop = 0, handmatig = []
 export function inkoopOverzicht(jaar = gekozenJaar()) {
   const alleTX = [...state.HIST_TX, ...state.TX];
   const belTX = jaar === 'all' ? alleTX
-    : (jaar === HUIDIG_JAAR ? state.TX : state.HIST_TX.filter(t => t.datum.startsWith(jaar)));
+    : txVanJaar(jaar);
   const namen = grootboekNamen();
   const bank = gb => belTX.filter(t => isKostenBoeking(t) && gbCode(t.gb) === gb).reduce((s, t) => s + (Number(t.bedrag) || 0), 0);
   const rijen = [];
@@ -980,7 +980,7 @@ export function inkoopOverzicht(jaar = gekozenJaar()) {
       const verkocht = jaar === 'all'
         ? Object.values(art.jaren || {}).reduce((n, j) => n + (Number(j?.verkocht) || 0), 0)
         : Number(art.jaren?.[jaar]?.verkocht) || 0;
-      const over = jaar === 'all' || jaar === HUIDIG_JAAR ? Number(art.voorraad) || 0 : Number(art.jaren?.[jaar]?.eind ?? 0);
+      const over = jaar === 'all' || jaar === lopendJaar() ? Number(art.voorraad) || 0 : Number(art.jaren?.[jaar]?.eind ?? 0);
       kosten += prijs * verkocht; voorraad += prijs * over;
       stuksVerkocht += verkocht; stuksVoorraad += over;
     }
@@ -1023,7 +1023,7 @@ export function inkoopOverzicht(jaar = gekozenJaar()) {
 export function aangifteModel(jaar = gekozenJaar()) {
   const belTX = jaar === 'all'
     ? [...state.HIST_TX, ...state.TX]
-    : (jaar === HUIDIG_JAAR ? state.TX : state.HIST_TX.filter(t => t.datum.startsWith(jaar)));
+    : txVanJaar(jaar);
 
   // Omzet uit bank (gb 8000, 8010, 8020)
   const omzetBank = nettoOmzet(belTX).netto;
@@ -1059,7 +1059,7 @@ export function aangifteModel(jaar = gekozenJaar()) {
   const eind = handelsartikelen.reduce((som, art) => {
     const prijs = prijsPerStuk(art, prijzenUitBank, jaar);
     if (!(prijs > 0)) return som;
-    const stuks = jaar === 'all' || jaar === HUIDIG_JAAR
+    const stuks = jaar === 'all' || jaar === lopendJaar()
       ? Number(art.voorraad) || 0
       : Number(art.jaren?.[jaar]?.eind ?? 0);
     return som + prijs * stuks;
@@ -1370,7 +1370,7 @@ export function openPercentages(startGb = '4235') {
   const jaar = gekozenJaar();
   const belTX = jaar === 'all'
     ? [...state.HIST_TX, ...state.TX]
-    : (jaar === HUIDIG_JAAR ? state.TX : state.HIST_TX.filter(t => t.datum.startsWith(jaar)));
+    : txVanJaar(jaar);
 
   const kosten = belTX.filter(isKostenpost);
   const rekeningen = [...new Set(kosten.map(t => String(t.gb)))].sort();

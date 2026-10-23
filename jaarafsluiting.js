@@ -2,14 +2,15 @@
 // controlelijst, de inkoop die wel en niet meetelt, het resultaat en de
 // aangifte. Alleen kijken; er wordt niets aangepast.
 
-import { state } from './storage.js?v=20261023s';
-import { esc, fmt, MND_KORT } from './helpers.js?v=20261023s';
-import { aangifteModel, inkoopOverzicht, ibOver, hnviLotenVanJaar, hnviOmzetBuitenBank } from './belasting.js?v=20261023s';
-import { korStatus } from './kor.js?v=20261023s';
-import { draaiControles } from './controle.js?v=20261023s';
+import { state, saveCoversData } from './storage.js?v=20261023t';
+import { maakHerstelpunt } from './herstelpunt.js?v=20261023t';
+import { lopendJaar, txVanJaar, vandaagIso } from './jaren.js?v=20261023t';
+import { esc, fmt, MND_KORT } from './helpers.js?v=20261023t';
+import { aangifteModel, inkoopOverzicht, ibOver, hnviLotenVanJaar, hnviOmzetBuitenBank } from './belasting.js?v=20261023t';
+import { korStatus } from './kor.js?v=20261023t';
+import { draaiControles } from './controle.js?v=20261023t';
 
 const el = id => document.getElementById(id);
-const HUIDIG = '2026';
 const jr = x => String(x || '').slice(0, 4);
 
 function regel(ernst, titel, uitleg = '', ga = '') {
@@ -23,7 +24,7 @@ function regel(ernst, titel, uitleg = '', ga = '') {
 
 /** Maanden van het jaar zonder één boeking (voor het lopende jaar tot nu). */
 function legeMaanden(jaar, tx) {
-  const tot = jaar === HUIDIG ? new Date().getMonth() + 1 : 12;
+  const tot = jaar === lopendJaar() ? Number(vandaagIso().slice(5, 7)) : 12;
   const heeft = new Set(tx.map(t => String(t.datum || '').slice(5, 7)));
   const leeg = [];
   for (let m = 1; m <= tot; m++) if (!heeft.has(String(m).padStart(2, '0'))) leeg.push(MND_KORT[m - 1]);
@@ -60,7 +61,7 @@ function checks(jaar, tx, inkoop) {
   if (metOmzetGeenPrijs.length) uit.push(regel('waarschuwing', `${metOmzetGeenPrijs.length} verkochte loten zonder verkoopprijs`, '', 'hnvi'));
 
   // HNVI-verkopen die niet in de bank te vinden zijn tellen als extra omzet
-  const belTX = jaar === HUIDIG ? state.TX : state.HIST_TX.filter(t => String(t.datum || '').startsWith(jaar));
+  const belTX = txVanJaar(jaar);
   const buiten = hnviOmzetBuitenBank(hnviLotenVanJaar(jaar), belTX).buitenBank || [];
   uit.push(buiten.length
     ? regel('waarschuwing', `${buiten.length} verkochte HNVI-loten niet terug te vinden in de bank (${fmt(buiten.reduce((s, l) => s + Number(l.verkoop), 0))})`,
@@ -75,7 +76,34 @@ function checks(jaar, tx, inkoop) {
       nietVerdeeld.map(r => `${esc(r.rekening)} ${esc(r.naam)}: ${fmt(r.teVerdelen)} — ${esc(r.opmerking)}`).join('<br>'), 'voorraad'));
   } else uit.push(regel('ok', 'Alle inkoop is toegerekend (verkocht of op voorraad)'));
 
+  // 5. Eindvoorraad van een afgesloten jaar. De voorraad op de pagina Voorraad is de stand
+  // van nu; voor een jaar dat voorbij is moet de eindstand vastliggen, anders rekent de
+  // aangifte van dat jaar met een lege voorraad.
+  if (jaar !== lopendJaar() && Number(jaar) < Number(lopendJaar())) {
+    const zonderEind = (state.COVERS || []).filter(c => (Number(c.voorraad) || 0) > 0 && c.jaren?.[jaar]?.eind == null);
+    if (zonderEind.length) {
+      uit.push(`<div class="ctrl-regel ctrl-waarschuwing" style="padding:10px 14px;display:flex;gap:10px;align-items:flex-start">
+        <span aria-hidden="true">⚠️</span>
+        <div style="flex:1"><div style="font-weight:600">${zonderEind.length} artikelen zonder eindvoorraad ${esc(jaar)}</div>
+        <div class="muted" style="font-size:12px;margin-top:2px">Zonder eindstand telt de voorraad van ${esc(jaar)} als leeg in de aangifte. Leg de huidige voorraad vast als eindstand, maar alleen als er sinds 31 december niets is in- of verkocht. Pas anders de aantallen per artikel aan.</div></div>
+        <button class="btn btn-sm" onclick="legEindvoorraadVast('${esc(jaar)}')">Leg vast</button></div>`);
+    } else if ((state.COVERS || []).length) {
+      uit.push(regel('ok', `Eindvoorraad ${jaar} is vastgelegd`));
+    }
+  }
+
   return uit;
+}
+
+/** Zet de huidige voorraad als eindstand van een afgesloten jaar, voor artikelen waar die ontbreekt. */
+export function legEindvoorraadVast(jaar) {
+  const doen = (state.COVERS || []).filter(c => (Number(c.voorraad) || 0) > 0 && c.jaren?.[jaar]?.eind == null);
+  if (!doen.length) return;
+  if (!window.confirm(`De huidige voorraad van ${doen.length} artikelen vastleggen als eindstand van ${jaar}?\n\nDoe dit alleen als er sinds 31 december ${jaar} niets is in- of verkocht.`)) return;
+  maakHerstelpunt(`vóór vastleggen eindvoorraad ${jaar}`);
+  for (const c of doen) c.jaren = { ...(c.jaren || {}), [jaar]: { ...(c.jaren?.[jaar] || {}), eind: Number(c.voorraad) || 0 } };
+  saveCoversData();
+  renderJaarafsluiting();
 }
 
 function inkoopTabel(inkoop) {
@@ -95,13 +123,13 @@ function inkoopTabel(inkoop) {
 export function renderJaarafsluiting() {
   const doel = el('jaarafsluiting-inhoud');
   if (!doel) return;
-  const jaar = state.huidigJaar || HUIDIG;
+  const jaar = state.huidigJaar || lopendJaar();
   if (jaar === 'all') {
     doel.innerHTML = '<div class="card"><p>Kies rechtsboven één boekjaar om dat jaar af te sluiten.</p></div>';
     return;
   }
   try {
-    const tx = jaar === HUIDIG ? state.TX : state.HIST_TX.filter(t => String(t.datum || '').startsWith(jaar));
+    const tx = txVanJaar(jaar);
     const inkoop = inkoopOverzicht(jaar);
     const m = aangifteModel(jaar);
     const { omzet, winst } = m.resultaat;
