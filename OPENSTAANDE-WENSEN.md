@@ -19,6 +19,9 @@ Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
 
 - PAUZE (gebruiker 23-10): cloud-synchronisatie van voorraad (vervang_voorraad.sql in Supabase uitvoeren), factuurinstellingen en bonnetjes (Supabase Storage bucket) -- later oppakken; telefoon/computer delen nu alleen boekingen, loten, facturen, bedrijfsgegevens.
 
+## BELANGRIJK: jaarwisseling 2027 (gevonden 23-10-2026, nog niet gedaan)
+De app kent `state.TX` als "het huidige jaar = 2026" en `state.HIST_TX` als eerdere jaren. Op minstens ~40 plekken staat `'2026'` hard in de code (bank.js, belasting.js, controle.js, dashboard.js, export.js, grootboek.js, partijen.js, voorraad.js, modals.js (import: is2026 -> xtenate_tx), jaarafsluiting.js, bankimport.js, kor.js e.a.) plus BEGINSALDO_2026 (beginsaldo huidige jaar = 183,15). Op 1-1-2027 komen nieuwe boekingen in `TX` terecht en worden als 2026 getoond/geteld. Plan: (1) centrale `txVanJaar(jaar)` = alle TX+HIST_TX met datum-voorvoegsel; (2) HUIDIG_JAAR uit de datum van vandaag; (3) beginsaldo per jaar afleiden (eindsaldo vorig jaar); (4) import per jaar generiek; (5) jaar 2026 vergrendelen en testen met nagebootste 2027-boekingen. Doen vóór december, met herstelpunt en backup.
+
 ## Wensen van de gebruiker (nog te doen)
 1. **Bankimport: verwijderen.** Bij het importeren van de bank geen verwijderknop. Gewenst: regels (dubbel, storno) uit het voorstel kunnen halen, én een al geïmporteerde boeking makkelijk kunnen verwijderen. (Een vinkje om een regel over te slaan bestaat al.)
 2. **HNVI: deel van een lot verkocht.** Voorbeeld: "Vier Hitster spellen", één verkocht, drie nog niet. Nu telt de hele inkoop mee zodra het lot als verkocht staat, dus ontstaat een schijnverlies. Voorstel: aantal stuks per lot, inkoop per stuk, verkochte stuks; kosten = inkoop per stuk × verkochte stuks. Daarnaast optie om een lot te splitsen. Keuze met de gebruiker bespreken (aantal-veld versus splitsen in Excel).
