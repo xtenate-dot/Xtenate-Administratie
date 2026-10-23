@@ -1,18 +1,18 @@
 // dashboard.js — Home: het financiële dashboard.
 
-import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261023q';
+import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261023r';
 import {
   BEGINSALDO_2026, calcIB, ddmm, esc, fmt, fmtKort, isInkomst, isKostenBoeking, isOmzet, isUitgave,
   maandLabel, rekBadge, saldoDelta, typeBadge, weergaveNaam
-} from './helpers.js?v=20261023q';
-import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261023q';
-import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261023q';
-import { draaiControles } from './controle.js?v=20261023q';
-import { aangifteModel, ibOver } from './belasting.js?v=20261023q';
-import { splitsLoten } from './hnvilot.js?v=20261023q';
-import { korStatus } from './kor.js?v=20261023q';
-import { maakSorteerbaar } from './tables.js?v=20261023q';
-import { hertekenHuidigePagina } from './ui.js?v=20261023q';
+} from './helpers.js?v=20261023r';
+import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261023r';
+import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261023r';
+import { draaiControles } from './controle.js?v=20261023r';
+import { aangifteModel, ibOver } from './belasting.js?v=20261023r';
+import { splitsLoten } from './hnvilot.js?v=20261023r';
+import { korStatus } from './kor.js?v=20261023r';
+import { maakSorteerbaar } from './tables.js?v=20261023r';
+import { hertekenHuidigePagina } from './ui.js?v=20261023r';
 
 const HOOFDREKENING = '1010'; // de bankrekening waarop het beginsaldo staat
 

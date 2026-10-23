@@ -14,12 +14,12 @@ import {
   facturenVan, openstaandSaldo, factuurnummerInGebruik,
   vindBoeking, koppelBetaling, ontkoppelBetaling,
   ouderdomsanalyse, OUDERDOM_VOLGORDE
-} from './facturen.js?v=20261023q';
-import { esc, fmt, ddmm, bedragUit, leegVlak, isInkomst, isUitgave, weergaveNaam } from './helpers.js?v=20261023q';
-import { downloadModelPdf } from './pdf.js?v=20261023q';
-import { state, grootboekNamen, grootboekOptgroepen, BEDRIJFSGEGEVENS } from './storage.js?v=20261023q';
-import { zoekBoekingen } from './search.js?v=20261023q';
-import { vindRelatie, zoekRelaties, maakRelatie, hernoemRelatie, voegRelatiesSamen, herlaadRelaties, bewaarRelatieAdres } from './relaties.js?v=20261023q';
+} from './facturen.js?v=20261023r';
+import { esc, fmt, ddmm, bedragUit, leegVlak, isInkomst, isUitgave, weergaveNaam } from './helpers.js?v=20261023r';
+import { downloadModelPdf } from './pdf.js?v=20261023r';
+import { state, grootboekNamen, grootboekOptgroepen, BEDRIJFSGEGEVENS } from './storage.js?v=20261023r';
+import { zoekBoekingen } from './search.js?v=20261023r';
+import { vindRelatie, zoekRelaties, maakRelatie, hernoemRelatie, voegRelatiesSamen, herlaadRelaties, bewaarRelatieAdres } from './relaties.js?v=20261023r';
 
 const el = id => document.getElementById(id);
 

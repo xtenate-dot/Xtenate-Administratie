@@ -6,10 +6,10 @@
 // (zie facturen.js). De voorraad en de boekingen worden NIET aangepast: de
 // verkoop komt via de bank binnen, zoals altijd.
 
-import { state, BEDRIJFSGEGEVENS } from './storage.js?v=20261023q';
-import { esc, fmt } from './helpers.js?v=20261023q';
-import { modelNaarPdf } from './pdf.js?v=20261023q';
-import { voegFactuurToe, werkFactuurBij, vindFactuur, plusDagen, vandaagISO, standaardTermijn, factuurnummerInGebruik } from './facturen.js?v=20261023q';
+import { state, BEDRIJFSGEGEVENS } from './storage.js?v=20261023r';
+import { esc, fmt } from './helpers.js?v=20261023r';
+import { modelNaarPdf } from './pdf.js?v=20261023r';
+import { voegFactuurToe, werkFactuurBij, vindFactuur, plusDagen, vandaagISO, standaardTermijn, factuurnummerInGebruik } from './facturen.js?v=20261023r';
 
 const KEY = 'xtenate_factuurmaker';
 const el = id => document.getElementById(id);
@@ -183,6 +183,27 @@ export function factuurPdfModel(c = concept(), i = opslag.instellingen) {
       ...(i.voettekst ? [{ type: 'voet', tekst: i.voettekst }] : [])
     ]
   };
+}
+
+/** Zet het opgeslagen logo om naar jpeg-bytes (pdf.js kan alleen jpeg), op wit. */
+export function logoAlsJpeg(dataUrl, plaats) {
+  return new Promise(ok => {
+    if (!dataUrl) { ok(null); return; }
+    const img = new Image();
+    img.onload = () => {
+      const cv = document.createElement('canvas');
+      cv.width = img.width; cv.height = img.height;
+      const cx = cv.getContext('2d');
+      cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height);
+      cx.drawImage(img, 0, 0);
+      cv.toBlob(async b => {
+        if (!b) { ok(null); return; }
+        ok({ jpeg: new Uint8Array(await b.arrayBuffer()), pxBreed: cv.width, pxHoog: cv.height, plaats });
+      }, 'image/jpeg', 0.9);
+    };
+    img.onerror = () => ok(null);
+    img.src = dataUrl;
+  });
 }
 
 /** Bouwt de mailtekst. Los van de knop, zodat hij te testen is. */
@@ -439,7 +460,10 @@ async function fmMail() {
   if (!c.klantNaam.trim() || t.totaal <= 0) { alert('Vul eerst de klant en minstens één regel met een bedrag in.'); return; }
   const { onderwerp, tekst } = mailTekst();
   const bestandsnaam = `factuur-${c.nummer}.pdf`;
-  const bytes = modelNaarPdf(factuurPdfModel());
+  const model = factuurPdfModel();
+  const logo = await logoAlsJpeg(opslag.instellingen.logo, opslag.instellingen.logoRechts ? 'rechts' : 'links');
+  if (logo) model.logo = logo;
+  const bytes = modelNaarPdf(model);
   const bestand = new File([bytes], bestandsnaam, { type: 'application/pdf' });
   // Waar de browser het toelaat (telefoon, Mac, Windows) kan de pdf als bijlage
   // meegegeven worden aan je mailprogramma.

@@ -14,7 +14,10 @@ Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
 - Mailen: knop deelt pdf als bijlage (telefoon/Mac/Windows) of downloadt pdf + opent mailto met tekst; echt automatisch versturen vereist een backend (Supabase Edge Function + mailservice), nog niet gedaan.
 - Factuur maken (factuurmaker.js, nav 'Factuur maken'): klant, regels uit voorraad of eigen regel, KOR of 21% BTW, live voorbeeld, afdrukken/PDF, bewaren in Facturen (veld `regels`). Indeling: titel, kleur, logo, kolommen aan/uit. Instellingen staan alleen in de browser (localStorage). Voorraad wordt niet afgeboekt.
 
+- Logo staat nu ook in de pdf van Mailen (pdf.js ondersteunt een jpeg-logo bovenaan pagina 1).
 - Bonnetjes bij boekingen (bonnetjes.js): bijlage toevoegen in boekingsvenster, paperclip in banklijst + detailpaneel, back-up/terugzetten in Beheer. Alleen in IndexedDB van de browser (keuze gebruiker); koppeling via boeking-id.
+
+- PAUZE (gebruiker 23-10): cloud-synchronisatie van voorraad (vervang_voorraad.sql in Supabase uitvoeren), factuurinstellingen en bonnetjes (Supabase Storage bucket) -- later oppakken; telefoon/computer delen nu alleen boekingen, loten, facturen, bedrijfsgegevens.
 
 ## Wensen van de gebruiker (nog te doen)
 1. **Bankimport: verwijderen.** Bij het importeren van de bank geen verwijderknop. Gewenst: regels (dubbel, storno) uit het voorstel kunnen halen, én een al geïmporteerde boeking makkelijk kunnen verwijderen. (Een vinkje om een regel over te slaan bestaat al.)

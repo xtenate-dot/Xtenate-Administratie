@@ -126,6 +126,16 @@ export function modelNaarPdf(doc) {
     pagina.tekst.push({ tekst: bedrag, x: rechts - breedte(bedrag, CORPS), y, corps: CORPS, vet });
   };
 
+  // Optioneel logo (jpeg) boven aan de eerste pagina, op maximaal 150 x 50 punten.
+  if (doc.logo && doc.logo.jpeg && doc.logo.pxBreed > 0 && doc.logo.pxHoog > 0) {
+    const schaal = Math.min(150 / doc.logo.pxBreed, 50 / doc.logo.pxHoog);
+    const w = doc.logo.pxBreed * schaal;
+    const h = doc.logo.pxHoog * schaal;
+    const rechtsBoven = doc.logo.plaats === 'rechts';
+    pagina.afbeelding = { x: rechtsBoven ? rechts - w : links, y: A4.hoog - MARGE - h + 8, w, h };
+    if (!rechtsBoven) y -= h + 4;     // links: de rest schuift omlaag
+  }
+
   y -= 22;
   pagina.tekst.push({ tekst: doc.titel, x: links, y, corps: KOP_CORPS, vet: true });
   y -= REGELHOOGTE;
@@ -220,7 +230,7 @@ export function modelNaarPdf(doc) {
   }
 
   paginas.push(pagina);
-  return bouwPdf(paginas, doc.titel);
+  return bouwPdf(paginas, doc.titel, doc.logo && doc.logo.jpeg ? doc.logo : null);
 }
 
 /** Platte tekst als pdf, voor als er geen model is maar wel regels. */
@@ -251,9 +261,10 @@ export function tekstNaarPdf(tekst, { titel = 'Document' } = {}) {
  * Objectnummering: 1 catalogus, 2 pagina-boom, 3 gewoon lettertype, 4 vet
  * lettertype, daarna per pagina twee objecten (de pagina en zijn inhoud).
  */
-function bouwPdf(paginas, titel) {
+function bouwPdf(paginas, titel, logo = null) {
   const objecten = [];
   const paginaIds = paginas.map((_, i) => 5 + i * 2);
+  const logoId = 5 + paginas.length * 2;
 
   objecten[1] = '<< /Type /Catalog /Pages 2 0 R >>';
   objecten[2] = `<< /Type /Pages /Kids [${paginaIds.map(id => `${id} 0 R`).join(' ')}] /Count ${paginas.length} >>`;
@@ -264,11 +275,15 @@ function bouwPdf(paginas, titel) {
   paginas.forEach((pagina, i) => {
     const id = paginaIds[i];
     objecten[id] = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${A4.breed.toFixed(2)} ${A4.hoog.toFixed(2)}] ` +
-                   `/Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${id + 1} 0 R >>`;
+                   `/Resources << /Font << /F1 3 0 R /F2 4 0 R >>${pagina.afbeelding && logo ? ` /XObject << /Im1 ${logoId} 0 R >>` : ''} >> /Contents ${id + 1} 0 R >>`;
 
     const stukken = [];
     const schrijfStuk = t => { for (const c of t) stukken.push(c.charCodeAt(0)); };
 
+    if (pagina.afbeelding && logo) {
+      const a = pagina.afbeelding;
+      schrijfStuk(`q ${a.w.toFixed(2)} 0 0 ${a.h.toFixed(2)} ${a.x.toFixed(2)} ${a.y.toFixed(2)} cm /Im1 Do Q\n`);
+    }
     for (const l of pagina.lijnen || []) {
       schrijfStuk(`0.6 w 0.2 0.2 0.2 RG\n${l.x1.toFixed(2)} ${l.y.toFixed(2)} m ${l.x2.toFixed(2)} ${l.y.toFixed(2)} l S\n`);
     }
@@ -290,10 +305,14 @@ function bouwPdf(paginas, titel) {
   // Hoge bytes in het commentaar vertellen lezers dat dit een binair bestand is.
   uit.push(0x25, 0xC7, 0xEC, 0x8F, 0xA2, 0x0A);
 
-  const hoogste = 4 + paginas.length * 2;
+  const hoogste = 4 + paginas.length * 2 + (logo ? 1 : 0);
   for (let nr = 1; nr <= hoogste; nr++) {
     posities[nr] = uit.length;
-    if (stromen[nr]) {
+    if (logo && nr === logoId) {
+      schrijf(`${nr} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${logo.pxBreed} /Height ${logo.pxHoog} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${logo.jpeg.length} >>\nstream\n`);
+      for (const byte of logo.jpeg) uit.push(byte);
+      schrijf('\nendstream\nendobj\n');
+    } else if (stromen[nr]) {
       schrijf(`${nr} 0 obj\n<< /Length ${stromen[nr].length} >>\nstream\n`);
       uit.push(...stromen[nr]);
       schrijf('\nendstream\nendobj\n');
