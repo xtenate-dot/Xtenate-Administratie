@@ -1,20 +1,21 @@
 // dashboard.js — Home: het financiële dashboard.
 
-import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261023v';
+import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261023w';
 import {
   BEGINSALDO_2026, calcIB, ddmm, esc, fmt, fmtKort, isInkomst, isKostenBoeking, isOmzet, isUitgave,
   maandLabel, rekBadge, saldoDelta, typeBadge, weergaveNaam
-} from './helpers.js?v=20261023v';
-import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261023v';
-import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261023v';
-import { draaiControles } from './controle.js?v=20261023v';
-import { aangifteModel, ibOver } from './belasting.js?v=20261023v';
-import { splitsLoten } from './hnvilot.js?v=20261023v';
-import { korStatus } from './kor.js?v=20261023v';
-import { maakSorteerbaar } from './tables.js?v=20261023v';
-import { hertekenHuidigePagina } from './ui.js?v=20261023v';
-import { txVanJaar, lopendJaar, isTxJaar, banksaldoTot } from './jaren.js?v=20261023v';
-import { tarievenVoor } from './tarieven.js?v=20261023v';
+} from './helpers.js?v=20261023w';
+import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261023w';
+import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261023w';
+import { draaiControles } from './controle.js?v=20261023w';
+import { aangifteModel, ibOver } from './belasting.js?v=20261023w';
+import { splitsLoten } from './hnvilot.js?v=20261023w';
+import { factuurSamenvatting } from './facturen.js?v=20261023w';
+import { korStatus } from './kor.js?v=20261023w';
+import { maakSorteerbaar } from './tables.js?v=20261023w';
+import { hertekenHuidigePagina } from './ui.js?v=20261023w';
+import { txVanJaar, lopendJaar, isTxJaar, banksaldoTot } from './jaren.js?v=20261023w';
+import { tarievenVoor } from './tarieven.js?v=20261023w';
 
 
 export function wisselJaar() {
@@ -215,6 +216,22 @@ function aandachtspunten() {
       actie: "openOpslagDiagnose();downloadBackup()", knop: 'Back-up maken'
     });
   } catch { /* geen localStorage: dan ook geen herinnering */ }
+  // Facturen die te laat zijn (jij moet betaald krijgen) of binnenkort vervallen (jij moet betalen).
+  try {
+    const fs = factuurSamenvatting();
+    if (fs.debiteuren.teLaat > 0) punten.push({
+      kleur: 'red',
+      titel: `${fs.debiteuren.teLaat} ${fs.debiteuren.teLaat === 1 ? 'factuur' : 'facturen'} te laat betaald`,
+      tekst: 'Klanten die de vervaldatum hebben overschreden. Stuur eventueel een herinnering.',
+      actie: "nav('facturen')", knop: 'Facturen'
+    });
+    if (fs.crediteuren.teLaat + fs.crediteuren.binnenkort > 0) punten.push({
+      kleur: fs.crediteuren.teLaat ? 'red' : 'amber',
+      titel: `${fs.crediteuren.teLaat + fs.crediteuren.binnenkort} te betalen ${fs.crediteuren.teLaat + fs.crediteuren.binnenkort === 1 ? 'factuur' : 'facturen'}`,
+      tekst: fs.crediteuren.teLaat ? `${fs.crediteuren.teLaat} al verlopen, ${fs.crediteuren.binnenkort} vervallen binnenkort.` : 'Vervallen binnenkort.',
+      actie: "nav('facturen')", knop: 'Facturen'
+    });
+  } catch (e) { console.warn('Factuurbewaking mislukt:', e); }
   const min = (c) => Number.isFinite(Number(c.minVoorraad)) ? Number(c.minVoorraad) : 3;
 
   const uitverkocht = state.COVERS.filter(c => (Number(c.voorraad) || 0) <= 0);

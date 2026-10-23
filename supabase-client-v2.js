@@ -11,7 +11,7 @@
  * Fase 3A Implementation
  */
 
-import { getClient, heeftClient, leesbareFout } from './supabase.js?v=20261023v';
+import { getClient, heeftClient, leesbareFout } from './supabase.js?v=20261023w';
 
 // ===== NOODREM =====
 export function syncIsAangezet() {

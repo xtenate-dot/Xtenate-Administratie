@@ -60,3 +60,6 @@ Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
 - Pagina "Uren" (uren.js, uren-ui.js): uren invoeren (1,5 of 1:30), soort, omschrijving, timer (kwartieren, alleen in deze browser), voortgang t.o.v. 1.225 uur, tempo/prognose, per maand en per soort.
 - Opslag: localStorage `xtenate_uren` + cloud app_data-sleutel `uren` (zelfde patroon als km). Raakt boekingen/belasting niet.
 - Jaarafsluiting toont een inforegel "Uren {jaar}: X van 1.225".
+
+## Facturen-aandachtspunten op het overzicht (23-10) — GEDAAN
+- Overzicht toont "X facturen te laat betaald" (debiteuren) en "te betalen facturen" (crediteuren, verlopen of binnenkort), uit factuurSamenvatting().
