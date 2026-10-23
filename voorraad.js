@@ -1,20 +1,20 @@
 // voorraad.js — Voorraad: kerncijfers, groepen per tab en voorraad per jaar.
 
-import { esc, fmt, gbCode } from './helpers.js?v=20261023m';
-import { REDENEN, legVast, logVan, verschilTekst, datumTekst } from './voorraadlog.js?v=20261023m';
+import { esc, fmt, gbCode } from './helpers.js?v=20261023n';
+import { REDENEN, legVast, logVan, verschilTekst, datumTekst } from './voorraadlog.js?v=20261023n';
 import {
   standaardMinVoorraad, groepId, groepNaam, saveCoversData, saveGroepen, standaardGroep, state,
   grootboekNamen
-} from './storage.js?v=20261023m';
-import { maakSorteerbaar } from './tables.js?v=20261023m';
-import { factorVan, heeftHandmatigePrijs, isHandelsvoorraad } from './belasting.js?v=20261023m';
+} from './storage.js?v=20261023n';
+import { maakSorteerbaar } from './tables.js?v=20261023n';
+import { factorVan, heeftHandmatigePrijs, isHandelsvoorraad } from './belasting.js?v=20261023n';
 import {
   bankPrijzenNu, inkoopprijsVan as _inkoopprijsVan, verkoopprijsVan,
   inkoopwaardeVan as _inkoopwaardeVan, verkoopwaardeVan as _verkoopwaardeVan,
   margeVan as _margeVan, omzetVan as _omzetVan, totalenVan
-} from './voorraadwaarde.js?v=20261023m';
-import { saveCoverToSupabase, deleteFromSupabase, addToPendingQueue, syncAllesNaarSupabase } from './supabase-client-v2.js?v=20261023m';
-import { downloadModelPdf } from './pdf.js?v=20261023m';
+} from './voorraadwaarde.js?v=20261023n';
+import { saveCoverToSupabase, deleteFromSupabase, addToPendingQueue, syncAllesNaarSupabase } from './supabase-client-v2.js?v=20261023n';
+import { downloadModelPdf } from './pdf.js?v=20261023n';
 
 const el = id => document.getElementById(id);
 const HUIDIG_JAAR = '2026';
@@ -436,7 +436,6 @@ export function renderCovers() {
           <td style="text-align:right" data-label="Inkoopprijs" data-v="${ip ?? -1}"${!handmatigeIp && ip != null ? ' title="Afgeleid uit de bankboekingen op de inkooprekening"' : ''}>${
             ip == null ? '<span class="muted">—</span>'
                        : `${fmt(ip)}${handmatigeIp ? '' : '<span class="muted" style="font-size:10px"> ~</span>'}`}</td>
-          <td style="text-align:right" data-label="Verkoopprijs" data-v="${vk ?? -1}">${g(vk)}</td>
           <td style="text-align:right" data-label="Inkoopwaarde" data-v="${inkoopwaarde ?? -1}">${g(inkoopwaarde)}</td>
           <td style="text-align:right" class="kol-detail" data-label="Ingekocht" data-v="${stand.inkoop ?? -1}">${stand.inkoop || '—'}</td>
           <td style="text-align:right" class="kol-detail" data-label="Verkocht" data-v="${stand.verkocht ?? -1}">${stand.verkocht || '—'}</td>
@@ -451,7 +450,7 @@ export function renderCovers() {
           </td>
         </tr>`;
       }).join('')
-    : `<tr data-geen-sort="1"><td colspan="${toonGroep ? 13 : 12}"><div class="empty">
+    : `<tr data-geen-sort="1"><td colspan="${toonGroep ? 12 : 11}"><div class="empty">
         <div class="empty-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg></div>
         <div class="empty-title">${basis.length ? 'Geen artikelen binnen deze filters' : 'Nog geen artikelen in deze groep'}</div>
         <div class="empty-text">${basis.length
@@ -508,7 +507,6 @@ function renderTotaalregel(lijst, toonGroep, jaarModus) {
     <td data-tot="Totaal" style="font-weight:600">Totaal${noot ? `<div class="muted" style="font-weight:400;font-size:11px">${noot}</div>` : ''}</td>
     ${toonGroep ? `<td class="muted kol-detail" style="font-size:11px">${lijst.length} artikelen</td>` : ''}
     ${r('Stuks', stuks)}
-    <td></td>
     <td></td>
     <td></td>
     ${r('Inkoopwaarde', fmt(inkoopwaarde))}

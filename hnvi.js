@@ -1,15 +1,15 @@
 // hnvi.js — HNVI/Xtenate voorraadbeheer, inclusief AI-factuurimport.
 
-import { bedragUit, ddmm, esc, fmt, leegVlak } from './helpers.js?v=20261023m';
-import { maakSorteerbaar } from './tables.js?v=20261023m';
-import { openApiKeyModal } from './modals.js?v=20261023m';
-import { saveHnviData, state } from './storage.js?v=20261023m';
+import { bedragUit, ddmm, esc, fmt, leegVlak } from './helpers.js?v=20261023n';
+import { maakSorteerbaar } from './tables.js?v=20261023n';
+import { openApiKeyModal } from './modals.js?v=20261023n';
+import { saveHnviData, state } from './storage.js?v=20261023n';
 
 /** Globaal boekjaar vertaald naar het hnvi-filter: 'all' betekent hier ''. */
 const hnviJaar = () => (state.huidigJaar === 'all' ? '' : (state.huidigJaar || ''));
-import { splitsLoten, lotAantal, lotVerkochtStuks } from './hnvilot.js?v=20261023m';
-import { saveHnviToSupabase, deleteFromSupabase, addToPendingQueue } from './supabase-client-v2.js?v=20261023m';
-import { downloadModelPdf } from './pdf.js?v=20261023m';
+import { splitsLoten, lotAantal, lotVerkochtStuks } from './hnvilot.js?v=20261023n';
+import { saveHnviToSupabase, deleteFromSupabase, addToPendingQueue } from './supabase-client-v2.js?v=20261023n';
+import { downloadModelPdf } from './pdf.js?v=20261023n';
 
 /** De loten zoals ze nu op het scherm staan: status- en jaarfilter meegenomen. */
 function zichtbareLoten() {
@@ -134,8 +134,13 @@ export function renderHNVI() {
   if (checkAll) { checkAll.checked = false; checkAll.indeterminate = false; }
 
   document.getElementById('hnvi-body').innerHTML = list.length ? list.map(i => {
-    const w = i.verkoop!=null ? i.verkoop-i.inkoop : null;
-    const pct = w!=null&&i.inkoop ? Math.round(w/i.inkoop*100) : null;
+    // Bij een lot van meerdere stuks waarvan een deel verkocht is, zet je de opbrengst
+    // tegenover de inkoop van alleen het verkochte deel.
+    const kost = lotAantal(i) > 1 && lotVerkochtStuks(i) > 0
+      ? (Number(i.inkoop) || 0) * lotVerkochtStuks(i) / lotAantal(i)
+      : (Number(i.inkoop) || 0);
+    const w = i.verkoop!=null ? i.verkoop-kost : null;
+    const pct = w!=null&&kost ? Math.round(w/kost*100) : null;
     return `<tr>
       <td style="padding-left:16px"><input type="checkbox" class="hnvi-check" data-key="${esc(i._key||i.id)}" onchange="updateHNVIDeleteBtn()"></td>
       <td class="muted" data-v="${esc(i.datum)}">${ddmm(i.datum)}</td>
@@ -151,7 +156,7 @@ export function renderHNVI() {
           ? `<div style="font-size:10px;color:var(--text-secondary);margin-top:2px">${regels.join(' \u00b7 ')}</div>`
           : '';
       })()}</td>
-      <td style="text-align:right" data-v="${Number(i.inkoop)||0}">${fmt(i.inkoop)}</td>
+      <td style="text-align:right" data-v="${Number(i.inkoop)||0}">${fmt(i.inkoop)}${lotAantal(i) > 1 && lotVerkochtStuks(i) > 0 && lotVerkochtStuks(i) < lotAantal(i) ? `<div style="font-size:10px;color:var(--text-secondary)">verkocht deel ${fmt(kost)}</div>` : ''}</td>
       <td style="text-align:right" data-v="${Number(i.verkoop)||0}">${
         i.verkoop!=null&&i.verkoop>0
           ? `${fmt(i.verkoop)}${i.verkoopDatum?`<div style="font-size:10px;color:var(--text-secondary)">${ddmm(i.verkoopDatum)}</div>`:''}`
