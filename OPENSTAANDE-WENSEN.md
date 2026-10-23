@@ -10,6 +10,12 @@ Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
 5. **Voorraadpagina.** Verkoopwaarde en marge weglaten. Alleen voorraad (aantal) en inkoopwaarde tonen. Inkoopwaarde uit de bankinkopen halen waar dat past; niet voor elk artikel (gamemuizen komen van de Makro, Funko-popstandaards worden zelf geprint).
 6. **Bankkoppeling automatisch.** Als het lukt: dagelijks bijgewerkt zonder upload. Anders blijft de CSV-import. Eerst uitzoeken of Revolut Business bij Enable Banking werkt en wat het kost (info@enablebanking.com).
 
+## Besloten op 23-10-2026
+- HNVI: **aantal per lot** (inkoop per stuk, verkochte stuks); het andere bestand (gesplitst) blijft ernaast zichtbaar.
+- Kilometers in Per periode en verwijderen bij de bankimport: eerst onderzoeken, dan doen (vanavond/als de gebruiker thuis is).
+- Bank importeren en koppelen aan grootboek doet de gebruiker later, eerst moet de rest werken.
+- NIEUW: bij een verkocht HNVI-lot een keuze "opbrengst staat al in de bank (meerdere betalingen)", zodat de verkoopprijs niet nog eens als extra omzet telt. Aanleiding: Cartridges (€ 334,70) wordt niet als één bankbedrag teruggevonden, waarschijnlijk omdat het in meerdere Marktplaats-betalingen is binnengekomen. Nog niet geverifieerd in de data.
+
 ## Nog te beantwoorden / door de gebruiker te doen
 - Voorraad importeren ("Voorraad & Mutaties" via Import op de Voorraadpagina), zodat de AliExpress/Alibaba-inkoop wordt toegerekend.
 - Staat Revolut vanaf april op 1009 of op 1010? In de app staat alles in 2026 op 1010 en niets op 1009. Beslissen; dan boekingen verplaatsen en de import op 1009 zetten.
