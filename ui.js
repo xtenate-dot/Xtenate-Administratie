@@ -1,27 +1,27 @@
 // ui.js — navigatie tussen pagina's en het onthouden van de actieve pagina.
 
-import { state } from './storage.js?v=20261023o';
-import { renderBank } from './bank.js?v=20261023o';
-import { renderBelasting } from './belasting.js?v=20261023o';
-import { renderBtw } from './btw.js?v=20261023o';
-import { renderCrediteuren } from './crediteuren.js?v=20261023o';
-import { renderDebiteuren } from './debiteuren.js?v=20261023o';
-import { renderHome } from './dashboard.js?v=20261023o';
-import { renderPortaal } from './home.js?v=20261023o';
-import { renderGrootboek } from './grootboek.js?v=20261023o';
-import { renderHNVI } from './hnvi.js?v=20261023o';
-import { renderControle } from './controle.js?v=20261023o';
-import { renderCovers } from './voorraad.js?v=20261023o';
-import { renderFacturen } from './facturen-ui.js?v=20261023o';
-import { renderKm } from './km-ui.js?v=20261023o';
-import { renderActiva } from './activa-ui.js?v=20261023o';
-import { renderVeiling } from './veiling-ui.js?v=20261023o';
-import { renderPeriode } from './periode.js?v=20261023o';
-import { renderFactuurmaker } from './factuurmaker.js?v=20261023o';
-import { renderBankimport } from './bankimport.js?v=20261023o';
-import { renderJaarafsluiting } from './jaarafsluiting.js?v=20261023o';
-import { renderBeheer } from './beheer.js?v=20261023o';
-import { toonGroepVan } from './navgroepen.js?v=20261023o';
+import { state } from './storage.js?v=20261023p';
+import { renderBank } from './bank.js?v=20261023p';
+import { renderBelasting } from './belasting.js?v=20261023p';
+import { renderBtw } from './btw.js?v=20261023p';
+import { renderCrediteuren } from './crediteuren.js?v=20261023p';
+import { renderDebiteuren } from './debiteuren.js?v=20261023p';
+import { renderHome } from './dashboard.js?v=20261023p';
+import { renderPortaal } from './home.js?v=20261023p';
+import { renderGrootboek } from './grootboek.js?v=20261023p';
+import { renderHNVI } from './hnvi.js?v=20261023p';
+import { renderControle } from './controle.js?v=20261023p';
+import { renderCovers } from './voorraad.js?v=20261023p';
+import { renderFacturen } from './facturen-ui.js?v=20261023p';
+import { renderKm } from './km-ui.js?v=20261023p';
+import { renderActiva } from './activa-ui.js?v=20261023p';
+import { renderVeiling } from './veiling-ui.js?v=20261023p';
+import { renderPeriode } from './periode.js?v=20261023p';
+import { renderFactuurmaker } from './factuurmaker.js?v=20261023p';
+import { renderBankimport } from './bankimport.js?v=20261023p';
+import { renderJaarafsluiting } from './jaarafsluiting.js?v=20261023p';
+import { renderBeheer } from './beheer.js?v=20261023p';
+import { toonGroepVan } from './navgroepen.js?v=20261023p';
 
 const RENDERS = {
   home: renderPortaal,      // de startpagina: tegels naar de onderdelen

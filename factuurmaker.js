@@ -6,9 +6,10 @@
 // (zie facturen.js). De voorraad en de boekingen worden NIET aangepast: de
 // verkoop komt via de bank binnen, zoals altijd.
 
-import { state, BEDRIJFSGEGEVENS } from './storage.js?v=20261023o';
-import { esc, fmt } from './helpers.js?v=20261023o';
-import { voegFactuurToe, werkFactuurBij, vindFactuur, plusDagen, vandaagISO, standaardTermijn, factuurnummerInGebruik } from './facturen.js?v=20261023o';
+import { state, BEDRIJFSGEGEVENS } from './storage.js?v=20261023p';
+import { esc, fmt } from './helpers.js?v=20261023p';
+import { modelNaarPdf } from './pdf.js?v=20261023p';
+import { voegFactuurToe, werkFactuurBij, vindFactuur, plusDagen, vandaagISO, standaardTermijn, factuurnummerInGebruik } from './facturen.js?v=20261023p';
 
 const KEY = 'xtenate_factuurmaker';
 const el = id => document.getElementById(id);
@@ -53,7 +54,7 @@ function volgendNummer(datum) {
 function nieuwConcept() {
   const datum = vandaagISO();
   return {
-    klantNaam: '', klantAdres: '', klantPlaats: '', klantRef: '',
+    klantNaam: '', klantAdres: '', klantPlaats: '', klantRef: '', klantEmail: '',
     nummer: volgendNummer(datum), datum, termijn: standaardTermijn('debiteur'),
     regels: [{ soort: 'vrij', omschr: '', aantal: 1, prijs: 0 }],
     notitie: '', opgeslagenId: null
@@ -143,6 +144,65 @@ ${i.voettekst ? `<div class="voet">${esc(i.voettekst).replace(/\n/g, '<br>')}</d
 </body></html>`;
 }
 
+// ─── PDF en mail ───────────────────────────────────────────────────────────
+
+const pdfBedrag = n => '\u20AC ' + Number(n).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+/** Het factuurmodel voor pdf.js: kop, van/aan, tabel met regels, totaal, betaalinfo. */
+export function factuurPdfModel(c = concept(), i = opslag.instellingen) {
+  const b = BEDRIJFSGEGEVENS || {};
+  const t = totalen(c, i.btw);
+  const verval = plusDagen(c.datum, num(c.termijn));
+  const rijen = c.regels.filter(r => String(r.omschr).trim() || num(r.prijs)).map(r => ({
+    cellen: [r.omschr, String(num(r.aantal)).replace('.', ','), pdfBedrag(num(r.prijs)), pdfBedrag(num(r.aantal) * num(r.prijs))]
+  }));
+  const kolommen = [
+    { kop: 'Omschrijving', breedte: 233 },
+    { kop: 'Aantal', breedte: 55, rechts: true },
+    { kop: 'Prijs', breedte: 85, rechts: true },
+    { kop: 'Bedrag', breedte: 100, rechts: true }
+  ];
+  const regels = (lijst) => lijst.filter(x => x && String(x).trim()).map(tekst => ({ type: 'tekst', tekst: String(tekst) }));
+  return {
+    titel: `${i.titel || 'Factuur'} ${c.nummer}`,
+    ondertitel: `Datum ${nlDatum(c.datum)} - vervaldatum ${nlDatum(verval)}`,
+    blokken: [
+      { type: 'kop', tekst: 'Van' },
+      ...regels([b.naam, b.adres, b.postcodePlaats, i.email, i.telefoon,
+        i.toonKvk && b.kvkNummer ? `KVK ${b.kvkNummer}` : '', i.btw !== 'kor' && b.btwNummer ? `BTW ${b.btwNummer}` : '']),
+      { type: 'kop', tekst: 'Aan' },
+      ...regels([c.klantNaam, c.klantAdres, c.klantPlaats, c.klantRef ? `Uw referentie: ${c.klantRef}` : '']),
+      { type: 'tabel', kop: 'Regels', kolommen, rijen },
+      ...(i.btw === 'btw21' ? [
+        { type: 'regel', label: 'Subtotaal', bedrag: t.sub },
+        { type: 'regel', label: 'BTW 21%', bedrag: t.btw }] : []),
+      { type: 'regel', label: 'Totaal', bedrag: t.totaal, totaal: true },
+      ...(i.btw === 'kor' ? regels(['Vrijgesteld van omzetbelasting op grond van de kleineondernemersregeling (KOR).']) : []),
+      ...regels([c.notitie]),
+      ...regels([`Wij verzoeken je het bedrag van ${pdfBedrag(t.totaal)} voor ${nlDatum(verval)} over te maken${i.iban ? ` op ${i.iban}` : ''}${b.naam ? ` t.n.v. ${b.naam}` : ''}, onder vermelding van ${c.nummer}.`]),
+      ...(i.voettekst ? [{ type: 'voet', tekst: i.voettekst }] : [])
+    ]
+  };
+}
+
+/** Bouwt de mailtekst. Los van de knop, zodat hij te testen is. */
+export function mailTekst(c = concept(), i = opslag.instellingen) {
+  const b = BEDRIJFSGEGEVENS || {};
+  const t = totalen(c, i.btw);
+  const verval = plusDagen(c.datum, num(c.termijn));
+  const onderwerp = `${i.titel || 'Factuur'} ${c.nummer}${b.naam ? ` van ${b.naam}` : ''}`;
+  const tekst = [
+    c.klantNaam ? `Beste ${c.klantNaam},` : 'Beste klant,',
+    '',
+    `Hierbij ontvang je ${String(i.titel || 'factuur').toLowerCase()} ${c.nummer} (${pdfBedrag(t.totaal)}). In de bijlage vind je de pdf.`,
+    `Wil je het bedrag voor ${nlDatum(verval)} overmaken${i.iban ? ` op ${i.iban}` : ''}, onder vermelding van ${c.nummer}?`,
+    '',
+    'Alvast bedankt en met vriendelijke groet,',
+    b.naam || ''
+  ].join('\n');
+  return { onderwerp, tekst };
+}
+
 let wachtPreview = null;
 function tekenPreview() {
   clearTimeout(wachtPreview);
@@ -200,6 +260,7 @@ export function renderFactuurmaker() {
       <div class="form-group"><label>Naam</label><input type="text" list="fm-relaties" value="${esc(c.klantNaam)}" oninput="fmVeld('klantNaam',this.value)" onchange="fmKiesKlant(this.value)"><datalist id="fm-relaties">${relaties}</datalist></div>
       <div class="form-group"><label>Adres</label><input type="text" value="${esc(c.klantAdres)}" oninput="fmVeld('klantAdres',this.value)"></div>
       <div class="form-group"><label>Postcode en plaats</label><input type="text" value="${esc(c.klantPlaats)}" oninput="fmVeld('klantPlaats',this.value)"></div>
+      <div class="form-group"><label>E-mail klant (voor Mailen)</label><input type="email" value="${esc(c.klantEmail || '')}" oninput="fmVeld('klantEmail',this.value)"></div>
       <div class="form-group"><label>Uw referentie (optioneel)</label><input type="text" value="${esc(c.klantRef)}" oninput="fmVeld('klantRef',this.value)"></div>
     </div>
 
@@ -258,6 +319,7 @@ export function renderFactuurmaker() {
       <span style="flex:1"></span>
       <button class="btn" onclick="fmNieuw()">Nieuwe factuur</button>
       <button class="btn" onclick="fmOpslaan()">${gekozen ? 'Bijwerken in Facturen' : 'Bewaren in Facturen'}</button>
+      <button class="btn" onclick="fmMail()">Mailen</button>
       <button class="btn btn-primary" onclick="fmPrint()">Afdrukken / PDF</button>
     </div>
     <iframe id="fm-preview" title="Voorbeeld factuur" style="width:100%;height:760px;border:1px solid var(--border,#ddd);background:#fff;border-radius:6px" srcdoc=""></iframe>
@@ -371,6 +433,35 @@ function fmNieuw() {
   renderFactuurmaker();
 }
 
+async function fmMail() {
+  const c = concept();
+  const t = totalen();
+  if (!c.klantNaam.trim() || t.totaal <= 0) { alert('Vul eerst de klant en minstens één regel met een bedrag in.'); return; }
+  const { onderwerp, tekst } = mailTekst();
+  const bestandsnaam = `factuur-${c.nummer}.pdf`;
+  const bytes = modelNaarPdf(factuurPdfModel());
+  const bestand = new File([bytes], bestandsnaam, { type: 'application/pdf' });
+  // Waar de browser het toelaat (telefoon, Mac, Windows) kan de pdf als bijlage
+  // meegegeven worden aan je mailprogramma.
+  try {
+    if (navigator.canShare && navigator.canShare({ files: [bestand] })) {
+      await navigator.share({ files: [bestand], title: onderwerp, text: tekst });
+      return;
+    }
+  } catch (e) {
+    if (e && e.name === 'AbortError') return;   // gebruiker annuleerde
+  }
+  // Anders: pdf downloaden en een kant-en-klare mail openen. De bijlage moet
+  // dan zelf worden toegevoegd; een webpagina kan dat niet voor je doen.
+  const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+  const a = document.createElement('a');
+  a.href = url; a.download = bestandsnaam;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  const aan = (c.klantEmail || '').trim();
+  location.href = `mailto:${encodeURIComponent(aan)}?subject=${encodeURIComponent(onderwerp)}&body=${encodeURIComponent(tekst + '\n\n(Voeg de gedownloade pdf ' + bestandsnaam + ' toe als bijlage.)')}`;
+}
+
 function fmPrint() {
   const f = el('fm-preview');
   if (!f) return;
@@ -404,5 +495,5 @@ function fmOpslaan() {
 
 Object.assign(window, {
   renderFactuurmaker, fmVeld, fmKiesKlant, fmRegel, fmVoegRegel, fmVerwijderRegel,
-  fmKiesArtikel, fmInst, fmLogo, fmWisLogo, fmNieuw, fmPrint, fmOpslaan
+  fmKiesArtikel, fmInst, fmLogo, fmWisLogo, fmNieuw, fmPrint, fmOpslaan, fmMail
 });
