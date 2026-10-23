@@ -1,0 +1,25 @@
+# Openstaande wensen en afspraken (bijgewerkt 23-10-2026)
+
+Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
+
+## Wensen van de gebruiker (nog te doen)
+1. **Bankimport: verwijderen.** Bij het importeren van de bank geen verwijderknop. Gewenst: regels (dubbel, storno) uit het voorstel kunnen halen, én een al geïmporteerde boeking makkelijk kunnen verwijderen. (Een vinkje om een regel over te slaan bestaat al.)
+2. **HNVI: deel van een lot verkocht.** Voorbeeld: "Vier Hitster spellen", één verkocht, drie nog niet. Nu telt de hele inkoop mee zodra het lot als verkocht staat, dus ontstaat een schijnverlies. Voorstel: aantal stuks per lot, inkoop per stuk, verkochte stuks; kosten = inkoop per stuk × verkochte stuks. Daarnaast optie om een lot te splitsen. Keuze met de gebruiker bespreken (aantal-veld versus splitsen in Excel).
+3. **Facturen maken en versturen.** Een lege "sheet" die je zelf indeelt (Canva-idee), artikelen uit de voorraad kiezen met aantallen, en eigen regels (bijv. extern werk). Niet urgent. Er bestaat al een facturenonderdeel (facturen.js, facturen-ui.js) — eerst kijken wat daar is.
+4. **Kilometers in "Per periode".** De kilometertab werkt, maar de kilometers komen niet in Per periode (en dus niet in de Excel-export). Gewenst: per maand zichtbaar, zodat de Excel-export klopt met de huidige Excel. Onderzoeken wat er gebeurt (km.js, periode.js).
+5. **Voorraadpagina.** Verkoopwaarde en marge weglaten. Alleen voorraad (aantal) en inkoopwaarde tonen. Inkoopwaarde uit de bankinkopen halen waar dat past; niet voor elk artikel (gamemuizen komen van de Makro, Funko-popstandaards worden zelf geprint).
+6. **Bankkoppeling automatisch.** Als het lukt: dagelijks bijgewerkt zonder upload. Anders blijft de CSV-import. Eerst uitzoeken of Revolut Business bij Enable Banking werkt en wat het kost (info@enablebanking.com).
+
+## Nog te beantwoorden / door de gebruiker te doen
+- Voorraad importeren ("Voorraad & Mutaties" via Import op de Voorraadpagina), zodat de AliExpress/Alibaba-inkoop wordt toegerekend.
+- Staat Revolut vanaf april op 1009 of op 1010? In de app staat alles in 2026 op 1010 en niets op 1009. Beslissen; dan boekingen verplaatsen en de import op 1009 zetten.
+- Twee mogelijk dubbele boekingen (592/594 en 775/776), twaalf mogelijk verkeerd getypte boekingen, vier HNVI-verschillen met de Excel (Iphone 6s, Vier/Zes Hitster, RTM-lot).
+- 7 verkochte HNVI-loten niet terug te vinden in de bank (€ 1.044,70) controleren.
+- Jaar 2025 vergrendelen op de Jaarafsluiting-pagina (aangifte is ingediend).
+- Testversie: heeft een tweede (gratis) Supabase-project nodig. Vraag openstaand.
+- "Testregel 9999" uit het grootboek halen (staat in de data, niet in de code).
+
+## Besluiten
+- Inkoopkosten tellen alleen mee als het artikel verkocht is, in het jaar van verkoop (HNVI: per lot; AliExpress: via het gemiddelde inkoopbedrag per stuk).
+- Bol.com en Helmetcoverstore halen hun voorraad uit AliExpress/Alibaba (7000); MijnMagie (7020) is directe kosten.
+- Aangifte 2025 is ingediend zonder de inkoop van de loten die in 2026 zijn verkocht; die tellen dus in 2026.
