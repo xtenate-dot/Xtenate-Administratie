@@ -34,7 +34,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
-const LIVE_APP_REDIRECT_URL = "https://xtenate-dot.github.io/Xtenate/";
+const LIVE_APP_REDIRECT_URL = "https://xtenate-dot.github.io/Xtenate-Administratie/";
 
 function base64url(bytes: Uint8Array): string {
   let bin = "";
@@ -104,7 +104,7 @@ async function afhandelenAuthStart(req: Request): Promise<Response> {
 
   let body: { aspsp_naam?: string; country?: string } = {};
   try { body = await req.json(); } catch { /* lege body is prima, dan gelden de standaardwaarden */ }
-  const country = body.country || "FI";
+  const country = body.country || "NL";
 
   let jwt: string;
   try {
@@ -125,7 +125,7 @@ async function afhandelenAuthStart(req: Request): Promise<Response> {
   const lijst = (aspspsData?.aspsps || []) as { name: string; country: string }[];
   const gekozen = body.aspsp_naam
     ? lijst.find((a) => a.name === body.aspsp_naam)
-    : (lijst.find((a) => /mock/i.test(a.name)) || lijst[0]);
+    : (lijst.find((a) => a.name === "Revolut") || lijst.find((a) => /mock/i.test(a.name)) || lijst[0]);
   if (!gekozen) {
     return Response.json({ ok: false, fout: "Geen (passende) bank gevonden om te koppelen." }, { status: 404 });
   }
@@ -146,11 +146,11 @@ async function afhandelenAuthStart(req: Request): Promise<Response> {
   }
 
   const authBody = {
-    access: { valid_until: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString() },
+    access: { valid_until: new Date(Date.now() + 89 * 24 * 60 * 60 * 1000).toISOString() },
     aspsp: { name: gekozen.name, country: gekozen.country },
     state: poging.state,
     redirect_url: LIVE_APP_REDIRECT_URL,
-    psu_type: "personal",
+    psu_type: "business", // Revolut Business; de database accepteert maximaal 90 dagen
   };
 
   const authResp = await fetch("https://api.enablebanking.com/auth", {
