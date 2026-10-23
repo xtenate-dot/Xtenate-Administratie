@@ -21,7 +21,7 @@
 //    paren uit elkaar en schuiven Internet en Reiskosten over de jaargrens.
 
 import { HIST_TX_DEFAULT, HOME_TOTALS, MAAND_SALDOS, MAAND_SALDOS_DEFAULT, CONTROLE_INSTELLINGEN, state }
-  from './storage.js?v=20261023n';
+  from './storage.js?v=20261023o';
 
 const HISTORISCHE_JAREN = ['2022', '2023', '2024', '2025'];
 const HUIDIG_JAAR = '2026';

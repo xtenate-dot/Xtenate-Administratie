@@ -7,7 +7,7 @@
 //
 // Deze module bevat geen interface. De schermen komen in stap 3 en 4.
 
-import { FACTUUR_INSTELLINGEN, saveFacturen, state } from './storage.js?v=20261023n';
+import { FACTUUR_INSTELLINGEN, saveFacturen, state } from './storage.js?v=20261023o';
 
 export const SOORTEN = ['debiteur', 'crediteur'];
 
@@ -73,6 +73,8 @@ export function maakFactuur(gegevens = {}) {
     status: STATUSSEN.includes(gegevens.status) ? gegevens.status : 'open',
     txIds: Array.isArray(gegevens.txIds) ? [...gegevens.txIds] : [],
     gb: gegevens.gb || '',
+    // Optioneel: de regels van een in de factuurmaker opgestelde factuur.
+    ...(Array.isArray(gegevens.regels) ? { regels: gegevens.regels } : {}),
     aangemaakt: gegevens.aangemaakt || new Date().toISOString()
   };
 }

@@ -21,10 +21,10 @@
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<link rel="stylesheet" href="theme.css?v=20261023n">
-<link rel="stylesheet" href="layout.css?v=20261023n">
-<link rel="stylesheet" href="components.css?v=20261023n">
-<link rel="stylesheet" href="responsive.css?v=20261023n">
+<link rel="stylesheet" href="theme.css?v=20261023o">
+<link rel="stylesheet" href="layout.css?v=20261023o">
+<link rel="stylesheet" href="components.css?v=20261023o">
+<link rel="stylesheet" href="responsive.css?v=20261023o">
 </head>
 <body>
 
@@ -153,6 +153,10 @@
   <div class="nav-item" data-page="bankimport" onclick="nav('bankimport',this)" title="Bankimport">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 20h16"/></svg>
     <span class="nav-label">Bankimport</span>
+  </div>
+  <div class="nav-item" data-page="factuurmaker" onclick="nav('factuurmaker',this)" title="Factuur maken">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M14 3v6h6"/><path d="M8 13h8M8 17h5"/></svg>
+    <span class="nav-label">Factuur maken</span>
   </div>
   <div class="nav-item" data-page="crediteuren" onclick="nav('crediteuren',this)" title="Leveranciers">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
@@ -620,6 +624,17 @@
     </div>
   </div>
   <div id="periode-inhoud"></div>
+</div>
+
+<!-- FACTUUR MAKEN -->
+<div id="p-factuurmaker" class="page">
+  <div class="page-head">
+    <div>
+      <div class="page-title">Factuur maken</div>
+      <div class="page-sub">Stel een factuur op, bekijk hem meteen en druk hem af of sla hem op als PDF.</div>
+    </div>
+  </div>
+  <div id="factuurmaker-inhoud"></div>
 </div>
 
 <!-- BANKIMPORT -->
@@ -1359,6 +1374,6 @@
 </div>
 </div>
 
-<script type="module" src="app.js?v=20261023n"></script>
+<script type="module" src="app.js?v=20261023o"></script>
 </body>
 </html>

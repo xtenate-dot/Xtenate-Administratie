@@ -5,7 +5,7 @@
 // wordt er op meerdere kenmerken tegelijk gewogen, met een score die ook aan de
 // gebruiker wordt getoond, en worden terugkerende tarieven overgeslagen.
 
-import { weergaveNaam } from './helpers.js?v=20261023n';
+import { weergaveNaam } from './helpers.js?v=20261023o';
 
 /** Minimale score waarbij we een paar als verdacht beschouwen. */
 export const DREMPEL = 85;
