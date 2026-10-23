@@ -5,14 +5,14 @@
 // ongewijzigd: elke tegel roept dezelfde globale functie aan als het
 // zijbalk-item, dus er verandert niets aan wat ze doen.
 
-import { herstelpuntenBlok } from './herstelpunt.js?v=20261023u';
-import { draaiControles } from './controle.js?v=20261023u';
-import { esc } from './helpers.js?v=20261023u';
-import { saveVoorraadInstellingen, standaardMinVoorraad, saveControleInstellingen, CONTROLE_INSTELLINGEN, saveBtwInstellingen, BTW_INSTELLINGEN, saveBedrijfsgegevens, BEDRIJFSGEGEVENS, saveKmInstellingen, KM_INSTELLINGEN, saveFactuurInstellingen, FACTUUR_INSTELLINGEN, appDataStatus, state, rekeningenLijst, bankKoppelingDagenTotVerval } from './storage.js?v=20261023u';
-import { werkBankKoppelingRekBijInSupabase } from './supabase-client-v2.js?v=20261023u';
-import { hertekenHuidigePagina } from './ui.js?v=20261023u';
-import { getPendingItems } from './supabase-client-v2.js?v=20261023u';
-import { syncNu } from './autosync.js?v=20261023u';
+import { herstelpuntenBlok } from './herstelpunt.js?v=20261023v';
+import { draaiControles } from './controle.js?v=20261023v';
+import { esc } from './helpers.js?v=20261023v';
+import { saveVoorraadInstellingen, standaardMinVoorraad, saveControleInstellingen, CONTROLE_INSTELLINGEN, saveBtwInstellingen, BTW_INSTELLINGEN, saveBedrijfsgegevens, BEDRIJFSGEGEVENS, saveKmInstellingen, KM_INSTELLINGEN, saveFactuurInstellingen, FACTUUR_INSTELLINGEN, appDataStatus, state, rekeningenLijst, bankKoppelingDagenTotVerval } from './storage.js?v=20261023v';
+import { werkBankKoppelingRekBijInSupabase } from './supabase-client-v2.js?v=20261023v';
+import { hertekenHuidigePagina } from './ui.js?v=20261023v';
+import { getPendingItems } from './supabase-client-v2.js?v=20261023v';
+import { syncNu } from './autosync.js?v=20261023v';
 
 const el = id => document.getElementById(id);
 
@@ -492,6 +492,7 @@ const APP_DATA_NAMEN = {
   bedrijfsgegevens: 'Bedrijfsgegevens',
   km_instellingen: 'Kilometertarief',
   ritten: 'Ritten (kilometers)',
+  uren: 'Uren (urenregistratie)',
   activa: 'Activaregister',
   tellers: 'Tellers'
 };

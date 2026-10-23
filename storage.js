@@ -19,7 +19,7 @@ import {
   saveAppData,
   loadAppData,
   laatsteAppDataFout
-} from './supabase-client-v2.js?v=20261023u';
+} from './supabase-client-v2.js?v=20261023v';
 
 /**
  * Stuurt een los lijstje (groepen, facturen, tellers) naar de cloud zonder
@@ -111,6 +111,7 @@ function appDataWaarde(sleutel) {
   if (sleutel === 'bedrijfsgegevens') return BEDRIJFSGEGEVENS;
   if (sleutel === 'km_instellingen') return KM_INSTELLINGEN;
   if (sleutel === 'ritten') return { lijst: state.RITTEN, volgende: state.nxtRit };
+  if (sleutel === 'uren') return { lijst: state.UREN, volgende: state.nxtUur };
   if (sleutel === 'activa') return { lijst: state.ACTIVA, volgende: state.nxtActivum };
   if (sleutel === 'veiling') return state.VEILING;
   if (sleutel === 'hnvi_datums') return state.HNVI_DATUMS;
@@ -659,6 +660,18 @@ export function saveKmInstellingen(nieuwe) {
 state.RITTEN = load('xtenate_ritten', []);
 state.nxtRit = load('xtenate_nxt_rit', 1);
 
+// ─── URENREGISTRATIE ────────────────────────────────────────────────────────
+// Uren die je aan je onderneming besteedt, voor het urencriterium (1.225 uur per jaar).
+// Staan naast de boekingen en raken de cijfers niet; ze gaan wel mee naar de cloud.
+state.UREN = load('xtenate_uren', []);
+state.nxtUur = load('xtenate_nxt_uur', 1);
+
+export function saveUren() {
+  save('xtenate_uren', state.UREN);
+  save('xtenate_nxt_uur', state.nxtUur);
+  duwAppData('uren', { lijst: state.UREN, volgende: state.nxtUur });
+}
+
 export function saveRitten() {
   save('xtenate_ritten', state.RITTEN);
   save('xtenate_nxt_rit', state.nxtRit);
@@ -878,6 +891,11 @@ export async function loadDataHybrid() {
           state.RITTEN = extra.ritten.lijst;
           if (Number(extra.ritten.volgende) > 0) state.nxtRit = Number(extra.ritten.volgende);
           console.log(`✅ Ritten uit Supabase: ${state.RITTEN.length}`);
+        }
+        if (extra.uren && Array.isArray(extra.uren.lijst)) {
+          state.UREN = extra.uren.lijst;
+          if (Number(extra.uren.volgende) > 0) state.nxtUur = Number(extra.uren.volgende);
+          console.log(`✅ Uren uit Supabase: ${state.UREN.length}`);
         }
         if (extra.activa && Array.isArray(extra.activa.lijst)) {
           state.ACTIVA = extra.activa.lijst;

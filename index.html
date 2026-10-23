@@ -21,10 +21,10 @@
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<link rel="stylesheet" href="theme.css?v=20261023u">
-<link rel="stylesheet" href="layout.css?v=20261023u">
-<link rel="stylesheet" href="components.css?v=20261023u">
-<link rel="stylesheet" href="responsive.css?v=20261023u">
+<link rel="stylesheet" href="theme.css?v=20261023v">
+<link rel="stylesheet" href="layout.css?v=20261023v">
+<link rel="stylesheet" href="components.css?v=20261023v">
+<link rel="stylesheet" href="responsive.css?v=20261023v">
 </head>
 <body>
 
@@ -181,6 +181,10 @@
   <div class="nav-item" data-page="km" onclick="nav('km',this)" title="Kilometers">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/><path d="M5 17H3v-4l2-5h9l4 4h1a2 2 0 012 2v3h-2"/><path d="M9 8V5h4"/></svg>
     <span class="nav-label">Kilometers</span>
+  </div>
+  <div class="nav-item" data-page="uren" onclick="nav('uren',this)" title="Uren">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+    <span class="nav-label">Uren</span>
   </div>
   <div class="nav-item" data-page="activa" onclick="nav('activa',this)" title="Activa">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16"/><path d="M10 4v16"/></svg>
@@ -591,6 +595,17 @@
     <button class="btn" onclick="downloadBtwPdf()">Download als pdf</button>
   </div>
   <div id="btw-inhoud"></div>
+</div>
+
+<!-- UREN -->
+<div id="p-uren" class="page">
+  <div class="page-head">
+    <div>
+      <div class="page-title">Uren</div>
+      <div class="page-sub">Uren bijhouden voor het urencriterium (1.225 uur per jaar).</div>
+    </div>
+  </div>
+  <div id="uren-inhoud"></div>
 </div>
 
 <!-- KILOMETERS -->
@@ -1375,6 +1390,6 @@
 </div>
 </div>
 
-<script type="module" src="app.js?v=20261023u"></script>
+<script type="module" src="app.js?v=20261023v"></script>
 </body>
 </html>

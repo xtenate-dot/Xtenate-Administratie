@@ -2,13 +2,15 @@
 // controlelijst, de inkoop die wel en niet meetelt, het resultaat en de
 // aangifte. Alleen kijken; er wordt niets aangepast.
 
-import { state, saveCoversData } from './storage.js?v=20261023u';
-import { maakHerstelpunt } from './herstelpunt.js?v=20261023u';
-import { lopendJaar, txVanJaar, vandaagIso } from './jaren.js?v=20261023u';
-import { esc, fmt, MND_KORT } from './helpers.js?v=20261023u';
-import { aangifteModel, inkoopOverzicht, ibOver, hnviLotenVanJaar, hnviOmzetBuitenBank } from './belasting.js?v=20261023u';
-import { korStatus } from './kor.js?v=20261023u';
-import { draaiControles } from './controle.js?v=20261023u';
+import { state, saveCoversData } from './storage.js?v=20261023v';
+import { maakHerstelpunt } from './herstelpunt.js?v=20261023v';
+import { lopendJaar, txVanJaar, vandaagIso } from './jaren.js?v=20261023v';
+import { esc, fmt, MND_KORT } from './helpers.js?v=20261023v';
+import { aangifteModel, inkoopOverzicht, ibOver, hnviLotenVanJaar, hnviOmzetBuitenBank } from './belasting.js?v=20261023v';
+import { totaalUren, URENCRITERIUM } from './uren.js?v=20261023v';
+const nlU = n => Number(n).toLocaleString('nl-NL', { maximumFractionDigits: 1 });
+import { korStatus } from './kor.js?v=20261023v';
+import { draaiControles } from './controle.js?v=20261023v';
 
 const el = id => document.getElementById(id);
 const jr = x => String(x || '').slice(0, 4);
@@ -139,6 +141,7 @@ export function renderJaarafsluiting() {
       <div class="card" style="padding:0">${checks(jaar, tx, inkoop).join('')}</div>
       <div class="section-head"><div class="section-titel">Inkoop: wel en niet meegeteld</div></div>
       ${inkoopTabel(inkoop)}
+      <p class="muted" style="font-size:12px;margin:8px 0">Uren ${esc(jaar)}: ${nlU(totaalUren(jaar))} van ${URENCRITERIUM.toLocaleString('nl-NL')} (urencriterium, ter info).</p>
       <div class="section-head"><div class="section-titel">Resultaat</div></div>
       <div class="kpi-grid">
         <div class="kpi kpi--secondary"><div class="kpi-lbl">Omzet</div><div class="kpi-val">${fmt(omzet)}</div></div>
