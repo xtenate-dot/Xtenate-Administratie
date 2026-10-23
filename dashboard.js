@@ -1,18 +1,18 @@
 // dashboard.js — Home: het financiële dashboard.
 
-import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261023r';
+import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261023s';
 import {
   BEGINSALDO_2026, calcIB, ddmm, esc, fmt, fmtKort, isInkomst, isKostenBoeking, isOmzet, isUitgave,
   maandLabel, rekBadge, saldoDelta, typeBadge, weergaveNaam
-} from './helpers.js?v=20261023r';
-import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261023r';
-import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261023r';
-import { draaiControles } from './controle.js?v=20261023r';
-import { aangifteModel, ibOver } from './belasting.js?v=20261023r';
-import { splitsLoten } from './hnvilot.js?v=20261023r';
-import { korStatus } from './kor.js?v=20261023r';
-import { maakSorteerbaar } from './tables.js?v=20261023r';
-import { hertekenHuidigePagina } from './ui.js?v=20261023r';
+} from './helpers.js?v=20261023s';
+import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261023s';
+import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261023s';
+import { draaiControles } from './controle.js?v=20261023s';
+import { aangifteModel, ibOver } from './belasting.js?v=20261023s';
+import { splitsLoten } from './hnvilot.js?v=20261023s';
+import { korStatus } from './kor.js?v=20261023s';
+import { maakSorteerbaar } from './tables.js?v=20261023s';
+import { hertekenHuidigePagina } from './ui.js?v=20261023s';
 
 const HOOFDREKENING = '1010'; // de bankrekening waarop het beginsaldo staat
 
@@ -208,6 +208,17 @@ function aandachtspunten() {
       actie: "nav('jaarafsluiting')", knop: 'Jaarafsluiting'
     });
   } catch (e) { console.warn('KOR-bewaking mislukt:', e); }
+  // Zonder cloud staat alles in deze browser; een recente back-up is dan het enige vangnet.
+  try {
+    const laatste = localStorage.getItem('xtenate_laatste_backup');
+    const dagen = laatste ? Math.floor((Date.now() - new Date(laatste).getTime()) / 86400000) : null;
+    if (dagen === null || dagen >= 14) punten.push({
+      kleur: dagen === null || dagen >= 30 ? 'red' : 'amber',
+      titel: dagen === null ? 'Nog geen back-up gemaakt' : `Laatste back-up is ${dagen} dagen oud`,
+      tekst: 'Je gegevens staan in deze browser. Download een back-up (en bewaar die buiten de browser), zeker voor je een import doet.',
+      actie: "openOpslagDiagnose();downloadBackup()", knop: 'Back-up maken'
+    });
+  } catch { /* geen localStorage: dan ook geen herinnering */ }
   const min = (c) => Number.isFinite(Number(c.minVoorraad)) ? Number(c.minVoorraad) : 3;
 
   const uitverkocht = state.COVERS.filter(c => (Number(c.voorraad) || 0) <= 0);

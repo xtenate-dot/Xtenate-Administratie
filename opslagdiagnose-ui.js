@@ -6,7 +6,7 @@
 import { opslagDiagnose, opslagDiagnoseAlsTekst, opslagSnapshot, opslagSnapshotAlsTekst,
   overrideDetail, overrideDetailAlsTekst, negeerDetail, backupBestand,
   negeerAnalyse, downloadNegeerlijst }
-  from './opslagdiagnose.js?v=20261023r';
+  from './opslagdiagnose.js?v=20261023s';
 
 const el = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
@@ -386,6 +386,7 @@ export async function downloadBackup() {
   if (knop) { knop.disabled = true; knop.textContent = 'Bezig…'; }
   try {
     const uit = await backupBestand();
+    try { localStorage.setItem('xtenate_laatste_backup', new Date().toISOString()); } catch { /* niet erg */ }
     const r = ['VOLLEDIGE RESERVEKOPIE — ' + new Date().toLocaleString('nl-NL'),
       'bestand: ' + uit.naam, 'sleutels: ' + uit.sleutels, 'omvang: ' + uit.tekens + ' tekens',
       'TOTALE CHECKSUM: ' + uit.som, '',
