@@ -19,8 +19,14 @@ Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
 
 - PAUZE (gebruiker 23-10): cloud-synchronisatie van voorraad (vervang_voorraad.sql in Supabase uitvoeren), factuurinstellingen en bonnetjes (Supabase Storage bucket) -- later oppakken; telefoon/computer delen nu alleen boekingen, loten, facturen, bedrijfsgegevens.
 
-## BELANGRIJK: jaarwisseling 2027 (gevonden 23-10-2026, nog niet gedaan)
-De app kent `state.TX` als "het huidige jaar = 2026" en `state.HIST_TX` als eerdere jaren. Op minstens ~40 plekken staat `'2026'` hard in de code (bank.js, belasting.js, controle.js, dashboard.js, export.js, grootboek.js, partijen.js, voorraad.js, modals.js (import: is2026 -> xtenate_tx), jaarafsluiting.js, bankimport.js, kor.js e.a.) plus BEGINSALDO_2026 (beginsaldo huidige jaar = 183,15). Op 1-1-2027 komen nieuwe boekingen in `TX` terecht en worden als 2026 getoond/geteld. Plan: (1) centrale `txVanJaar(jaar)` = alle TX+HIST_TX met datum-voorvoegsel; (2) HUIDIG_JAAR uit de datum van vandaag; (3) beginsaldo per jaar afleiden (eindsaldo vorig jaar); (4) import per jaar generiek; (5) jaar 2026 vergrendelen en testen met nagebootste 2027-boekingen. Doen vóór december, met herstelpunt en backup.
+## Jaarwisseling 2027: GEDAAN op 23-10-2026 (v20261023t), getest met nagemaakte 2027-boekingen
+- jaren.js is de enige plek voor jaarlogica: `txVanJaar(jaar)` (op datum, uit TX en HIST_TX), `lopendJaar()`, `isTxJaar`, `banksaldoTot`, `berekendMaandSaldo`. TX = alle boekingen vanaf 2026 (in de cloud archief_jaar NULL), HIST_TX = eerdere jaren.
+- Omgezet: bank, belasting, controle, dashboard, grootboek, partijen, export, excel-ui, jaarafsluiting, bankimport (alle jaren vanaf 2026, vergrendeld-vraag), Excel-import (vervangt alleen de jaren uit het bestand, ids botsen niet), voorraad (lopendJaar), kor.
+- Saldo's: zonder afschrift-saldo (Excel) wordt het saldo berekend uit beginsaldo 1-1-2026 + boekingen (bank, dashboard, export).
+- Wissen van 2026 wordt geweigerd zolang er boekingen van latere jaren zijn.
+- Jaarafsluiting: controle "eindvoorraad {jaar} vastgelegd" met knop "Leg vast" (zet de huidige voorraad als eindstand van een afgesloten jaar). In januari 2027 doen vóór de voorraad verandert.
+- Nog niet gedaan/te controleren in 2027: IB-tarieven en MKB-vrijstelling in helpers.calcIB staan vast (indicatief, niet per jaar); herstel.js/migratie.js/opslagdiagnose zijn diagnosetools met 2026-aannames; voorraad-"Omzet {jaar}" gebruikt nog het veld omzet2026 (legacy naam).
+- Draaiboek begin januari 2027: back-up maken; 2026 afsluiten via Jaarafsluiting (eindvoorraad vastleggen, controle doorlopen, aangifte, vergrendelen); daarna boeken in 2027.
 
 ## Wensen van de gebruiker (nog te doen)
 1. **Bankimport: verwijderen.** Bij het importeren van de bank geen verwijderknop. Gewenst: regels (dubbel, storno) uit het voorstel kunnen halen, én een al geïmporteerde boeking makkelijk kunnen verwijderen. (Een vinkje om een regel over te slaan bestaat al.)
