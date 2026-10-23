@@ -6,10 +6,10 @@
 // bedrijfskosten (geen balansposten, geen HNVI- of voorraadinkoop).
 // HNVI-inkoop staat apart, omdat die pas bij verkoop een kostenpost is.
 
-import { state } from './storage.js?v=20261023l';
-import { esc, fmt, isInkomst, isOmzet, isUitgave, MND_KORT } from './helpers.js?v=20261023l';
-import { isKostenpost, inkoopOverzicht } from './belasting.js?v=20261023l';
-import { kmTarief } from './km.js?v=20261023l';
+import { state } from './storage.js?v=20261023m';
+import { esc, fmt, isInkomst, isOmzet, isUitgave, MND_KORT } from './helpers.js?v=20261023m';
+import { isKostenpost, inkoopOverzicht } from './belasting.js?v=20261023m';
+import { kmTarief } from './km.js?v=20261023m';
 
 const el = id => document.getElementById(id);
 let stand = 'maand';          // 'maand' | 'kwartaal' | 'jaar'
@@ -150,15 +150,19 @@ export function grootboekMatrix(boekingen, soort, jaar) {
   const prive = rubriek('Totaal rubriek 0 (privé)', x => num(x) < 1000);
   const balans = rubriek('Totaal rubriek 1 en 2', x => num(x) >= 1000 && num(x) < 3000);
   const kosten4 = rubriek('Totaal rubriek 4', x => num(x) >= 4000 && num(x) < 5000);
-  // Kilometervergoeding hoort bij Reiskosten (4640): als eigen regel eronder.
+  // Kilometervergoeding hoort bij Reiskosten (4640) en wordt op dezelfde regel meegeteld.
   const kmKaart = kmPerPeriode(boekingen, soort);
   if (kmKaart.size && kmTarief()) {
     const w = sleutels.map(k => (kmKaart.get(k) || { bedrag: 0 }).bedrag);
-    const km = sleutels.reduce((s, k) => s + ((kmKaart.get(k) || { km: 0 }).km), 0);
     if (w.some(x => x)) {
-      const rij = { nummer: '4640', naam: `↳ kilometervergoeding (${km.toLocaleString('nl-NL')} km × € ${kmTarief().toLocaleString('nl-NL')})`, waarden: w, totaal: w.reduce((s, v) => s + v, 0) };
-      const i = kosten4.rijen.findIndex(x => x.nummer === '4640');
-      kosten4.rijen.splice(i >= 0 ? i + 1 : kosten4.rijen.length, 0, rij);
+      let rij = kosten4.rijen.find(x => x.nummer === '4640');
+      if (!rij) {
+        rij = { nummer: '4640', naam: namen.get('4640') || 'Reiskosten', waarden: nul(), totaal: 0 };
+        kosten4.rijen.push(rij);
+        kosten4.rijen.sort((x, y) => Number(x.nummer) - Number(y.nummer));
+      }
+      rij.waarden = tel(rij.waarden, w);
+      rij.totaal = rij.waarden.reduce((s, v) => s + v, 0);
       kosten4.waarden = tel(kosten4.waarden, w);
       kosten4.totaal = kosten4.waarden.reduce((s, v) => s + v, 0);
     }
