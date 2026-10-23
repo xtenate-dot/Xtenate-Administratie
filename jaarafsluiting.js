@@ -2,13 +2,13 @@
 // controlelijst, de inkoop die wel en niet meetelt, het resultaat en de
 // aangifte. Alleen kijken; er wordt niets aangepast.
 
-import { state, saveCoversData } from './storage.js?v=20261023t';
-import { maakHerstelpunt } from './herstelpunt.js?v=20261023t';
-import { lopendJaar, txVanJaar, vandaagIso } from './jaren.js?v=20261023t';
-import { esc, fmt, MND_KORT } from './helpers.js?v=20261023t';
-import { aangifteModel, inkoopOverzicht, ibOver, hnviLotenVanJaar, hnviOmzetBuitenBank } from './belasting.js?v=20261023t';
-import { korStatus } from './kor.js?v=20261023t';
-import { draaiControles } from './controle.js?v=20261023t';
+import { state, saveCoversData } from './storage.js?v=20261023u';
+import { maakHerstelpunt } from './herstelpunt.js?v=20261023u';
+import { lopendJaar, txVanJaar, vandaagIso } from './jaren.js?v=20261023u';
+import { esc, fmt, MND_KORT } from './helpers.js?v=20261023u';
+import { aangifteModel, inkoopOverzicht, ibOver, hnviLotenVanJaar, hnviOmzetBuitenBank } from './belasting.js?v=20261023u';
+import { korStatus } from './kor.js?v=20261023u';
+import { draaiControles } from './controle.js?v=20261023u';
 
 const el = id => document.getElementById(id);
 const jr = x => String(x || '').slice(0, 4);
@@ -133,7 +133,7 @@ export function renderJaarafsluiting() {
     const inkoop = inkoopOverzicht(jaar);
     const m = aangifteModel(jaar);
     const { omzet, winst } = m.resultaat;
-    const ib = ibOver(winst);
+    const ib = ibOver(winst, jaar);
     doel.innerHTML = `
       <div class="section-head"><div class="section-titel">Controlelijst ${esc(jaar)}</div></div>
       <div class="card" style="padding:0">${checks(jaar, tx, inkoop).join('')}</div>

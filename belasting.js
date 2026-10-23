@@ -1,13 +1,14 @@
 // belasting.js — Belasting-pagina (indicatieve IB-berekening).
 
-import { splitsLoten } from './hnvilot.js?v=20261023t';
-import { lopendJaar, txVanJaar } from './jaren.js?v=20261023t';
-import { charts, dc, kleurVoorGb } from './charts.js?v=20261023t';
-import { ddmm, fmt, gbCode, isInkomst, isKostenBoeking, isOmzet, isPriveBetaaldeKost, isUitgave } from './helpers.js?v=20261023t';
-import { downloadModelPdf } from './pdf.js?v=20261023t';
-import { state, grootboekNamen } from './storage.js?v=20261023t';
-import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261023t';
-import { totaalAfschrijvingVanJaar } from './activa.js?v=20261023t';
+import { splitsLoten } from './hnvilot.js?v=20261023u';
+import { tarievenVoor, ibDetail, pct, zelfstandigenaftrekAan, zetZelfstandigenaftrek, bewaarTarieven, herstelStandaardTarieven } from './tarieven.js?v=20261023u';
+import { lopendJaar, txVanJaar } from './jaren.js?v=20261023u';
+import { charts, dc, kleurVoorGb } from './charts.js?v=20261023u';
+import { ddmm, fmt, gbCode, isInkomst, isKostenBoeking, isOmzet, isPriveBetaaldeKost, isUitgave } from './helpers.js?v=20261023u';
+import { downloadModelPdf } from './pdf.js?v=20261023u';
+import { state, grootboekNamen } from './storage.js?v=20261023u';
+import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261023u';
+import { totaalAfschrijvingVanJaar } from './activa.js?v=20261023u';
 
 
 /** Sleutel waaronder de handmatige posten van één jaar staan opgeslagen. */
@@ -120,7 +121,7 @@ const SOORT_SLEUTEL = 'xtenate_inkomenssoort';
  * Twee manieren waarop dit inkomen in de aangifte kan staan.
  *
  * 'onderneming' — winst uit onderneming. Hierbij geldt de MKB-winstvrijstelling
- *   van 14,2%, die je belastbare winst verlaagt.
+ *   (percentage per jaar, zie tarieven.js), die je belastbare winst verlaagt.
  * 'overig' — resultaat uit overig werk. Deze vrijstelling geldt dan niet, dus
  *   je betaalt over de hele winst.
  *
@@ -137,17 +138,13 @@ export function zetInkomenssoort(soort) {
 }
 
 /** Het vrijstellingspercentage dat bij de gekozen rubriek hoort. */
-export function mkbTarief() {
-  return inkomenssoort() === 'overig' ? 0 : 0.142;
+export function mkbTarief(jaar) {
+  return inkomenssoort() === 'overig' ? 0 : tarievenVoor(jaar ?? gekozenJaar()).mkb;
 }
 
 /** Geschatte inkomstenbelasting over een winst, in de eerste twee schijven. */
-export function ibOver(winst) {
-  if (!(winst > 0)) return 0;
-  const belastbaar = Math.max(0, winst - winst * mkbTarief());
-  return belastbaar <= 38441
-    ? belastbaar * 0.3697
-    : 38441 * 0.3697 + (belastbaar - 38441) * 0.495;
+export function ibOver(winst, jaar) {
+  return ibDetail(winst, jaar ?? gekozenJaar(), { metMkb: inkomenssoort() !== 'overig' }).ib;
 }
 
 const PCT_SLEUTEL = 'xtenate_aftrek_pct';
@@ -507,16 +504,17 @@ export function renderBelasting() {
   const winstJaar = omzetJaar - kostenJaar;
 
   // IB berekening (huidig)
+  const metMkb = inkomenssoort() !== 'overig';
+  const tarief = tarievenVoor(jaar);
   const calcIB = (w) => {
-    if (w <= 0) return w * 0.3697; // negatief = mogelijke teruggave
-    const mkb = w * mkbTarief();
-    const belastbaar = Math.max(0, w - mkb);
-    return belastbaar <= 38441 ? belastbaar * 0.3697 : 38441 * 0.3697 + (belastbaar-38441) * 0.495;
+    if (w <= 0) return w * tarief.schijven[0].tarief; // negatief = mogelijke teruggave
+    return ibDetail(w, jaar, { metMkb }).ib;
   };
+  const ibd = ibDetail(winst, jaar, { metMkb });
   const ib = calcIB(winst);
   const ibJaar = calcIB(winstJaar);
-  const mkb = winst > 0 ? Math.round(winst * mkbTarief()) : 0;
-  const belastbaar = winst > 0 ? Math.max(0, winst - mkb) : 0;
+  const mkb = winst > 0 ? Math.round(ibd.mkb) : 0;
+  const belastbaar = winst > 0 ? ibd.belastbaar : 0;
 
   document.getElementById('bel-metrics').innerHTML = `
     <div class="metric"><div class="lbl">Bruto omzet</div><div class="val">${fmt(omzetTotal)}</div></div>
@@ -701,9 +699,11 @@ export function renderBelasting() {
     ${voorraadInkoopBank > 0 ? `<div class="ib-row" style="color:var(--text-secondary);font-size:11px"><span>Inkoop voorraad dit jaar (${vrdRek.join(', ')}) — geen kostenpost</span><span>${fmt(voorraadInkoopBank)}</span></div>` : ''}
     <div class="ib-row"><span style="font-weight:600">Winst / verlies</span><span style="font-weight:600" class="${winst>=0?'pos':'neg'}">${fmt(winst)}</span></div>
     ${winst > 0 ? `
-    ${mkbTarief() > 0 ? `<div class="ib-row"><span>MKB-winstvrijstelling (14,2%)</span><span class="neg">– ${fmt(mkb)}</span></div>` : `<div class="ib-row" style="color:var(--text-secondary);font-size:11px"><span>Geen MKB-winstvrijstelling (resultaat uit overig werk)</span><span>${fmt(0)}</span></div>`}
+    ${ibd.aftrek > 0 ? `<div class="ib-row"><span>Zelfstandigenaftrek ${escHtml(jaar)}</span><span class="neg">– ${fmt(ibd.aftrek)}</span></div>` : ''}
+    ${metMkb ? `<div class="ib-row"><span>MKB-winstvrijstelling (${pct(tarief.mkb)})</span><span class="neg">– ${fmt(mkb)}</span></div>` : `<div class="ib-row" style="color:var(--text-secondary);font-size:11px"><span>Geen MKB-winstvrijstelling (resultaat uit overig werk)</span><span>${fmt(0)}</span></div>`}
     <div class="ib-row"><span>Belastbaar inkomen</span><span>${fmt(Math.round(belastbaar))}</span></div>
-    <div class="ib-row"><span>Tarief schijf 1 (36,97%)</span><span></span></div>
+    ${ibd.perSchijf.map((s, n) => `<div class="ib-row" style="color:var(--text-secondary);font-size:11px"><span>Schijf ${n + 1} (${pct(s.tarief)}) over ${fmt(Math.round(s.bedrag))}</span><span>${fmt(Math.round(s.bedrag * s.tarief))}</span></div>`).join('')}
+    ${tarief.vanJaar !== tarief.jaar || tarief.voorlopig ? `<div class="ib-row" style="color:var(--semantic-warning-bright, #b45309);font-size:11px"><span>${tarief.vanJaar !== tarief.jaar ? `Voor ${escHtml(tarief.jaar)} zijn geen tarieven ingevuld; die van ${escHtml(tarief.vanJaar)} gelden.` : `De tarieven van ${escHtml(tarief.jaar)} zijn een voorstel, nog niet definitief.`} Controleer via “Tarieven”.</span><span></span></div>` : ''}
     <div class="ib-total"><span>Geschatte inkomstenbelasting</span><span class="neg">${fmt(Math.round(ib))}</span></div>` : `
     <div class="ib-total"><span>${ib < 0 ? 'Geschatte teruggave (bij ander inkomen)' : 'Geen belasting verschuldigd'}</span><span class="${ib<0?'pos':''}">${ib<0?'+ '+fmt(Math.abs(Math.round(ib))):'€\u202f0,00'}</span></div>`}
 
@@ -722,6 +722,7 @@ export function renderBelasting() {
 
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--border-default)">
       <button type="button" class="btn btn-sm" onclick="openInkomenssoort()">Rubriek: ${inkomenssoort() === 'overig' ? 'overig werk' : 'onderneming'}</button>
+      <button type="button" class="btn btn-sm" onclick="openTarieven()">Tarieven ${escHtml(String(jaar))}</button>
       <button type="button" class="btn btn-sm" onclick="openPercentages()">Aftrekpercentages</button>
       <button type="button" class="btn btn-sm" onclick="openExtraKosten()">Aftrekposten aanvullen${handmatig.length ? ` (${handmatig.length})` : ''}</button>
       <button type="button" class="btn btn-sm" onclick="kopieerAangifte()">Kopieer aangifte</button>
@@ -1073,8 +1074,9 @@ export function aangifteModel(jaar = gekozenJaar()) {
   const inkoopwaarde = cogs + hnviInkoop;
   const overigeKosten = kostenOverig + handmatig.reduce((s, k) => s + (Number(k.bedrag) || 0), 0) + kmBedrag + activaBedrag;
   const winst = omzet - inkoopwaarde - overigeKosten;
-  const mkb = winst > 0 ? winst * mkbTarief() : 0;
-  const belastbaar = Math.max(0, winst - mkb);
+  const ibd = ibDetail(winst, jaar, { metMkb: inkomenssoort() !== 'overig' });
+  const mkb = ibd.mkb;
+  const belastbaar = ibd.belastbaar;
 
   const velden = aangifteVelden(belTX, { cogs, hnviInkoop, handmatig, kmBedrag, activaBedrag });
   const omzetSplit = nettoOmzet(belTX);
@@ -1105,11 +1107,12 @@ export function aangifteModel(jaar = gekozenJaar()) {
 
       { type: 'kop', tekst: 'Resultaat' },
       { type: 'regel', label: 'Winst uit onderneming', bedrag: winst },
-      ...(mkbTarief() > 0
-        ? [{ type: 'regel', label: 'MKB-winstvrijstelling (14,2%)', bedrag: mkb, aftrek: true }]
+      ...(ibd.aftrek > 0 ? [{ type: 'regel', label: 'Zelfstandigenaftrek', bedrag: ibd.aftrek, aftrek: true }] : []),
+      ...(mkbTarief(jaar) > 0
+        ? [{ type: 'regel', label: `MKB-winstvrijstelling (${pct(mkbTarief(jaar))})`, bedrag: mkb, aftrek: true }]
         : []),
       { type: 'regel', label: 'Belastbare winst', bedrag: belastbaar, totaal: true },
-      { type: 'regel', label: winst > 0 ? 'Geschatte inkomstenbelasting hierover' : 'Geen belasting (verlies)', bedrag: Math.max(0, ibOver(winst)) },
+      { type: 'regel', label: winst > 0 ? 'Geschatte inkomstenbelasting hierover' : 'Geen belasting (verlies)', bedrag: Math.max(0, ibd.ib) },
       { type: 'tekst', tekst: winst > 0
         ? `Dit is de belasting over deze inkomsten alleen. Wat je uiteindelijk betaalt of terugkrijgt hangt ook af van je andere inkomsten en wat daarop al is ingehouden.`
         : `Bij verlies betaal je hierover niets. Verrekening met ander inkomen kan een teruggave opleveren.` },
@@ -1319,7 +1322,7 @@ export function openInkomenssoort() {
       <header class="pm-kop">
         <div>
           <h3>In welke rubriek vul je dit in?</h3>
-          <p class="pm-sub">Dit bepaalt of de MKB-winstvrijstelling van 14,2% meetelt.</p>
+          <p class="pm-sub">Dit bepaalt of de MKB-winstvrijstelling van ${pct(tarievenVoor(gekozenJaar()).mkb)} meetelt.</p>
         </div>
         <button type="button" class="pm-kruis" data-sluit aria-label="Sluiten">&times;</button>
       </header>
@@ -1328,7 +1331,7 @@ export function openInkomenssoort() {
           <input type="radio" name="soort" value="onderneming"${nu === 'onderneming' ? ' checked' : ''} style="margin-top:3px">
           <span>
             <strong style="display:block;font-size:13px">Winst uit onderneming</strong>
-            <span style="font-size:12px;color:var(--text-secondary);line-height:1.5">De Belastingdienst ziet je als ondernemer voor de inkomstenbelasting. De MKB-winstvrijstelling van 14,2% geldt: je betaalt over 85,8% van de winst.</span>
+            <span style="font-size:12px;color:var(--text-secondary);line-height:1.5">De Belastingdienst ziet je als ondernemer voor de inkomstenbelasting. De MKB-winstvrijstelling van ${pct(tarievenVoor(gekozenJaar()).mkb)} geldt: je betaalt over ${pct(1 - tarievenVoor(gekozenJaar()).mkb)} van de winst.</span>
           </span>
         </label>
         <label style="display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--border-default);border-radius:var(--radius-sm);cursor:pointer">
@@ -1353,6 +1356,74 @@ export function openInkomenssoort() {
   const sluit = koppelVenster(laag);
   laag.querySelector('#soort-bewaar').addEventListener('click', () => {
     zetInkomenssoort(laag.querySelector('input[name="soort"]:checked')?.value);
+    sluit();
+    renderBelasting();
+  });
+}
+
+/**
+ * Venster met de belastingtarieven van het gekozen jaar. De standaardwaarden komen van de
+ * KVK; wat je hier aanpast staat alleen in deze browser en gaat vóór de standaard.
+ */
+export function openTarieven() {
+  const jaar = /^\d{4}$/.test(String(gekozenJaar())) ? String(gekozenJaar()) : lopendJaar();
+  const t = tarievenVoor(jaar);
+  const num = v => parseFloat(String(v).replace(',', '.'));
+  const p2 = v => String(Math.round(v * 10000) / 100).replace('.', ',');
+  const laag = document.createElement('div');
+  laag.className = 'pm-laag';
+  laag.innerHTML = `
+    <div class="pm-venster" role="dialog" aria-modal="true" style="max-width:600px">
+      <header class="pm-kop">
+        <div>
+          <h3>Tarieven ${escHtml(jaar)}</h3>
+          <p class="pm-sub">${t.vanJaar !== jaar
+            ? `Voor ${escHtml(jaar)} zijn nog geen tarieven ingevuld: dit zijn de waarden van ${escHtml(t.vanJaar)}. Pas ze aan en sla op.`
+            : t.voorlopig ? 'Dit is een voorstel (Belastingplan), nog niet definitief. Controleer ze zodra ze vaststaan.' : 'Standaardwaarden volgens de KVK. Pas aan als de Belastingdienst iets anders opgeeft.'}</p>
+        </div>
+        <button type="button" class="pm-kruis" data-sluit aria-label="Sluiten">&times;</button>
+      </header>
+      <div class="pm-inhoud" style="padding:16px 20px">
+        <table class="tbl-compact" style="width:100%"><thead><tr><th>Schijf</th><th>Tot (€)</th><th>Tarief (%)</th></tr></thead><tbody>
+          ${t.schijven.map((s, n) => `<tr><td>${n + 1}</td>
+            <td>${s.tot == null ? '<span class="muted">geen grens</span>' : `<input type="text" inputmode="numeric" data-tot="${n}" value="${s.tot}" style="width:110px">`}</td>
+            <td><input type="text" inputmode="decimal" data-tarief="${n}" value="${p2(s.tarief)}" style="width:80px"></td></tr>`).join('')}
+        </tbody></table>
+        <div class="form-group" style="margin-top:12px"><label>MKB-winstvrijstelling (%)</label><input type="text" inputmode="decimal" id="tar-mkb" value="${p2(t.mkb)}" style="width:100px"></div>
+        <div class="form-group"><label>Zelfstandigenaftrek (€)</label><input type="text" inputmode="numeric" id="tar-za" value="${t.zelfstandigenaftrek}" style="width:100px"></div>
+        <label style="display:flex;gap:8px;align-items:flex-start;margin-top:10px;cursor:pointer">
+          <input type="checkbox" id="tar-za-aan" ${zelfstandigenaftrekAan() ? 'checked' : ''} style="margin-top:3px">
+          <span style="font-size:12px;line-height:1.5">Zelfstandigenaftrek toepassen. Alleen aanvinken als je aan het urencriterium voldoet (minimaal 1.225 uur per jaar aan je onderneming). Dit geldt voor alle jaren. Vraag bij twijfel je boekhouder of de Belastingdienst.</span>
+        </label>
+        <p style="margin:12px 0 0;font-size:12px;color:var(--text-secondary);line-height:1.6">Dit blijft een schatting over de winst uit onderneming. Heffingskortingen en je andere inkomsten zitten er niet in.</p>
+      </div>
+      <footer class="pm-voet">
+        <div class="pm-knoppen">
+          ${t.aangepast ? '<button type="button" class="btn" id="tar-herstel">Standaard herstellen</button>' : ''}
+          <button type="button" class="btn" data-sluit>Annuleren</button>
+          <button type="button" class="btn btn-primary" id="tar-bewaar">Opslaan</button>
+        </div>
+      </footer>
+    </div>`;
+  const sluit = koppelVenster(laag);
+  laag.querySelector('#tar-bewaar').addEventListener('click', () => {
+    const schijven = t.schijven.map((s, n) => ({
+      tot: s.tot == null ? null : num(laag.querySelector(`[data-tot="${n}"]`).value),
+      tarief: num(laag.querySelector(`[data-tarief="${n}"]`).value) / 100
+    }));
+    const mkb = num(laag.querySelector('#tar-mkb').value) / 100;
+    const za = num(laag.querySelector('#tar-za').value);
+    const ok = schijven.every((s, n) => Number.isFinite(s.tarief) && s.tarief > 0 && s.tarief < 1 && (s.tot == null || (Number.isFinite(s.tot) && s.tot > 0 && (n === 0 || s.tot > schijven[n - 1].tot))))
+      && Number.isFinite(mkb) && mkb >= 0 && mkb < 1 && Number.isFinite(za) && za >= 0;
+    if (!ok) { window.alert('Controleer de invoer: tarieven in procenten, schijfgrenzen oplopend, en geen negatieve bedragen.'); return; }
+    bewaarTarieven(jaar, { schijven, mkb, zelfstandigenaftrek: za });
+    zetZelfstandigenaftrek(laag.querySelector('#tar-za-aan').checked);
+    sluit();
+    renderBelasting();
+    window.hertekenHuidigePagina?.();
+  });
+  laag.querySelector('#tar-herstel')?.addEventListener('click', () => {
+    herstelStandaardTarieven(jaar);
     sluit();
     renderBelasting();
   });

@@ -25,7 +25,7 @@ Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
 - Saldo's: zonder afschrift-saldo (Excel) wordt het saldo berekend uit beginsaldo 1-1-2026 + boekingen (bank, dashboard, export).
 - Wissen van 2026 wordt geweigerd zolang er boekingen van latere jaren zijn.
 - Jaarafsluiting: controle "eindvoorraad {jaar} vastgelegd" met knop "Leg vast" (zet de huidige voorraad als eindstand van een afgesloten jaar). In januari 2027 doen vóór de voorraad verandert.
-- Nog niet gedaan/te controleren in 2027: IB-tarieven en MKB-vrijstelling in helpers.calcIB staan vast (indicatief, niet per jaar); herstel.js/migratie.js/opslagdiagnose zijn diagnosetools met 2026-aannames; voorraad-"Omzet {jaar}" gebruikt nog het veld omzet2026 (legacy naam).
+- Tarieven per jaar (tarieven.js): 2024-2026 volgens KVK, 2027 voorstel Belastingplan; bewerkbaar via knop "Tarieven {jaar}" op Belasting; zelfstandigenaftrek optioneel (standaard uit). Nog niet gedaan: heffingskortingen; herstel.js/migratie.js/opslagdiagnose zijn diagnosetools met 2026-aannames; voorraad-"Omzet {jaar}" gebruikt nog het veld omzet2026 (legacy naam).
 - Draaiboek begin januari 2027: back-up maken; 2026 afsluiten via Jaarafsluiting (eindvoorraad vastleggen, controle doorlopen, aangifte, vergrendelen); daarna boeken in 2027.
 
 ## Wensen van de gebruiker (nog te doen)

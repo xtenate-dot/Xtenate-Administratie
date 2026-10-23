@@ -1,19 +1,20 @@
 // dashboard.js — Home: het financiële dashboard.
 
-import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261023t';
+import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261023u';
 import {
   BEGINSALDO_2026, calcIB, ddmm, esc, fmt, fmtKort, isInkomst, isKostenBoeking, isOmzet, isUitgave,
   maandLabel, rekBadge, saldoDelta, typeBadge, weergaveNaam
-} from './helpers.js?v=20261023t';
-import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261023t';
-import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261023t';
-import { draaiControles } from './controle.js?v=20261023t';
-import { aangifteModel, ibOver } from './belasting.js?v=20261023t';
-import { splitsLoten } from './hnvilot.js?v=20261023t';
-import { korStatus } from './kor.js?v=20261023t';
-import { maakSorteerbaar } from './tables.js?v=20261023t';
-import { hertekenHuidigePagina } from './ui.js?v=20261023t';
-import { txVanJaar, lopendJaar, isTxJaar, banksaldoTot } from './jaren.js?v=20261023t';
+} from './helpers.js?v=20261023u';
+import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261023u';
+import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261023u';
+import { draaiControles } from './controle.js?v=20261023u';
+import { aangifteModel, ibOver } from './belasting.js?v=20261023u';
+import { splitsLoten } from './hnvilot.js?v=20261023u';
+import { korStatus } from './kor.js?v=20261023u';
+import { maakSorteerbaar } from './tables.js?v=20261023u';
+import { hertekenHuidigePagina } from './ui.js?v=20261023u';
+import { txVanJaar, lopendJaar, isTxJaar, banksaldoTot } from './jaren.js?v=20261023u';
+import { tarievenVoor } from './tarieven.js?v=20261023u';
 
 
 export function wisselJaar() {
@@ -350,7 +351,7 @@ export function renderHome() {
     try { fiscaleWinst = aangifteModel(jaar).resultaat.winst; }
     catch (e) { console.error('Belastingwinst kon niet worden berekend:', e); }
   }
-  const ib = fiscaleWinst > 0 ? ibOver(fiscaleWinst) : calcIB(fiscaleWinst);
+  const ib = fiscaleWinst > 0 ? ibOver(fiscaleWinst, jaar) : fiscaleWinst * tarievenVoor(jaar).schijven[0].tarief;
   const reservering = Math.max(0, Math.round(fiscaleWinst * 0.30));
 
   const bronMerk = uitExcel
