@@ -32,7 +32,7 @@
 // Verwijderen zit hier bewust niet in. Moet een record ooit weg, dan is dat een
 // aparte handeling met een eigen bevestiging.
 
-import { HIST_TX_DEFAULT, HOME_TOTALS_DEFAULT, CONTROLE_INSTELLINGEN, state } from './storage.js?v=20261023w';
+import { HIST_TX_DEFAULT, HOME_TOTALS_DEFAULT, CONTROLE_INSTELLINGEN, state } from './storage.js?v=20261023x';
 
 export const ACTIES = { CORRIGEREN: 'corrigeren', VERBERGEN: 'verbergen', NEGEREN: 'negeren' };
 

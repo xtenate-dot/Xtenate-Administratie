@@ -2,15 +2,16 @@
 // controlelijst, de inkoop die wel en niet meetelt, het resultaat en de
 // aangifte. Alleen kijken; er wordt niets aangepast.
 
-import { state, saveCoversData } from './storage.js?v=20261023w';
-import { maakHerstelpunt } from './herstelpunt.js?v=20261023w';
-import { lopendJaar, txVanJaar, vandaagIso } from './jaren.js?v=20261023w';
-import { esc, fmt, MND_KORT } from './helpers.js?v=20261023w';
-import { aangifteModel, inkoopOverzicht, ibOver, hnviLotenVanJaar, hnviOmzetBuitenBank } from './belasting.js?v=20261023w';
-import { totaalUren, URENCRITERIUM } from './uren.js?v=20261023w';
+import { state, saveCoversData } from './storage.js?v=20261023x';
+import { maakHerstelpunt } from './herstelpunt.js?v=20261023x';
+import { lopendJaar, txVanJaar, vandaagIso } from './jaren.js?v=20261023x';
+import { esc, fmt, MND_KORT, isUitgave } from './helpers.js?v=20261023x';
+import { aangifteModel, inkoopOverzicht, ibOver, hnviLotenVanJaar, hnviOmzetBuitenBank } from './belasting.js?v=20261023x';
+import { totaalUren, URENCRITERIUM } from './uren.js?v=20261023x';
 const nlU = n => Number(n).toLocaleString('nl-NL', { maximumFractionDigits: 1 });
-import { korStatus } from './kor.js?v=20261023w';
-import { draaiControles } from './controle.js?v=20261023w';
+import { heeftBonnetje } from './bonnetjes.js?v=20261023x';
+import { korStatus } from './kor.js?v=20261023x';
+import { draaiControles } from './controle.js?v=20261023x';
 
 const el = id => document.getElementById(id);
 const jr = x => String(x || '').slice(0, 4);
@@ -122,6 +123,12 @@ function inkoopTabel(inkoop) {
     <p class="muted" style="font-size:12px;margin-top:6px">Een negatief bedrag bij “Niet toegerekend” betekent dat je dit jaar inkoop aftrekt die je in een eerder jaar hebt betaald (loten uit vorig jaar die nu zijn verkocht). “Wel aftrekbaar” is de inkoop van wat dit jaar is verkocht. “Nog op voorraad” telt pas mee in het jaar van verkoop.</p>`;
 }
 
+function bonnetjesInfo(tx) {
+  const uitgaven = tx.filter(isUitgave);
+  const met = uitgaven.filter(t => heeftBonnetje(t.id)).length;
+  return `Bonnetjes: ${met} van ${uitgaven.length} uitgaven hebben een bonnetje of factuur in de app. Je moet ze 7 jaar bewaren; bank-afschriften alleen zijn bij een controle meestal niet genoeg voor inkopen.`;
+}
+
 export function renderJaarafsluiting() {
   const doel = el('jaarafsluiting-inhoud');
   if (!doel) return;
@@ -141,6 +148,7 @@ export function renderJaarafsluiting() {
       <div class="card" style="padding:0">${checks(jaar, tx, inkoop).join('')}</div>
       <div class="section-head"><div class="section-titel">Inkoop: wel en niet meegeteld</div></div>
       ${inkoopTabel(inkoop)}
+      <p class="muted" style="font-size:12px;margin:8px 0">${bonnetjesInfo(tx)}</p>
       <p class="muted" style="font-size:12px;margin:8px 0">Uren ${esc(jaar)}: ${nlU(totaalUren(jaar))} van ${URENCRITERIUM.toLocaleString('nl-NL')} (urencriterium, ter info).</p>
       <div class="section-head"><div class="section-titel">Resultaat</div></div>
       <div class="kpi-grid">

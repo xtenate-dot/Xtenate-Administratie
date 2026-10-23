@@ -63,3 +63,6 @@ Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
 
 ## Facturen-aandachtspunten op het overzicht (23-10) — GEDAAN
 - Overzicht toont "X facturen te laat betaald" (debiteuren) en "te betalen facturen" (crediteuren, verlopen of binnenkort), uit factuurSamenvatting().
+
+## Bonnetjes-info in Jaarafsluiting (23-10) — GEDAAN
+- Inforegel: hoeveel uitgaven een bonnetje hebben (bewaarplicht 7 jaar). Alleen informatief.
