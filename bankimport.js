@@ -5,16 +5,17 @@
 // niet nog eens voorgesteld. Grootboek en soort worden afgeleid uit eerdere
 // boekingen met dezelfde naam; wat onbekend is kies je zelf.
 
-import { state, saveTxData, jaarIsVergrendeld } from './storage.js?v=20261023z';
-import { isTxJaar, jaarVan, EERSTE_TX_JAAR } from './jaren.js?v=20261023z';
-import { esc, fmt } from './helpers.js?v=20261023z';
-import { addToPendingQueue } from './supabase-client-v2.js?v=20261023z';
-import { maakHerstelpunt } from './herstelpunt.js?v=20261023z';
+import { state, saveTxData, jaarIsVergrendeld } from './storage.js?v=20261024a';
+import { isTxJaar, jaarVan, EERSTE_TX_JAAR } from './jaren.js?v=20261024a';
+import { esc, fmt } from './helpers.js?v=20261024a';
+import { addToPendingQueue } from './supabase-client-v2.js?v=20261024a';
+import { maakHerstelpunt } from './herstelpunt.js?v=20261024a';
 
 const REK = '1010';          // zo staat Revolut nu in je administratie
 const el = id => document.getElementById(id);
 let voorstel = null;         // { bestand, rijen, ontbreekt, overgeslagen }
 let melding = '';
+let inBehandeling = [];   // bankregels die de bank nog niet definitief heeft geboekt (alleen tonen, niet boeken)
 
 // ----------------------------------------------------------------- inlezen
 
@@ -156,7 +157,8 @@ export function maakVoorstel(uit, bestaand = [...state.TX, ...state.HIST_TX], be
 // ----------------------------------------------------------------------- UI
 
 /** Zet transacties die de bank-koppeling heeft opgehaald om in hetzelfde voorstel als een CSV-afschrift. */
-export function laadVoorstelUitBank(transacties, label = 'Bank (automatisch)') {
+export function laadVoorstelUitBank(transacties, label = 'Bank (automatisch)', wachtend = []) {
+  inBehandeling = wachtend;
   const rijen = transacties.map(t => {
     const naam = String(t.naam || '').trim();
     const tekst = naam || String(t.omschr || '').trim() || 'Onbekend';
@@ -267,6 +269,12 @@ export function renderBankimport() {
         <td><select onchange="zetBankimportKeuze(${i},'type',this.value)" style="font-size:12px">${optType(r.type)}</select></td>
         <td><button class="btn btn-sm btn-ghost" title="Deze regel uit het voorstel halen" onclick="verwijderBankimportRegel(${i})">Verwijder</button></td></tr>`).join('');
 
+  const wacht = inBehandeling.length
+    ? `<div class="section-head"><div class="section-titel">Nog in behandeling bij de bank (${inBehandeling.length})</div></div>
+       <div class="card card-flush"><div class="table-wrap"><table class="tbl-compact"><tbody>${inBehandeling.map(t =>
+         `<tr style="opacity:.7"><td>${esc(t.datum)}</td><td>${esc(t.naam || t.omschr || '')}</td><td style="text-align:right">${fmt(Math.abs(t.totaal))}</td><td>${t.totaal < 0 ? 'af' : 'bij'}</td></tr>`).join('')}</tbody></table></div></div>
+       <p class="muted" style="font-size:12px;margin-top:6px">Deze zijn nog niet definitief; bedrag of datum kan nog wijzigen. Haal later opnieuw op, dan staan ze in het voorstel.</p>`
+    : '';
   const ontbreekt = voorstel.ontbreekt.length
     ? `<div class="section-head"><div class="section-titel">Staat in de administratie, niet in het bestand (${voorstel.ontbreekt.length})</div></div>
        <div class="card card-flush"><div class="table-wrap"><table class="tbl-compact"><tbody>${voorstel.ontbreekt.map(t =>
@@ -287,5 +295,5 @@ export function renderBankimport() {
       <thead><tr><th></th><th>Datum</th><th>Naam</th><th style="text-align:right">Bedrag</th><th>Grootboek</th><th>Soort</th><th></th></tr></thead>
       <tbody>${rijen}</tbody></table></div></div>
     <div style="margin:var(--spacing-4) 0"><button class="btn btn-primary" onclick="importeerRevolut()">Importeer ${kies.length} geselecteerde boekingen</button></div>
-    ${overg}${ontbreekt}`;
+    ${overg}${wacht}${ontbreekt}`;
 }

@@ -322,7 +322,7 @@ async function afhandelenOphalen(req: Request): Promise<Response> {
   const resultaat: Record<string, unknown>[] = [];
   let doorgaan: string | null = null;
   for (let pagina = 0; pagina < 20; pagina++) {
-    const q = new URLSearchParams({ date_from: vanaf, transaction_status: "BOOK" });
+    const q = new URLSearchParams({ date_from: vanaf });
     if (doorgaan) q.set("continuation_key", doorgaan);
     const r = await fetch(`https://api.enablebanking.com/accounts/${encodeURIComponent(sessie.account_uid)}/transactions?${q}`, {
       headers: { Authorization: `Bearer ${jwt}` },
@@ -347,6 +347,7 @@ async function afhandelenOphalen(req: Request): Promise<Response> {
         naam: tegen?.name || "",
         omschr: omschr.slice(0, 200),
         tegenIban: tegenIban || "",
+        status: String(e.status || ""),
       });
     }
     doorgaan = d?.continuation_key || null;

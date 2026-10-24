@@ -8,10 +8,10 @@
 //   de code via dezelfde Edge Function in.
 // De functie zelf bewaart de sessie in de database; de app ziet die nooit.
 
-import { getClient } from './supabase.js?v=20261023z';
-import { state } from './storage.js?v=20261023z';
-import { laadVoorstelUitBank } from './bankimport.js?v=20261023z';
-import { loadBankKoppelingenFromSupabase } from './supabase-client-v2.js?v=20261023z';
+import { getClient } from './supabase.js?v=20261024a';
+import { state } from './storage.js?v=20261024a';
+import { laadVoorstelUitBank } from './bankimport.js?v=20261024a';
+import { loadBankKoppelingenFromSupabase } from './supabase-client-v2.js?v=20261024a';
 
 const STATE_KEY = 'xtenate_bank_state';
 const el = id => document.getElementById(id);
@@ -88,7 +88,9 @@ export async function haalBankTransactiesOp() {
       if (error || !data?.ok) { window.alert(`Ophalen is niet gelukt${fout ? ': ' + fout : '.'}`); return; }
       for (const t of data.transacties || []) alle.set(t.id, t);
     }
-    laadVoorstelUitBank([...alle.values()]);
+    const lijst = [...alle.values()];
+    const wachtend = lijst.filter(t => t.status && t.status !== 'BOOK');
+    laadVoorstelUitBank(lijst.filter(t => !t.status || t.status === 'BOOK'), undefined, wachtend);
   } catch {
     window.alert('Ophalen is niet gelukt. Probeer het later opnieuw.');
   }
