@@ -92,3 +92,8 @@ Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
 - Tabel cloud_backups + functies maak_cloud_backup / maak_nachtelijke_backups (cloud_backup.sql), pg_cron 01:30 UTC, alleen bij wijziging, 30 nachtelijke + 10 handmatige bewaard. Beheer: blok "Back-ups in de cloud" (lijst, nu maken, downloaden). Dashboard-aandachtspunt "Nog geen back-up" verdwijnt als de cloud-back-up ≤ 3 dagen oud is.
 - Nog niet: terugzetten vanuit een cloud-back-up met één klik (nu: download en laat Claude terugzetten).
 - Ideeën nog open: bonnetje fotograferen + automatisch koppelen aan bankregel; Bol.com-API; meer bankrekeningen koppelen; weekoverzicht per e-mail.
+
+## Bol.com-bestellingen (24-10) — GEBOUWD, wacht op sleutels
+- Edge Function bol-koppeling (Retailer API v10, alleen lezen), tabel bol_bestellingen (bol_bestellingen.sql), pagina Bol.com (bol.js, bol-ui.js): omzet, commissie, per artikel, vergelijking met bankuitbetalingen (gb 8010 / naam bol).
+- Gebruiker moet BOL_CLIENT_ID en BOL_CLIENT_SECRET als Supabase-secret zetten. Daarna echte test: kloppen veldnamen (unitPrice, commission = per regel of per stuk?) tegen een Bol-factuur.
+- Nog niet: dagelijks automatisch ophalen (zoals bank), voorraad automatisch afboeken (voorraadartikelen hebben geen EAN).
