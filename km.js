@@ -10,7 +10,7 @@
 // administratie blijft hier kasstelsel (zie facturen.js). Ritten staan dus
 // naast de boekingen, precies zoals facturen dat ook doen.
 
-import { state, saveRitten, KM_INSTELLINGEN } from './storage.js?v=20261024i';
+import { state, saveRitten, KM_INSTELLINGEN } from './storage.js?v=20261024j';
 
 export function vandaagISO() {
   return new Date().toISOString().split('T')[0];

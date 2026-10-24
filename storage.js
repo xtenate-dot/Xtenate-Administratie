@@ -19,7 +19,7 @@ import {
   saveAppData,
   loadAppData,
   laatsteAppDataFout
-} from './supabase-client-v2.js?v=20261024i';
+} from './supabase-client-v2.js?v=20261024j';
 
 /**
  * Stuurt een los lijstje (groepen, facturen, tellers) naar de cloud zonder
@@ -977,4 +977,5 @@ export async function loadDataHybrid() {
   state.dataKlaar = true;
   console.log('✅ Data loading complete');
   try { window.synchroniseerBonnetjes && window.synchroniseerBonnetjes(); } catch { /* niet kritiek */ }
+  try { window.laadCloudBackupStatus && window.laadCloudBackupStatus(); } catch { /* niet kritiek */ }
 }

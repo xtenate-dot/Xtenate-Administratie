@@ -86,3 +86,9 @@ Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
 
 ## Bank ophalen per periode (24-10) — GEDAAN (de wens hierboven)
 - Periodekeuze naast "Ophalen bij de bank": laatste 45 dagen, week, maand, kwartaal, jaar (deze/vorige) of eigen periode. Bank geeft max. ~90 dagen terug; de functie kapt af op 89 dagen en de app meldt dat. "Staat in administratie, niet bij de bank" wordt over de gekozen periode berekend.
+
+
+## Automatische cloud-back-up (24-10) — GEDAAN
+- Tabel cloud_backups + functies maak_cloud_backup / maak_nachtelijke_backups (cloud_backup.sql), pg_cron 01:30 UTC, alleen bij wijziging, 30 nachtelijke + 10 handmatige bewaard. Beheer: blok "Back-ups in de cloud" (lijst, nu maken, downloaden). Dashboard-aandachtspunt "Nog geen back-up" verdwijnt als de cloud-back-up ≤ 3 dagen oud is.
+- Nog niet: terugzetten vanuit een cloud-back-up met één klik (nu: download en laat Claude terugzetten).
+- Ideeën nog open: bonnetje fotograferen + automatisch koppelen aan bankregel; Bol.com-API; meer bankrekeningen koppelen; weekoverzicht per e-mail.

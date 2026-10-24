@@ -1,21 +1,22 @@
 // dashboard.js — Home: het financiële dashboard.
 
-import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261024i';
+import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261024j';
 import {
   BEGINSALDO_2026, calcIB, ddmm, esc, fmt, fmtKort, isInkomst, isKostenBoeking, isOmzet, isUitgave,
   maandLabel, rekBadge, saldoDelta, typeBadge, weergaveNaam
-} from './helpers.js?v=20261024i';
-import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen, bankKoppelingDagenTotVerval } from './storage.js?v=20261024i';
-import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261024i';
-import { draaiControles } from './controle.js?v=20261024i';
-import { aangifteModel, ibOver } from './belasting.js?v=20261024i';
-import { splitsLoten } from './hnvilot.js?v=20261024i';
-import { factuurSamenvatting } from './facturen.js?v=20261024i';
-import { korStatus } from './kor.js?v=20261024i';
-import { maakSorteerbaar } from './tables.js?v=20261024i';
-import { hertekenHuidigePagina } from './ui.js?v=20261024i';
-import { txVanJaar, lopendJaar, isTxJaar, banksaldoTot } from './jaren.js?v=20261024i';
-import { tarievenVoor } from './tarieven.js?v=20261024i';
+} from './helpers.js?v=20261024j';
+import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen, bankKoppelingDagenTotVerval } from './storage.js?v=20261024j';
+import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261024j';
+import { draaiControles } from './controle.js?v=20261024j';
+import { aangifteModel, ibOver } from './belasting.js?v=20261024j';
+import { splitsLoten } from './hnvilot.js?v=20261024j';
+import { dagenSindsCloudBackup } from './cloudbackup.js?v=20261024j';
+import { factuurSamenvatting } from './facturen.js?v=20261024j';
+import { korStatus } from './kor.js?v=20261024j';
+import { maakSorteerbaar } from './tables.js?v=20261024j';
+import { hertekenHuidigePagina } from './ui.js?v=20261024j';
+import { txVanJaar, lopendJaar, isTxJaar, banksaldoTot } from './jaren.js?v=20261024j';
+import { tarievenVoor } from './tarieven.js?v=20261024j';
 
 
 export function wisselJaar() {
@@ -209,7 +210,9 @@ function aandachtspunten() {
   try {
     const laatste = localStorage.getItem('xtenate_laatste_backup');
     const dagen = laatste ? Math.floor((Date.now() - new Date(laatste).getTime()) / 86400000) : null;
-    if (dagen === null || dagen >= 14) punten.push({
+    const cloudDagen = dagenSindsCloudBackup();
+    const cloudOk = cloudDagen !== null && cloudDagen <= 3;   // de nachtelijke cloud-back-up draait
+    if (!cloudOk && (dagen === null || dagen >= 14)) punten.push({
       kleur: dagen === null || dagen >= 30 ? 'red' : 'amber',
       titel: dagen === null ? 'Nog geen back-up gemaakt' : `Laatste back-up is ${dagen} dagen oud`,
       tekst: 'Je gegevens staan in deze browser. Download een back-up (en bewaar die buiten de browser), zeker voor je een import doet.',
