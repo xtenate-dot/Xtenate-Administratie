@@ -8,10 +8,10 @@
 //   de code via dezelfde Edge Function in.
 // De functie zelf bewaart de sessie in de database; de app ziet die nooit.
 
-import { getClient } from './supabase.js?v=20261024e';
-import { state } from './storage.js?v=20261024e';
-import { laadVoorstelUitBank, periodeBereik } from './bankimport.js?v=20261024e';
-import { loadBankKoppelingenFromSupabase } from './supabase-client-v2.js?v=20261024e';
+import { getClient } from './supabase.js?v=20261024f';
+import { state } from './storage.js?v=20261024f';
+import { laadVoorstelUitBank, periodeBereik } from './bankimport.js?v=20261024f';
+import { loadBankKoppelingenFromSupabase } from './supabase-client-v2.js?v=20261024f';
 
 const STATE_KEY = 'xtenate_bank_state';
 const el = id => document.getElementById(id);
@@ -81,6 +81,10 @@ export async function haalBankTransactiesOp() {
   const bereik = periodeBereik();
   if (bereik.soort === 'eigen' && (!bereik.van || !bereik.tot || bereik.van > bereik.tot)) {
     window.alert('Kies bij "Eigen periode" een geldige begin- en einddatum.'); return;
+  }
+  const grens = new Date(Date.now() - 89 * 864e5).toISOString().slice(0, 10);
+  if (bereik.tot && bereik.tot < grens) {
+    window.alert('Deze periode ligt buiten wat de bank teruggeeft (ongeveer de laatste 90 dagen). Controleer oudere periodes met een CSV-afschrift of de Excel-import.'); return;
   }
   const body = bereik.van ? { van: bereik.van, tot: bereik.tot } : { dagen: 45 };
   let afgekapt = false, vanTekst = bereik.van;
