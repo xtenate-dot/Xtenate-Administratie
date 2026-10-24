@@ -15,7 +15,7 @@
 //   - De aanroeper komt uitsluitend uit auth.getUser() op de doorgegeven
 //     gebruikers-JWT. Er wordt nergens een user_id uit de request-body
 //     gelezen -- die bestaat simpelweg niet als veld.
-//   - (Uitzondering: /dagelijks, door pg_cron aangeroepen met CRON_SECRET, gebruikt de service-role-sleutel.)
+//   - (Uitzondering: /dagelijks, door pg_cron aangeroepen met het geheim uit bank_cron_geheim, gebruikt de service-role-sleutel.)
 //   - Alle databaseverkeer loopt via een Supabase-client die de doorgegeven
 //     Authorization-header gebruikt (dus als de rol authenticated, met
 //     dezelfde RLS/kolomrechten als de rest van de app). De
@@ -380,7 +380,7 @@ async function afhandelenOphalen(req: Request): Promise<Response> {
 
 
 // ─── Dagelijkse ronde (aangeroepen door pg_cron, niet door de browser) ─────────
-// Beveiligd met een gedeeld geheim (CRON_SECRET) in de header x-cron-secret.
+// Beveiligd met een geheim uit de database (bank_cron_geheim) in de header x-cron-secret.
 // Dit is de ENIGE plek die de service-role-sleutel gebruikt. Er wordt niets
 // teruggegeven behalve aantallen. Alleen definitief geboekte regels (BOOK)
 // gaan naar bank_inbox; bestaande regels worden nooit overschreven.
@@ -393,12 +393,15 @@ async function gelijk(a: string, b: string): Promise<boolean> {
 }
 
 async function afhandelenDagelijks(req: Request): Promise<Response> {
-  const geheim = Deno.env.get("CRON_SECRET") || "";
   const gegeven = req.headers.get("x-cron-secret") || "";
-  if (!geheim || geheim.length < 20 || !(await gelijk(geheim, gegeven))) {
+  const url = Deno.env.get("SUPABASE_URL"), sleutel = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!url || !sleutel || gegeven.length < 20) return Response.json({ ok: false, fout: "Niet toegestaan." }, { status: 401 });
+  // Het geheim wordt in de database zelf aangemaakt (tabel bank_cron_geheim) en door pg_cron daaruit meegestuurd.
+  const check = createClient(url, sleutel, { auth: { persistSession: false } });
+  const { data: g } = await check.from("bank_cron_geheim").select("geheim").eq("id", 1).maybeSingle();
+  if (!g?.geheim || !(await gelijk(String(g.geheim), gegeven))) {
     return Response.json({ ok: false, fout: "Niet toegestaan." }, { status: 401 });
   }
-  const url = Deno.env.get("SUPABASE_URL"), sleutel = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const secrets = leesEnableBankingSecrets();
   if (!url || !sleutel || !secrets) return Response.json({ ok: false, fout: "Configuratie ontbreekt." }, { status: 500 });
   const admin = createClient(url, sleutel, { auth: { persistSession: false } });

@@ -5,12 +5,12 @@
 // niet nog eens voorgesteld. Grootboek en soort worden afgeleid uit eerdere
 // boekingen met dezelfde naam; wat onbekend is kies je zelf.
 
-import { state, saveTxData, jaarIsVergrendeld } from './storage.js?v=20261024f';
-import { isTxJaar, jaarVan, EERSTE_TX_JAAR, vandaagIso } from './jaren.js?v=20261024f';
-import { esc, fmt } from './helpers.js?v=20261024f';
-import { addToPendingQueue } from './supabase-client-v2.js?v=20261024f';
-import { maakHerstelpunt } from './herstelpunt.js?v=20261024f';
-import { telInbox, haalInboxOp, zetInboxStatus } from './bankinbox.js?v=20261024f';
+import { state, saveTxData, jaarIsVergrendeld } from './storage.js?v=20261024g';
+import { isTxJaar, jaarVan, EERSTE_TX_JAAR, vandaagIso } from './jaren.js?v=20261024g';
+import { esc, fmt } from './helpers.js?v=20261024g';
+import { addToPendingQueue } from './supabase-client-v2.js?v=20261024g';
+import { maakHerstelpunt } from './herstelpunt.js?v=20261024g';
+import { telInbox, haalInboxOp, zetInboxStatus } from './bankinbox.js?v=20261024g';
 
 const REK = '1010';          // zo staat Revolut nu in je administratie
 const el = id => document.getElementById(id);
