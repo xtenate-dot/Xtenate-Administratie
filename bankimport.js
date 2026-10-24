@@ -5,11 +5,11 @@
 // niet nog eens voorgesteld. Grootboek en soort worden afgeleid uit eerdere
 // boekingen met dezelfde naam; wat onbekend is kies je zelf.
 
-import { state, saveTxData, jaarIsVergrendeld } from './storage.js?v=20261024c';
-import { isTxJaar, jaarVan, EERSTE_TX_JAAR } from './jaren.js?v=20261024c';
-import { esc, fmt } from './helpers.js?v=20261024c';
-import { addToPendingQueue } from './supabase-client-v2.js?v=20261024c';
-import { maakHerstelpunt } from './herstelpunt.js?v=20261024c';
+import { state, saveTxData, jaarIsVergrendeld } from './storage.js?v=20261024d';
+import { isTxJaar, jaarVan, EERSTE_TX_JAAR, vandaagIso } from './jaren.js?v=20261024d';
+import { esc, fmt } from './helpers.js?v=20261024d';
+import { addToPendingQueue } from './supabase-client-v2.js?v=20261024d';
+import { maakHerstelpunt } from './herstelpunt.js?v=20261024d';
 
 const REK = '1010';          // zo staat Revolut nu in je administratie
 const el = id => document.getElementById(id);
@@ -149,7 +149,7 @@ export function maakVoorstel(uit, bestaand = [...state.TX, ...state.HIST_TX], be
   }
   // Wat in de app staat maar niet in het bestand, binnen dezelfde periode
   const data = uit.rijen.map(r => r.datum).sort();
-  const van = data[0], tot = data[data.length - 1];
+  const van = uit.van || data[0], tot = uit.tot || data[data.length - 1];
   const ontbreekt = van ? [...eerder.values()].flat().filter(t => t.datum >= van && t.datum <= tot) : [];
   return { bestand: bestandsnaam, rijen, ontbreekt, overgeslagen: uit.overgeslagen, van, tot };
 }
@@ -157,7 +157,7 @@ export function maakVoorstel(uit, bestaand = [...state.TX, ...state.HIST_TX], be
 // ----------------------------------------------------------------------- UI
 
 /** Zet transacties die de bank-koppeling heeft opgehaald om in hetzelfde voorstel als een CSV-afschrift. */
-export function laadVoorstelUitBank(transacties, label = 'Bank (automatisch)', wachtend = []) {
+export function laadVoorstelUitBank(transacties, label = 'Bank (automatisch)', wachtend = [], bereik = {}) {
   inBehandeling = wachtend;
   const rijen = transacties.map(t => {
     const naam = String(t.naam || '').trim();
@@ -169,11 +169,49 @@ export function laadVoorstelUitBank(transacties, label = 'Bank (automatisch)', w
       totaal: Number(t.totaal), saldo: NaN, begunstigde: naam
     };
   }).filter(r => /^\d{4}-\d{2}-\d{2}$/.test(r.datum) && Number.isFinite(r.totaal));
-  voorstel = maakVoorstel({ rijen, overgeslagen: [] }, undefined, label);
-  melding = '';
+  voorstel = maakVoorstel({ rijen, overgeslagen: [], van: bereik.van, tot: bereik.tot }, undefined, label);
+  melding = bereik.opmerking || '';
   renderBankimport();
   const d0 = document.getElementById('bank-verwerken'); if (d0) d0.open = true;
 }
+
+// ------------------------------------------------------------ periodekeuze
+
+const PERIODES = [
+  ['recent', 'Laatste 45 dagen'], ['week', 'Deze week'], ['vorigeWeek', 'Vorige week'],
+  ['maand', 'Deze maand'], ['vorigeMaand', 'Vorige maand'], ['kwartaal', 'Dit kwartaal'],
+  ['vorigKwartaal', 'Vorig kwartaal'], ['jaar', 'Dit jaar'], ['vorigJaar', 'Vorig jaar'], ['eigen', 'Eigen periode…']
+];
+let periodeSoort = 'recent', eigenVan = '', eigenTot = '';
+
+const isoDatum = d => d.toISOString().slice(0, 10);
+const dag = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return isoDatum(d); };
+
+/** Begin- en einddatum (inclusief) van de gekozen periode; einde nooit na vandaag. */
+export function periodeBereik(soort = periodeSoort) {
+  const nu = vandaagIso();
+  const j = Number(nu.slice(0, 4)), m = Number(nu.slice(5, 7));
+  const maandStart = (jj, mm) => `${jj}-${String(mm).padStart(2, '0')}-01`;
+  const maandEinde = (jj, mm) => isoDatum(new Date(Date.UTC(jj, mm, 0, 12)));
+  let van = null, tot = null;
+  if (soort === 'week' || soort === 'vorigeWeek') {
+    const wd = (new Date(nu + 'T12:00:00Z').getUTCDay() + 6) % 7;      // maandag = 0
+    van = dag(nu, -wd - (soort === 'vorigeWeek' ? 7 : 0)); tot = dag(van, 6);
+  } else if (soort === 'maand') { van = maandStart(j, m); tot = maandEinde(j, m); }
+  else if (soort === 'vorigeMaand') { const pj = m === 1 ? j - 1 : j, pm = m === 1 ? 12 : m - 1; van = maandStart(pj, pm); tot = maandEinde(pj, pm); }
+  else if (soort === 'kwartaal' || soort === 'vorigKwartaal') {
+    let q = Math.floor((m - 1) / 3), jj = j;
+    if (soort === 'vorigKwartaal') { q -= 1; if (q < 0) { q = 3; jj -= 1; } }
+    van = maandStart(jj, q * 3 + 1); tot = maandEinde(jj, q * 3 + 3);
+  } else if (soort === 'jaar') { van = `${j}-01-01`; tot = `${j}-12-31`; }
+  else if (soort === 'vorigJaar') { van = `${j - 1}-01-01`; tot = `${j - 1}-12-31`; }
+  else if (soort === 'eigen') { van = eigenVan || null; tot = eigenTot || null; }
+  if (tot && tot > nu) tot = nu;
+  return { soort, van, tot };
+}
+
+export function zetPeriode(soort) { periodeSoort = soort; renderBankimport(); }
+export function zetEigenPeriode(veld, waarde) { if (veld === 'van') eigenVan = waarde; else eigenTot = waarde; }
 
 /** Klapt het blok "Bank verwerken" op de Bank-pagina open en scrolt ernaartoe. */
 export function openBankVerwerken() {
@@ -184,6 +222,8 @@ export function openBankVerwerken() {
   d.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 window.openBankVerwerken = openBankVerwerken;
+window.zetPeriode = zetPeriode;
+window.zetEigenPeriode = zetEigenPeriode;
 
 export function kiesRevolutBestand() {
   const veld = el('bankimport-bestand');
@@ -255,7 +295,10 @@ export function renderBankimport() {
   if (!doel) return;
   const knop = `<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:var(--spacing-4)">
     <button class="btn btn-primary" onclick="kiesRevolutBestand()">Revolut-afschrift kiezen (CSV)</button>
-    ${(state.BANK_KOPPELINGEN || []).length ? `<button class="btn" onclick="haalBankTransactiesOp()">Ophalen bij de bank</button>` : ''}
+    ${(state.BANK_KOPPELINGEN || []).length ? `
+      <select onchange="zetPeriode(this.value)" aria-label="Periode" style="font-size:13px">${PERIODES.map(([w, l]) => `<option value="${w}"${w === periodeSoort ? ' selected' : ''}>${l}</option>`).join('')}</select>
+      ${periodeSoort === 'eigen' ? `<input type="date" value="${esc(eigenVan)}" onchange="zetEigenPeriode('van',this.value)" aria-label="Van"> <span class="muted">t/m</span> <input type="date" value="${esc(eigenTot)}" onchange="zetEigenPeriode('tot',this.value)" aria-label="Tot">` : ''}
+      <button class="btn" onclick="haalBankTransactiesOp()">Ophalen bij de bank</button>` : ''}
     <span class="muted" style="font-size:12px">In Revolut: Rekeningen → Afschrift → CSV, voor de periode die je wilt.</span>
     ${melding ? `<span style="font-size:13px">${esc(melding)}</span>` : ''}</div>`;
   if (!voorstel) {

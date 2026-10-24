@@ -82,3 +82,6 @@ Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
 - Bij "Ophalen bij de bank" een periode kunnen kiezen: week, maand, kwartaal of jaar (of eigen van/tot), bijvoorbeeld voor een controle van een bepaalde periode tegen de administratie.
 - Let op: de bank geeft niet oneindig ver terug (Revolut ongeveer 90 dagen; functie nu maximaal 89). Oudere perioden dus alleen via CSV/Excel; de knop moet dat duidelijk zeggen.
 - Technisch: /ophalen accepteert nu `dagen`; uitbreiden met `van`/`tot` en een periodekiezer op Bank importeren. Controle-weergave: staan alle bankregels in de administratie, en andersom.
+
+## Bank ophalen per periode (24-10) — GEDAAN (de wens hierboven)
+- Periodekeuze naast "Ophalen bij de bank": laatste 45 dagen, week, maand, kwartaal, jaar (deze/vorige) of eigen periode. Bank geeft max. ~90 dagen terug; de functie kapt af op 89 dagen en de app meldt dat. "Staat in administratie, niet bij de bank" wordt over de gekozen periode berekend.

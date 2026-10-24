@@ -10,8 +10,8 @@
 // Een jaar opvragen gaat altijd op de DATUM van de boeking, niet op de groep waarin
 // hij zit. Zo verdwijnt er niets als een boeking toevallig in de "verkeerde" groep staat.
 
-import { state } from './storage.js?v=20261024c';
-import { BEGINSALDO_2026, saldoDelta } from './helpers.js?v=20261024c';
+import { state } from './storage.js?v=20261024d';
+import { BEGINSALDO_2026, saldoDelta } from './helpers.js?v=20261024d';
 
 /** Eerste jaar dat in state.TX staat. Eerdere jaren staan in state.HIST_TX. */
 export const EERSTE_TX_JAAR = '2026';

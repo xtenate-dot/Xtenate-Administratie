@@ -296,7 +296,7 @@ async function afhandelenOphalen(req: Request): Promise<Response> {
   const secrets = leesEnableBankingSecrets();
   if (!secrets) return Response.json({ ok: false, fout: "Enable Banking-secrets ontbreken." }, { status: 500 });
 
-  let body: { koppeling_id?: string; dagen?: number } = {};
+  let body: { koppeling_id?: string; dagen?: number; van?: string; tot?: string } = {};
   try { body = await req.json(); } catch { /* standaardwaarden */ }
   const koppelingId = body.koppeling_id;
   if (!koppelingId || typeof koppelingId !== "string") {
@@ -318,11 +318,18 @@ async function afhandelenOphalen(req: Request): Promise<Response> {
   try { jwt = await ondertekenJwt(secrets.appId, secrets.privateKey); }
   catch { return Response.json({ ok: false, fout: "Kon de aanvraag niet voorbereiden." }, { status: 500 }); }
 
-  const vanaf = new Date(Date.now() - dagen * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const datumOk = (x?: string) => typeof x === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x);
+  const grens = new Date(Date.now() - 89 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  let vanaf = datumOk(body.van) ? body.van! : new Date(Date.now() - dagen * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const tot = datumOk(body.tot) ? body.tot! : null;
+  // De bank geeft niet verder terug dan ongeveer 90 dagen.
+  const afgekapt = vanaf < grens;
+  if (afgekapt) vanaf = grens;
   const resultaat: Record<string, unknown>[] = [];
   let doorgaan: string | null = null;
   for (let pagina = 0; pagina < 20; pagina++) {
     const q = new URLSearchParams({ date_from: vanaf });
+    if (tot) q.set("date_to", tot);
     if (doorgaan) q.set("continuation_key", doorgaan);
     const r = await fetch(`https://api.enablebanking.com/accounts/${encodeURIComponent(sessie.account_uid)}/transactions?${q}`, {
       headers: { Authorization: `Bearer ${jwt}` },
@@ -353,7 +360,7 @@ async function afhandelenOphalen(req: Request): Promise<Response> {
     doorgaan = d?.continuation_key || null;
     if (!doorgaan) break;
   }
-  return Response.json({ ok: true, vanaf, transacties: resultaat }, { status: 200 });
+  return Response.json({ ok: true, vanaf, tot, afgekapt, transacties: resultaat }, { status: 200 });
 }
 
 const CORS = {

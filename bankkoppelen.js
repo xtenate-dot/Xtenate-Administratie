@@ -8,10 +8,10 @@
 //   de code via dezelfde Edge Function in.
 // De functie zelf bewaart de sessie in de database; de app ziet die nooit.
 
-import { getClient } from './supabase.js?v=20261024c';
-import { state } from './storage.js?v=20261024c';
-import { laadVoorstelUitBank } from './bankimport.js?v=20261024c';
-import { loadBankKoppelingenFromSupabase } from './supabase-client-v2.js?v=20261024c';
+import { getClient } from './supabase.js?v=20261024d';
+import { state } from './storage.js?v=20261024d';
+import { laadVoorstelUitBank, periodeBereik } from './bankimport.js?v=20261024d';
+import { loadBankKoppelingenFromSupabase } from './supabase-client-v2.js?v=20261024d';
 
 const STATE_KEY = 'xtenate_bank_state';
 const el = id => document.getElementById(id);
@@ -78,19 +78,29 @@ export async function verwerkBankTerugkeer() {
 export async function haalBankTransactiesOp() {
   const koppelingen = state.BANK_KOPPELINGEN || [];
   if (!koppelingen.length) { window.alert('Er is nog geen bankrekening gekoppeld. Doe dat in Beheer.'); return; }
+  const bereik = periodeBereik();
+  if (bereik.soort === 'eigen' && (!bereik.van || !bereik.tot || bereik.van > bereik.tot)) {
+    window.alert('Kies bij "Eigen periode" een geldige begin- en einddatum.'); return;
+  }
+  const body = bereik.van ? { van: bereik.van, tot: bereik.tot } : { dagen: 45 };
+  let afgekapt = false, vanTekst = bereik.van;
   try {
     const sb = await getClient();
     const alle = new Map();
     for (const k of koppelingen) {
-      const { data, error } = await sb.functions.invoke('bank-koppeling/ophalen', { body: { koppeling_id: k.id, dagen: 45 } });
+      const { data, error } = await sb.functions.invoke('bank-koppeling/ophalen', { body: { koppeling_id: k.id, ...body } });
       let fout = data?.fout;
       if (error && !fout) { try { fout = (await error.context.json())?.fout; } catch { /* geen detail */ } }
       if (error || !data?.ok) { window.alert(`Ophalen is niet gelukt${fout ? ': ' + fout : '.'}`); return; }
+      if (data.afgekapt) { afgekapt = true; vanTekst = data.vanaf; }
       for (const t of data.transacties || []) alle.set(t.id, t);
     }
     const lijst = [...alle.values()];
     const wachtend = lijst.filter(t => t.status && t.status !== 'BOOK');
-    laadVoorstelUitBank(lijst.filter(t => !t.status || t.status === 'BOOK'), undefined, wachtend);
+    const opmerking = afgekapt
+      ? `Let op: de bank geeft maar ongeveer 90 dagen terug, dus je ziet vanaf ${vanTekst}. Oudere regels kun je alleen controleren met een CSV-afschrift of de Excel-import.` : '';
+    laadVoorstelUitBank(lijst.filter(t => !t.status || t.status === 'BOOK'), undefined, wachtend,
+      { van: bereik.van ? vanTekst : undefined, tot: bereik.tot || undefined, opmerking });
   } catch {
     window.alert('Ophalen is niet gelukt. Probeer het later opnieuw.');
   }
