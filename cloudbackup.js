@@ -5,8 +5,8 @@
 // download je er een als bestand. De back-ups zelf worden alleen door de database
 // gemaakt (functie maak_cloud_backup); de app kan ze lezen en verwijderen, niet vervalsen.
 
-import { getClient, heeftClient } from './supabase.js?v=20261024j';
-import { esc } from './helpers.js?v=20261024j';
+import { getClient, heeftClient } from './supabase.js?v=20261024k';
+import { esc } from './helpers.js?v=20261024k';
 
 const el = id => document.getElementById(id);
 const nl = iso => new Date(iso).toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' });
@@ -34,7 +34,7 @@ export const dagenSindsCloudBackup = () =>
 
 const aantalTekst = a => {
   const n = a || {};
-  return `${n.boekingen ?? 0} boekingen · ${n.hnvi_loten ?? 0} loten · ${n.voorraadartikelen ?? 0} voorraadartikelen · ${n.app_data ?? 0} lijsten/instellingen`;
+  return `${n.boekingen ?? 0} boekingen · ${n.hnvi_loten ?? 0} loten · ${n.app_data ?? 0} lijsten en instellingen (o.a. voorraad, facturen)`;
 };
 
 export function cloudBackupBlok() {
