@@ -275,16 +275,31 @@ async function afhandelenSessiesInwisselen(req: Request): Promise<Response> {
   return Response.json({ ok: true, koppeling_id: koppelingId }, { status: 200 });
 }
 
+const CORS = {
+  "Access-Control-Allow-Origin": "https://xtenate-dot.github.io",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Vary": "Origin",
+};
+
+function metCors(r: Response): Response {
+  const h = new Headers(r.headers);
+  for (const [k, v] of Object.entries(CORS)) h.set(k, v);
+  return new Response(r.body, { status: r.status, headers: h });
+}
+
 Deno.serve(async (req: Request) => {
+  // De browser vraagt eerst met OPTIONS of de aanroep vanaf GitHub Pages mag.
+  if (req.method === "OPTIONS") return new Response("ok", { status: 204, headers: CORS });
   try {
     const url = new URL(req.url);
     if (url.pathname.endsWith("/sessies")) {
-      return await afhandelenSessiesInwisselen(req);
+      return metCors(await afhandelenSessiesInwisselen(req));
     }
-    return await afhandelenAuthStart(req);
+    return metCors(await afhandelenAuthStart(req));
   } catch {
     // Geen err.message in het antwoord -- ook deze catch-all mag geen
     // interne details lekken.
-    return Response.json({ ok: false, fout: "Onverwachte fout." }, { status: 500 });
+    return metCors(Response.json({ ok: false, fout: "Onverwachte fout." }, { status: 500 }));
   }
 });
