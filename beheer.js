@@ -5,14 +5,14 @@
 // ongewijzigd: elke tegel roept dezelfde globale functie aan als het
 // zijbalk-item, dus er verandert niets aan wat ze doen.
 
-import { herstelpuntenBlok } from './herstelpunt.js?v=20261023x';
-import { draaiControles } from './controle.js?v=20261023x';
-import { esc } from './helpers.js?v=20261023x';
-import { saveVoorraadInstellingen, standaardMinVoorraad, saveControleInstellingen, CONTROLE_INSTELLINGEN, saveBtwInstellingen, BTW_INSTELLINGEN, saveBedrijfsgegevens, BEDRIJFSGEGEVENS, saveKmInstellingen, KM_INSTELLINGEN, saveFactuurInstellingen, FACTUUR_INSTELLINGEN, appDataStatus, state, rekeningenLijst, bankKoppelingDagenTotVerval } from './storage.js?v=20261023x';
-import { werkBankKoppelingRekBijInSupabase } from './supabase-client-v2.js?v=20261023x';
-import { hertekenHuidigePagina } from './ui.js?v=20261023x';
-import { getPendingItems } from './supabase-client-v2.js?v=20261023x';
-import { syncNu } from './autosync.js?v=20261023x';
+import { herstelpuntenBlok } from './herstelpunt.js?v=20261023y';
+import { draaiControles } from './controle.js?v=20261023y';
+import { esc } from './helpers.js?v=20261023y';
+import { saveVoorraadInstellingen, standaardMinVoorraad, saveControleInstellingen, CONTROLE_INSTELLINGEN, saveBtwInstellingen, BTW_INSTELLINGEN, saveBedrijfsgegevens, BEDRIJFSGEGEVENS, saveKmInstellingen, KM_INSTELLINGEN, saveFactuurInstellingen, FACTUUR_INSTELLINGEN, appDataStatus, state, rekeningenLijst, bankKoppelingDagenTotVerval } from './storage.js?v=20261023y';
+import { werkBankKoppelingRekBijInSupabase } from './supabase-client-v2.js?v=20261023y';
+import { hertekenHuidigePagina } from './ui.js?v=20261023y';
+import { getPendingItems } from './supabase-client-v2.js?v=20261023y';
+import { syncNu } from './autosync.js?v=20261023y';
 
 const el = id => document.getElementById(id);
 
@@ -450,7 +450,7 @@ function bankKoppelingenBlok() {
             ${waarschuwing}
           </div>`;
       }).join('')
-    : `<div class="muted" style="font-size:12px">Nog geen bankkoppelingen. Dat komt in een latere fase.</div>`;
+    : `<div class="muted" style="font-size:12px">Nog geen bankkoppelingen. Klik op “Bankrekening koppelen” om Revolut te koppelen.</div>`;
 
   return `
     <div class="beheer-groep">
@@ -462,6 +462,7 @@ function bankKoppelingenBlok() {
           bank opnieuw bevestigen — dat kan geen automatisering overnemen.
         </div>
         ${rijen}
+        <div style="margin-top:10px"><button class="btn btn-primary" onclick="startBankKoppeling()">Bankrekening koppelen</button></div>
         <div style="margin-top:6px"><span id="beheer-bank-koppeling-melding" class="muted" style="font-size:12px"></span></div>
       </div>
     </div>`;

@@ -66,3 +66,8 @@ Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
 
 ## Bonnetjes-info in Jaarafsluiting (23-10) — GEDAAN
 - Inforegel: hoeveel uitgaven een bonnetje hebben (bewaarplicht 7 jaar). Alleen informatief.
+
+## Bankkoppeling Revolut Business (24-10) — IN UITVOERING
+- Enable Banking: productie-app "Xtenate Administratie" (restricted, gratis), Revolut Business gekoppeld door de gebruiker. Supabase-secrets APP_ID/PRIVATE_KEY zijn door de gebruiker vervangen (app-id digest geverifieerd). Edge Function bank-koppeling geüpdatet en uitgerold (NL, Revolut, business, 89 dagen, redirect Xtenate-Administratie).
+- Gebouwd: knop "Bankrekening koppelen" in Beheer + opvang van ?code&state (bankkoppelen.js).
+- Nog te doen: de koppeling zelf doorlopen (door de gebruiker, in Revolut), dan: transacties ophalen (4b-4, dedup op entry_reference), knop "Nu ophalen", inbox (4c). Functie kiest nu alleen het eerste account uit de sessie.

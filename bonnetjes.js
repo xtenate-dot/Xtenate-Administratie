@@ -6,8 +6,8 @@
 // boekingnummer. Een back-up als bestand staat in Beheer: de fiscus wil de
 // stukken zeven jaar zien, en browserdata kan verdwijnen.
 
-import { state } from './storage.js?v=20261023x';
-import { esc } from './helpers.js?v=20261023x';
+import { state } from './storage.js?v=20261023y';
+import { esc } from './helpers.js?v=20261023y';
 
 const DB_NAAM = 'xtenate_bonnetjes';
 const MAX_PDF = 8 * 1024 * 1024;
