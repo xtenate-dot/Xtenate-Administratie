@@ -77,3 +77,8 @@ Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
 - Database: SQL-functie bank_sessie_voor_ophalen (security definer, alleen eigen rijen) — zie bank_sessie_voor_ophalen.sql.
 - App: Bank importeren > "Ophalen bij de bank" -> zelfde voorstel als CSV (dubbelen herkend, grootboek geleerd van eerdere boekingen). Test 24-10: 73 regels (9 sep-23 okt), 46 staan al, 27 nieuw, 10 zonder rekening.
 - Nog te doen: automatische dagelijkse ronde (pg_cron + opslag in bank_inbox), laatste_sync bijhouden, nette weergave van fouten, 90-dagen verlenging.
+
+## WENS (later uitvoeren, nog NIET gebouwd): bank ophalen per periode
+- Bij "Ophalen bij de bank" een periode kunnen kiezen: week, maand, kwartaal of jaar (of eigen van/tot), bijvoorbeeld voor een controle van een bepaalde periode tegen de administratie.
+- Let op: de bank geeft niet oneindig ver terug (Revolut ongeveer 90 dagen; functie nu maximaal 89). Oudere perioden dus alleen via CSV/Excel; de knop moet dat duidelijk zeggen.
+- Technisch: /ophalen accepteert nu `dagen`; uitbreiden met `van`/`tot` en een periodekiezer op Bank importeren. Controle-weergave: staan alle bankregels in de administratie, en andersom.
