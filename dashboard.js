@@ -1,21 +1,21 @@
 // dashboard.js — Home: het financiële dashboard.
 
-import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261024h';
+import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261024i';
 import {
   BEGINSALDO_2026, calcIB, ddmm, esc, fmt, fmtKort, isInkomst, isKostenBoeking, isOmzet, isUitgave,
   maandLabel, rekBadge, saldoDelta, typeBadge, weergaveNaam
-} from './helpers.js?v=20261024h';
-import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen, bankKoppelingDagenTotVerval } from './storage.js?v=20261024h';
-import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261024h';
-import { draaiControles } from './controle.js?v=20261024h';
-import { aangifteModel, ibOver } from './belasting.js?v=20261024h';
-import { splitsLoten } from './hnvilot.js?v=20261024h';
-import { factuurSamenvatting } from './facturen.js?v=20261024h';
-import { korStatus } from './kor.js?v=20261024h';
-import { maakSorteerbaar } from './tables.js?v=20261024h';
-import { hertekenHuidigePagina } from './ui.js?v=20261024h';
-import { txVanJaar, lopendJaar, isTxJaar, banksaldoTot } from './jaren.js?v=20261024h';
-import { tarievenVoor } from './tarieven.js?v=20261024h';
+} from './helpers.js?v=20261024i';
+import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen, bankKoppelingDagenTotVerval } from './storage.js?v=20261024i';
+import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261024i';
+import { draaiControles } from './controle.js?v=20261024i';
+import { aangifteModel, ibOver } from './belasting.js?v=20261024i';
+import { splitsLoten } from './hnvilot.js?v=20261024i';
+import { factuurSamenvatting } from './facturen.js?v=20261024i';
+import { korStatus } from './kor.js?v=20261024i';
+import { maakSorteerbaar } from './tables.js?v=20261024i';
+import { hertekenHuidigePagina } from './ui.js?v=20261024i';
+import { txVanJaar, lopendJaar, isTxJaar, banksaldoTot } from './jaren.js?v=20261024i';
+import { tarievenVoor } from './tarieven.js?v=20261024i';
 
 
 export function wisselJaar() {

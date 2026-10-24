@@ -8,10 +8,10 @@
 //   de code via dezelfde Edge Function in.
 // De functie zelf bewaart de sessie in de database; de app ziet die nooit.
 
-import { getClient } from './supabase.js?v=20261024h';
-import { state } from './storage.js?v=20261024h';
-import { laadVoorstelUitBank, periodeBereik } from './bankimport.js?v=20261024h';
-import { loadBankKoppelingenFromSupabase } from './supabase-client-v2.js?v=20261024h';
+import { getClient } from './supabase.js?v=20261024i';
+import { state } from './storage.js?v=20261024i';
+import { laadVoorstelUitBank, periodeBereik } from './bankimport.js?v=20261024i';
+import { loadBankKoppelingenFromSupabase } from './supabase-client-v2.js?v=20261024i';
 
 const STATE_KEY = 'xtenate_bank_state';
 const el = id => document.getElementById(id);

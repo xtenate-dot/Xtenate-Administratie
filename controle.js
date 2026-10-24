@@ -8,14 +8,14 @@
 //   'gb:<nr>'  -> die grootboekrekening
 //   'pagina:<naam>' -> die pagina
 
-import { BEGINSALDO_2026, esc, fmt, isPriveBetaaldeKost, teltBij, weergaveNaam } from './helpers.js?v=20261024h';
-import { txVanJaar, isTxJaar, banksaldoTot } from './jaren.js?v=20261024h';
-import { MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261024h';
-import { DREMPEL, vindDuplicaten } from './duplicaten.js?v=20261024h';
+import { BEGINSALDO_2026, esc, fmt, isPriveBetaaldeKost, teltBij, weergaveNaam } from './helpers.js?v=20261024i';
+import { txVanJaar, isTxJaar, banksaldoTot, lopendJaar } from './jaren.js?v=20261024i';
+import { MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261024i';
+import { DREMPEL, vindDuplicaten } from './duplicaten.js?v=20261024i';
 import {
   REDEN_LABEL, aantalVerborgen, herstelAlles, herstelControle, herstelMelding,
   isControleUit, isVerborgen, verbergMelding, verborgenOverzicht, zetControleUit
-} from './negeren.js?v=20261024h';
+} from './negeren.js?v=20261024i';
 
 const el = id => document.getElementById(id);
 const HOOFDREKENING = '1010';
@@ -277,18 +277,25 @@ function controlesVoorraad() {
     dubbel.map(c => meld(c.id, { label: c.artikel, sub: 'komt meer dan één keer voor', ga: `artikel:${c.id}` })),
     'Twee regels met dezelfde naam splitsen je voorraad en zorgen dat een import de verkeerde regel bijwerkt.'));
 
+  // Beginvoorraad = eindstand van het vorige jaar. Staat die niet vastgelegd, dan rekenen we terug:
+  // voorraad − ingekocht + verkocht. Is dat getal nul of meer, dan klopt het verhaal (je nam voorraad
+  // mee uit het vorige jaar); alleen een negatieve beginvoorraad kan niet en wordt gemeld.
+  const vorigJaar = String(Number(lopendJaar()) - 1);
   uit.push(check('vrd-telling', 'Voorraad',
-    'Ingekocht min verkocht komt uit op de voorraad',
-    n => `${enkelvoud(n, 'artikel', 'artikelen')} waarbij ingekocht min verkocht niet klopt`, 'waarschuwing',
-    artikelen.filter(c => {
-      const ink = Number(c.inkoop) || 0, vk = Number(c.verkoop) || 0;
-      return (ink > 0 || vk > 0) && ink - vk !== Number(c.voorraad);
-    }).map(c => meld(c.id, {
-      label: c.artikel,
-      sub: `${c.inkoop || 0} ingekocht − ${c.verkoop || 0} verkocht = ${(Number(c.inkoop) || 0) - (Number(c.verkoop) || 0)}, maar voorraad staat op ${c.voorraad}`,
-      ga: `artikel:${c.id}`
-    })),
-    'Klopt dit niet, dan is er iets verkocht of ingekocht zonder dat de voorraad is bijgewerkt. Een correctie na een telling is een geldige reden voor een verschil.'));
+    'Beginvoorraad + ingekocht − verkocht komt uit op de voorraad',
+    n => `${enkelvoud(n, 'artikel', 'artikelen')} waarbij de voorraadtelling niet klopt`, 'waarschuwing',
+    artikelen.map(c => {
+      const ink = Number(c.inkoop) || 0, vk = Number(c.verkoop) || 0, vrd = Number(c.voorraad) || 0;
+      if (!(ink > 0 || vk > 0)) return null;
+      const begin = c.jaren?.[vorigJaar]?.eind;
+      if (begin != null) {
+        const verwacht = Number(begin) + ink - vk;
+        return verwacht === vrd ? null : { c, tekst: `${begin} begin + ${ink} ingekocht − ${vk} verkocht = ${verwacht}, maar voorraad staat op ${vrd}` };
+      }
+      const afgeleid = vrd - ink + vk;
+      return afgeleid >= 0 ? null : { c, tekst: `${ink} ingekocht − ${vk} verkocht, voorraad ${vrd}: dan was de beginvoorraad ${afgeleid}, en dat kan niet` };
+    }).filter(Boolean).map(({ c, tekst }) => meld(c.id, { label: c.artikel, sub: tekst, ga: `artikel:${c.id}` })),
+    'Klopt dit niet, dan is er iets verkocht of ingekocht zonder dat de voorraad is bijgewerkt. Een correctie na een telling is een geldige reden voor een verschil. Voorraad die je uit het vorige jaar meenam telt als beginvoorraad.'));
 
   return uit;
 }
