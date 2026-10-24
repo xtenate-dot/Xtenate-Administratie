@@ -1,33 +1,33 @@
 // ui.js — navigatie tussen pagina's en het onthouden van de actieve pagina.
 
-import { state } from './storage.js?v=20261024b';
-import { renderBank } from './bank.js?v=20261024b';
-import { renderBelasting } from './belasting.js?v=20261024b';
-import { renderBtw } from './btw.js?v=20261024b';
-import { renderCrediteuren } from './crediteuren.js?v=20261024b';
-import { renderDebiteuren } from './debiteuren.js?v=20261024b';
-import { renderHome } from './dashboard.js?v=20261024b';
-import { renderPortaal } from './home.js?v=20261024b';
-import { renderGrootboek } from './grootboek.js?v=20261024b';
-import { renderHNVI } from './hnvi.js?v=20261024b';
-import { renderControle } from './controle.js?v=20261024b';
-import { renderCovers } from './voorraad.js?v=20261024b';
-import { renderFacturen } from './facturen-ui.js?v=20261024b';
-import { renderKm } from './km-ui.js?v=20261024b';
-import { renderUren } from './uren-ui.js?v=20261024b';
-import { renderActiva } from './activa-ui.js?v=20261024b';
-import { renderVeiling } from './veiling-ui.js?v=20261024b';
-import { renderPeriode } from './periode.js?v=20261024b';
-import { renderFactuurmaker } from './factuurmaker.js?v=20261024b';
-import { renderBankimport } from './bankimport.js?v=20261024b';
-import { renderJaarafsluiting } from './jaarafsluiting.js?v=20261024b';
-import { renderBeheer } from './beheer.js?v=20261024b';
-import { toonGroepVan } from './navgroepen.js?v=20261024b';
+import { state } from './storage.js?v=20261024c';
+import { renderBank } from './bank.js?v=20261024c';
+import { renderBelasting } from './belasting.js?v=20261024c';
+import { renderBtw } from './btw.js?v=20261024c';
+import { renderCrediteuren } from './crediteuren.js?v=20261024c';
+import { renderDebiteuren } from './debiteuren.js?v=20261024c';
+import { renderHome } from './dashboard.js?v=20261024c';
+import { renderPortaal } from './home.js?v=20261024c';
+import { renderGrootboek } from './grootboek.js?v=20261024c';
+import { renderHNVI } from './hnvi.js?v=20261024c';
+import { renderControle } from './controle.js?v=20261024c';
+import { renderCovers } from './voorraad.js?v=20261024c';
+import { renderFacturen } from './facturen-ui.js?v=20261024c';
+import { renderKm } from './km-ui.js?v=20261024c';
+import { renderUren } from './uren-ui.js?v=20261024c';
+import { renderActiva } from './activa-ui.js?v=20261024c';
+import { renderVeiling } from './veiling-ui.js?v=20261024c';
+import { renderPeriode } from './periode.js?v=20261024c';
+import { renderFactuurmaker } from './factuurmaker.js?v=20261024c';
+import { renderBankimport } from './bankimport.js?v=20261024c';
+import { renderJaarafsluiting } from './jaarafsluiting.js?v=20261024c';
+import { renderBeheer } from './beheer.js?v=20261024c';
+import { toonGroepVan } from './navgroepen.js?v=20261024c';
 
 const RENDERS = {
   home: renderPortaal,      // de startpagina: tegels naar de onderdelen
   overzicht: renderHome,    // het financiële dashboard (voorheen 'home')
-  bank: renderBank,
+  bank: () => { renderBank(); renderBankimport(); },
   facturen: renderFacturen,
   crediteuren: renderCrediteuren,
   debiteuren: renderDebiteuren,
@@ -40,7 +40,6 @@ const RENDERS = {
   veiling: renderVeiling,
   periode: renderPeriode,
   jaarafsluiting: renderJaarafsluiting,
-  bankimport: renderBankimport,
   factuurmaker: renderFactuurmaker,
   km: renderKm,
   uren: renderUren,
@@ -64,7 +63,6 @@ const TITELS = {
   veiling: 'Artikelvoorraad',
   periode: 'Per periode',
   jaarafsluiting: 'Jaarafsluiting',
-  bankimport: 'Bankimport',
   factuurmaker: 'Factuur maken',
   km: 'Kilometers',
   uren: 'Uren',
@@ -75,6 +73,8 @@ const TITELS = {
 export let huidigePagina = 'home';
 
 export function nav(p, btn) {
+  // De oude pagina Bankimport zit nu als blok in Bank.
+  if (p === 'bankimport') { nav('bank'); setTimeout(() => window.openBankVerwerken?.(), 0); return; }
   if (!RENDERS[p]) return;
   huidigePagina = p;
 
@@ -143,6 +143,7 @@ export function gaNaar(p) {
 /** Welke pagina hoort er bij de huidige hash? 'home' als de hash leeg of onbekend is. */
 export function paginaUitHash() {
   const p = location.hash.slice(1);
+  if (p === 'bankimport') return 'bank';
   return RENDERS[p] ? p : 'home';
 }
 
