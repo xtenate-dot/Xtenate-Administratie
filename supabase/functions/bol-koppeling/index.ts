@@ -35,12 +35,17 @@ function dagen(van: string, tot: string): string[] {
   return uit;
 }
 
+let laatsteTokenFout = "";
 async function token(id: string, geheim: string): Promise<string | null> {
   const r = await fetch("https://login.bol.com/token?grant_type=client_credentials", {
     method: "POST",
     headers: { Authorization: "Basic " + btoa(`${id}:${geheim}`), Accept: "application/json" },
   });
-  if (!r.ok) return null;
+  if (!r.ok) {
+    const t = (await r.text().catch(() => "")).replace(/\s+/g, " ").slice(0, 160);
+    laatsteTokenFout = `Bol antwoordde ${r.status}${t ? ": " + t : ""}. Lengte client ID: ${id.length}, lengte secret: ${geheim.length}.`;
+    return null;
+  }
   const d = await r.json().catch(() => null);
   return d?.access_token || null;
 }
@@ -86,7 +91,7 @@ function accounts(): { nummer: string; naam: string; id: string; geheim: string 
   const uit = [];
   for (const n of ["1", "2", "3", "4"]) {
     const sfx = n === "1" ? "" : `_${n}`;
-    const id = Deno.env.get(`BOL_CLIENT_ID${sfx}`), geheim = Deno.env.get(`BOL_CLIENT_SECRET${sfx}`);
+    const id = Deno.env.get(`BOL_CLIENT_ID${sfx}`)?.trim(), geheim = Deno.env.get(`BOL_CLIENT_SECRET${sfx}`)?.trim();
     if (id && geheim) uit.push({ nummer: n, naam: Deno.env.get(`BOL_NAAM${sfx}`) || `Bol-account ${n}`, id, geheim });
   }
   return uit;
@@ -124,7 +129,7 @@ async function afhandelen(req: Request): Promise<Response> {
   const perAccount: { nummer: string; naam: string; gevonden: number; opgeslagen: number }[] = [];
   for (const acc of gekozen) {
     const tok = await token(acc.id, acc.geheim);
-    if (!tok) return Response.json({ ok: false, fout: `Inloggen bij Bol is mislukt voor "${acc.naam}". Controleer de sleutels in Supabase.` }, { status: 502 });
+    if (!tok) return Response.json({ ok: false, fout: `Inloggen bij Bol is mislukt voor "${acc.naam}". Controleer de sleutels in Supabase. ${laatsteTokenFout}` }, { status: 502 });
 
     // 1. Welke bestellingen zijn er per dag gewijzigd? (nieuwe, verzonden, geannuleerde)
     const orderIds = new Map<string, string | null>();
