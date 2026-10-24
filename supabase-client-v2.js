@@ -378,7 +378,8 @@ export async function verwijderRelatieInSupabase(id) {
 function bankKoppelingUitRij(r) {
   return {
     id: r.id, aspspNaam: r.aspsp_naam, iban: r.iban, rek: r.rek,
-    geldigTot: r.geldig_tot, status: r.status
+    geldigTot: r.geldig_tot, status: r.status,
+    laatsteSync: r.laatste_sync || null, laatsteFout: r.laatste_fout || null
   };
 }
 
@@ -388,7 +389,7 @@ export async function loadBankKoppelingenFromSupabase() {
     const sb = await getClient();
     const { data, error } = await sb
       .from('bank_koppelingen')
-      .select('id, aspsp_naam, iban, rek, geldig_tot, status')
+      .select('id, aspsp_naam, iban, rek, geldig_tot, status, laatste_sync, laatste_fout')
       .order('aspsp_naam');
     if (error) {
       console.warn('⚠️  Bankkoppelingen laden mislukt:', error.message);

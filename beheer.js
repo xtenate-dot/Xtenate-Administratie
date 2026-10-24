@@ -442,6 +442,7 @@ function bankKoppelingenBlok() {
             <div style="min-width:180px">
               <div style="font-weight:500">${esc(k.aspspNaam || '—')}</div>
               <div class="muted" style="font-size:12px">${esc(k.iban || '—')}</div>
+              <div class="muted" style="font-size:11px">${k.laatsteFout ? '⚠️ ' + esc(k.laatsteFout) + ' ' : ''}${k.laatsteSync ? 'Laatst opgehaald: ' + esc(new Date(k.laatsteSync).toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' })) : 'Nog niet automatisch opgehaald'}</div>
             </div>
             <select id="beheer-bank-rek-${esc(k.id)}" style="min-width:160px" aria-label="Rekening voor ${esc(k.iban || k.aspspNaam || '')}">
               ${rekeningOpties(k.rek)}

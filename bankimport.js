@@ -10,11 +10,15 @@ import { isTxJaar, jaarVan, EERSTE_TX_JAAR, vandaagIso } from './jaren.js?v=2026
 import { esc, fmt } from './helpers.js?v=20261024f';
 import { addToPendingQueue } from './supabase-client-v2.js?v=20261024f';
 import { maakHerstelpunt } from './herstelpunt.js?v=20261024f';
+import { telInbox, haalInboxOp, zetInboxStatus } from './bankinbox.js?v=20261024f';
 
 const REK = '1010';          // zo staat Revolut nu in je administratie
 const el = id => document.getElementById(id);
 let voorstel = null;         // { bestand, rijen, ontbreekt, overgeslagen }
 let melding = '';
+let inboxAantal = null;     // aantal nieuwe regels in de inbox (null = onbekend)
+let inboxGelezen = 0;       // tijdstip van de laatste telling
+let inboxKaart = new Map(); // voorstelsleutel -> id van de inboxregel (alleen als het voorstel uit de inbox komt)
 let inBehandeling = [];   // bankregels die de bank nog niet definitief heeft geboekt (alleen tonen, niet boeken)
 
 // ----------------------------------------------------------------- inlezen
@@ -159,6 +163,7 @@ export function maakVoorstel(uit, bestaand = [...state.TX, ...state.HIST_TX], be
 /** Zet transacties die de bank-koppeling heeft opgehaald om in hetzelfde voorstel als een CSV-afschrift. */
 export function laadVoorstelUitBank(transacties, label = 'Bank (automatisch)', wachtend = [], bereik = {}) {
   inBehandeling = wachtend;
+  inboxKaart = new Map();
   const rijen = transacties.map(t => {
     const naam = String(t.naam || '').trim();
     const tekst = naam || String(t.omschr || '').trim() || 'Onbekend';
@@ -173,6 +178,33 @@ export function laadVoorstelUitBank(transacties, label = 'Bank (automatisch)', w
   melding = bereik.opmerking || '';
   renderBankimport();
   const d0 = document.getElementById('bank-verwerken'); if (d0) d0.open = true;
+}
+
+
+/** Telt de inbox (hooguit eens per minuut) en tekent opnieuw als het aantal veranderd is. */
+export async function ververseInbox(forceer = false) {
+  if (!(state.BANK_KOPPELINGEN || []).length) return;
+  if (!forceer && Date.now() - inboxGelezen < 60000) return;
+  inboxGelezen = Date.now();
+  const n = await telInbox();
+  if (n !== inboxAantal) { inboxAantal = n; renderBankimport(); }
+}
+
+/** Zet de regels uit de inbox in het voorstel; boeken gebeurt pas bij "Importeer". */
+export async function laadInboxVoorstel() {
+  try {
+    const rijen = await haalInboxOp();
+    if (!rijen.length) { melding = 'De inbox is leeg.'; inboxAantal = 0; renderBankimport(); return; }
+    const t = rijen.map(r => ({
+      id: r.entry_reference, datum: r.datum, naam: r.naam, omschr: r.omschr,
+      totaal: (r.richting === 'uitgave' ? -1 : 1) * Number(r.bedrag)
+    }));
+    laadVoorstelUitBank(t, 'Inbox (ochtendronde)', [], { opmerking: `Inbox: ${rijen.length} regels die de ochtendronde heeft opgehaald.` });
+    inboxKaart = new Map(rijen.map(r => ['api:' + r.entry_reference, r.id]));
+  } catch {
+    melding = 'De inbox kon niet gelezen worden. Probeer het later opnieuw.';
+    renderBankimport();
+  }
 }
 
 // ------------------------------------------------------------ periodekeuze
@@ -223,6 +255,7 @@ export function openBankVerwerken() {
 }
 window.openBankVerwerken = openBankVerwerken;
 window.zetPeriode = zetPeriode;
+window.laadInboxVoorstel = laadInboxVoorstel;
 window.zetEigenPeriode = zetEigenPeriode;
 
 export function kiesRevolutBestand() {
@@ -235,6 +268,7 @@ export async function leesRevolutBestand(event) {
   if (!f) return;
   try {
     const uit = leesRevolut(await f.text());
+    inboxKaart = new Map();
     voorstel = maakVoorstel(uit, undefined, f.name);
     melding = '';
   } catch (e) { voorstel = null; melding = '❌ ' + e.message; }
@@ -258,7 +292,9 @@ export function zetBankimportKeuze(i, veld, waarde) {
 /** Haalt een regel helemaal uit het voorstel (bijvoorbeeld een dubbele of een storno). */
 export function verwijderBankimportRegel(i) {
   if (!voorstel || !voorstel.rijen[i]) return;
-  voorstel.rijen.splice(i, 1);
+  const weg = voorstel.rijen.splice(i, 1)[0];
+  const inboxId = weg && inboxKaart.get(weg.sleutel);
+  if (inboxId) { zetInboxStatus([inboxId], 'genegeerd').then(() => { inboxAantal = null; inboxGelezen = 0; }); }
   renderBankimport();
 }
 
@@ -269,7 +305,12 @@ export function importeerRevolut() {
   if (zonderGb.length) { melding = `❌ ${zonderGb.length} regels hebben nog geen grootboekrekening. Kies er een of haal het vinkje weg.`; renderBankimport(); return; }
   const buitenJaar = teDoen.filter(r => !isTxJaar(jaarVan(r.datum)));
   if (buitenJaar.length) { melding = `❌ ${buitenJaar.length} regels zijn van vóór ${EERSTE_TX_JAAR}. Oudere jaren importeer je via de Excel-import.`; renderBankimport(); return; }
-  if (!teDoen.length) { melding = 'Er is niets nieuws om te importeren.'; renderBankimport(); return; }
+  if (!teDoen.length) {
+    const al = voorstel.rijen.filter(r => r.staatAl && inboxKaart.has(r.sleutel)).map(r => inboxKaart.get(r.sleutel));
+    if (al.length) { zetInboxStatus(al, 'omgezet').then(() => { inboxAantal = null; inboxGelezen = 0; ververseInbox(true); }); }
+    melding = 'Er is niets nieuws om te importeren.' + (al.length ? ` ${al.length} regels uit de inbox stonden al in de administratie en zijn afgehandeld.` : '');
+    renderBankimport(); return;
+  }
   const jarenTekst = [...new Set(teDoen.map(r => jaarVan(r.datum)))].sort().join(' en ');
   const vergrendeld = [...new Set(teDoen.map(r => jaarVan(r.datum)))].filter(j => jaarIsVergrendeld(j));
   if (vergrendeld.length && !window.confirm(`🔒 ${vergrendeld.join(' en ')} is vergrendeld (aangifte ingediend). Deze import verandert de cijfers van dat jaar. Toch doorgaan?`)) return;
@@ -282,6 +323,10 @@ export function importeerRevolut() {
     addToPendingQueue(tx, 'create', false);
   }
   saveTxData();
+  // Regels uit de inbox die nu geboekt zijn (of er al stonden) tellen niet meer mee.
+  const klaar = voorstel.rijen.filter(r => inboxKaart.has(r.sleutel) && (r.staatAl || r.kies)).map(r => inboxKaart.get(r.sleutel));
+  if (klaar.length) zetInboxStatus(klaar, 'omgezet').then(() => { inboxAantal = null; inboxGelezen = 0; ververseInbox(true); });
+  inboxKaart = new Map();
   melding = `✅ ${teDoen.length} boekingen toegevoegd.`;
   voorstel = null;
   renderBankimport();
@@ -293,12 +338,14 @@ const SOORTEN = [['inkomst', 'Inkomst'], ['uitgave', 'Uitgave'], ['prive_stortin
 export function renderBankimport() {
   const doel = el('bankimport-inhoud');
   if (!doel) return;
+  setTimeout(() => ververseInbox(), 0);
   const knop = `<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:var(--spacing-4)">
     <button class="btn btn-primary" onclick="kiesRevolutBestand()">Revolut-afschrift kiezen (CSV)</button>
     ${(state.BANK_KOPPELINGEN || []).length ? `
       <select onchange="zetPeriode(this.value)" aria-label="Periode" style="font-size:13px">${PERIODES.map(([w, l]) => `<option value="${w}"${w === periodeSoort ? ' selected' : ''}>${l}</option>`).join('')}</select>
       ${periodeSoort === 'eigen' ? `<input type="date" value="${esc(eigenVan)}" onchange="zetEigenPeriode('van',this.value)" aria-label="Van"> <span class="muted">t/m</span> <input type="date" value="${esc(eigenTot)}" onchange="zetEigenPeriode('tot',this.value)" aria-label="Tot">` : ''}
-      <button class="btn" onclick="haalBankTransactiesOp()">Ophalen bij de bank</button>` : ''}
+      <button class="btn" onclick="haalBankTransactiesOp()">Ophalen bij de bank</button>
+      ${inboxAantal ? `<button class="btn btn-primary" onclick="laadInboxVoorstel()" title="Regels die de ochtendronde automatisch heeft opgehaald">📥 Inbox (${inboxAantal} nieuw)</button>` : ''}` : ''}
     <span class="muted" style="font-size:12px">In Revolut: Rekeningen → Afschrift → CSV, voor de periode die je wilt.</span>
     ${melding ? `<span style="font-size:13px">${esc(melding)}</span>` : ''}</div>`;
   if (!voorstel) {

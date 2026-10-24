@@ -5,7 +5,7 @@ import {
   BEGINSALDO_2026, calcIB, ddmm, esc, fmt, fmtKort, isInkomst, isKostenBoeking, isOmzet, isUitgave,
   maandLabel, rekBadge, saldoDelta, typeBadge, weergaveNaam
 } from './helpers.js?v=20261024f';
-import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261024f';
+import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen, bankKoppelingDagenTotVerval } from './storage.js?v=20261024f';
 import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261024f';
 import { draaiControles } from './controle.js?v=20261024f';
 import { aangifteModel, ibOver } from './belasting.js?v=20261024f';
@@ -259,6 +259,24 @@ function aandachtspunten() {
     tekst: 'Deze krijgen hun prijs uit de bankboekingen. Met de inkoopverdeling stem je dat per artikel af.',
     actie: "nav('voorraad')", knop: 'Verdeling'
   });
+
+  // Bankkoppeling: de toestemming loopt na ~89 dagen af en dan stopt ook de ochtendronde.
+  try {
+    for (const kp of (state.BANK_KOPPELINGEN || [])) {
+      const d = bankKoppelingDagenTotVerval(kp);
+      if (d !== null && d <= 14) punten.unshift({
+        kleur: d <= 3 ? 'red' : 'amber',
+        titel: d < 0 ? 'Bankkoppeling is verlopen' : `Bankkoppeling verloopt over ${d} ${d === 1 ? 'dag' : 'dagen'}`,
+        tekst: 'Koppel de rekening opnieuw (Beheer \u2192 Bankrekening koppelen), anders worden er geen nieuwe bankregels meer opgehaald.',
+        actie: "nav('beheer')", knop: 'Beheer'
+      });
+      else if (kp.laatsteFout) punten.push({
+        kleur: 'amber', titel: 'Automatisch ophalen bij de bank is mislukt',
+        tekst: `${kp.laatsteFout} Open Beheer voor de details; de volgende ochtendronde probeert het opnieuw.`,
+        actie: "nav('beheer')", knop: 'Beheer'
+      });
+    }
+  } catch (e) { console.warn('Bankkoppeling-aandachtspunt mislukt:', e); }
 
   // Uitkomst van de Controle-pagina, zodat "Alles op orde" niet kan blijven
   // staan terwijl daar een fout of waarschuwing open staat.

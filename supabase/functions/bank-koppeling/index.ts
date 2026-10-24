@@ -15,6 +15,7 @@
 //   - De aanroeper komt uitsluitend uit auth.getUser() op de doorgegeven
 //     gebruikers-JWT. Er wordt nergens een user_id uit de request-body
 //     gelezen -- die bestaat simpelweg niet als veld.
+//   - (Uitzondering: /dagelijks, door pg_cron aangeroepen met CRON_SECRET, gebruikt de service-role-sleutel.)
 //   - Alle databaseverkeer loopt via een Supabase-client die de doorgegeven
 //     Authorization-header gebruikt (dus als de rol authenticated, met
 //     dezelfde RLS/kolomrechten als de rest van de app). De
@@ -290,6 +291,48 @@ type Entry = {
   remittance_information?: string[] | null; note?: string | null;
 };
 
+type BankRegel = { id: string; datum: string; totaal: number; naam: string; omschr: string; tegenIban: string; status: string };
+
+/** Haalt alle transacties van een rekening op (alle pagina's). Geeft bij een fout alleen een korte melding terug. */
+async function haalVanBank(jwt: string, accountUid: string, vanaf: string, tot: string | null): Promise<{ fout?: string; transacties: BankRegel[] }> {
+  const resultaat: BankRegel[] = [];
+  let doorgaan: string | null = null;
+  for (let pagina = 0; pagina < 20; pagina++) {
+    const q = new URLSearchParams({ date_from: vanaf });
+    if (tot) q.set("date_to", tot);
+    if (doorgaan) q.set("continuation_key", doorgaan);
+    const r = await fetch(`https://api.enablebanking.com/accounts/${encodeURIComponent(accountUid)}/transactions?${q}`, {
+      headers: { Authorization: `Bearer ${jwt}` },
+    });
+    if (!r.ok) {
+      const kort = r.status === 401 || r.status === 403 || r.status === 422 ? "De bank weigert de toegang (is de toestemming verlopen?)." : "Ophalen bij de bank mislukt.";
+      return { fout: kort, transacties: resultaat };
+    }
+    const d = await r.json().catch(() => null);
+    for (const e of ((d?.transactions || []) as Entry[])) {
+      const datum = String(e.booking_date || e.value_date || e.transaction_date || "").slice(0, 10);
+      const bedrag = Number(e.transaction_amount?.amount);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(datum) || !Number.isFinite(bedrag)) continue;
+      const credit = e.credit_debit_indicator === "CRDT";
+      const tegen = credit ? e.debtor : e.creditor;
+      const tegenIban = credit ? e.debtor_account?.iban : e.creditor_account?.iban;
+      const omschr = (e.remittance_information || []).join(" ").trim() || e.note || "";
+      resultaat.push({
+        id: e.entry_reference || e.transaction_id || `${datum}|${bedrag}|${tegen?.name || omschr}`.slice(0, 120),
+        datum,
+        totaal: credit ? Math.abs(bedrag) : -Math.abs(bedrag),
+        naam: tegen?.name || "",
+        omschr: omschr.slice(0, 200),
+        tegenIban: tegenIban || "",
+        status: String(e.status || ""),
+      });
+    }
+    doorgaan = d?.continuation_key || null;
+    if (!doorgaan) break;
+  }
+  return { transacties: resultaat };
+}
+
 async function afhandelenOphalen(req: Request): Promise<Response> {
   const { supabase, user } = await clientEnGebruiker(req);
   if (!user) return Response.json({ ok: false, fout: "Niet ingelogd." }, { status: 401 });
@@ -329,42 +372,76 @@ async function afhandelenOphalen(req: Request): Promise<Response> {
   if (tot && tot < vanaf) {
     return Response.json({ ok: true, vanaf, tot, afgekapt, buitenBereik: true, transacties: [] }, { status: 200 });
   }
-  const resultaat: Record<string, unknown>[] = [];
-  let doorgaan: string | null = null;
-  for (let pagina = 0; pagina < 20; pagina++) {
-    const q = new URLSearchParams({ date_from: vanaf });
-    if (tot) q.set("date_to", tot);
-    if (doorgaan) q.set("continuation_key", doorgaan);
-    const r = await fetch(`https://api.enablebanking.com/accounts/${encodeURIComponent(sessie.account_uid)}/transactions?${q}`, {
-      headers: { Authorization: `Bearer ${jwt}` },
-    });
-    if (!r.ok) {
-      const kort = r.status === 401 || r.status === 403 || r.status === 422 ? "De bank weigert de toegang (is de toestemming verlopen?)." : "Ophalen bij de bank mislukt.";
-      return Response.json({ ok: false, fout: kort }, { status: 502 });
-    }
-    const d = await r.json().catch(() => null);
-    for (const e of ((d?.transactions || []) as Entry[])) {
-      const datum = String(e.booking_date || e.value_date || e.transaction_date || "").slice(0, 10);
-      const bedrag = Number(e.transaction_amount?.amount);
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(datum) || !Number.isFinite(bedrag)) continue;
-      const credit = e.credit_debit_indicator === "CRDT";
-      const tegen = credit ? e.debtor : e.creditor;
-      const tegenIban = credit ? e.debtor_account?.iban : e.creditor_account?.iban;
-      const omschr = (e.remittance_information || []).join(" ").trim() || e.note || "";
-      resultaat.push({
-        id: e.entry_reference || e.transaction_id || `${datum}|${bedrag}|${tegen?.name || omschr}`.slice(0, 120),
-        datum,
-        totaal: credit ? Math.abs(bedrag) : -Math.abs(bedrag),
-        naam: tegen?.name || "",
-        omschr: omschr.slice(0, 200),
-        tegenIban: tegenIban || "",
-        status: String(e.status || ""),
-      });
-    }
-    doorgaan = d?.continuation_key || null;
-    if (!doorgaan) break;
-  }
+  const bank = await haalVanBank(jwt, sessie.account_uid, vanaf, tot);
+  if (bank.fout) return Response.json({ ok: false, fout: bank.fout }, { status: 502 });
+  const resultaat = bank.transacties;
   return Response.json({ ok: true, vanaf, tot, afgekapt, transacties: resultaat }, { status: 200 });
+}
+
+
+// ─── Dagelijkse ronde (aangeroepen door pg_cron, niet door de browser) ─────────
+// Beveiligd met een gedeeld geheim (CRON_SECRET) in de header x-cron-secret.
+// Dit is de ENIGE plek die de service-role-sleutel gebruikt. Er wordt niets
+// teruggegeven behalve aantallen. Alleen definitief geboekte regels (BOOK)
+// gaan naar bank_inbox; bestaande regels worden nooit overschreven.
+async function gelijk(a: string, b: string): Promise<boolean> {
+  const h = async (x: string) => new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(x)));
+  const [x, y] = [await h(a), await h(b)];
+  let v = 0;
+  for (let i = 0; i < x.length; i++) v |= x[i] ^ y[i];
+  return v === 0;
+}
+
+async function afhandelenDagelijks(req: Request): Promise<Response> {
+  const geheim = Deno.env.get("CRON_SECRET") || "";
+  const gegeven = req.headers.get("x-cron-secret") || "";
+  if (!geheim || geheim.length < 20 || !(await gelijk(geheim, gegeven))) {
+    return Response.json({ ok: false, fout: "Niet toegestaan." }, { status: 401 });
+  }
+  const url = Deno.env.get("SUPABASE_URL"), sleutel = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const secrets = leesEnableBankingSecrets();
+  if (!url || !sleutel || !secrets) return Response.json({ ok: false, fout: "Configuratie ontbreekt." }, { status: 500 });
+  const admin = createClient(url, sleutel, { auth: { persistSession: false } });
+  let jwt: string;
+  try { jwt = await ondertekenJwt(secrets.appId, secrets.privateKey); }
+  catch { return Response.json({ ok: false, fout: "Kon de aanvraag niet voorbereiden." }, { status: 500 }); }
+
+  const { data: koppelingen } = await admin.from("bank_koppelingen")
+    .select("id, user_id, iban, rek, account_uid, geldig_tot, laatste_sync")
+    .eq("status", "actief").gt("geldig_tot", new Date().toISOString());
+  const samenvatting: { koppelingen: number; nieuw: number; mislukt: number } = { koppelingen: 0, nieuw: 0, mislukt: 0 };
+  const dag = 24 * 60 * 60 * 1000;
+  for (const k of (koppelingen || [])) {
+    samenvatting.koppelingen++;
+    const grens = new Date(Date.now() - 89 * dag).toISOString().slice(0, 10);
+    // Eerste keer: zover de bank teruggeeft. Daarna: vanaf laatste sync met 7 dagen overlap
+    // (dubbele regels worden door de unieke sleutel genegeerd).
+    let vanaf = k.laatste_sync ? new Date(new Date(k.laatste_sync).getTime() - 7 * dag).toISOString().slice(0, 10) : grens;
+    if (vanaf < grens) vanaf = grens;
+    const bank = await haalVanBank(jwt, k.account_uid, vanaf, null);
+    if (bank.fout) {
+      samenvatting.mislukt++;
+      await admin.from("bank_koppelingen").update({ laatste_fout: bank.fout }).eq("id", k.id);
+      continue;
+    }
+    const rijen = bank.transacties.filter((t) => !t.status || t.status === "BOOK").map((t) => ({
+      user_id: k.user_id, bank_koppeling_id: String(k.id), entry_reference: t.id, datum: t.datum,
+      bedrag: Math.abs(t.totaal), richting: t.totaal < 0 ? "uitgave" : "inkomst",
+      naam: t.naam, omschr: t.omschr, tegenrekening_iban: t.tegenIban, eigen_iban: k.iban, rek: k.rek,
+      status: "nieuw",
+    }));
+    let fout = false;
+    for (let i = 0; i < rijen.length; i += 200) {
+      const deel = rijen.slice(i, i + 200);
+      const { data, error } = await admin.from("bank_inbox")
+        .upsert(deel, { onConflict: "user_id,bank_koppeling_id,entry_reference", ignoreDuplicates: true }).select("id");
+      if (error) { fout = true; break; }
+      samenvatting.nieuw += (data || []).length;
+    }
+    if (fout) { samenvatting.mislukt++; await admin.from("bank_koppelingen").update({ laatste_fout: "Opslaan in de inbox mislukt." }).eq("id", k.id); continue; }
+    await admin.from("bank_koppelingen").update({ laatste_sync: new Date().toISOString(), laatste_fout: null }).eq("id", k.id);
+  }
+  return Response.json({ ok: true, ...samenvatting }, { status: 200 });
 }
 
 const CORS = {
@@ -387,6 +464,9 @@ Deno.serve(async (req: Request) => {
     const url = new URL(req.url);
     if (url.pathname.endsWith("/sessies")) {
       return metCors(await afhandelenSessiesInwisselen(req));
+    }
+    if (url.pathname.endsWith("/dagelijks")) {
+      return metCors(await afhandelenDagelijks(req));
     }
     if (url.pathname.endsWith("/ophalen")) {
       return metCors(await afhandelenOphalen(req));
