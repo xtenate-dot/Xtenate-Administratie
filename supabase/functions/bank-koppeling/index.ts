@@ -47,13 +47,15 @@ function base64urlJson(obj: unknown): string {
 }
 
 function pemToDer(pem: string): ArrayBuffer {
-  const b64 = pem
-    .replace(/-----BEGIN [^-]+-----/g, "")
-    .replace(/-----END [^-]+-----/g, "")
-    .replace(/\s+/g, "");
+  // Tolerant voor aanhalingstekens en letterlijke "\\n" die bij het plakken kunnen ontstaan.
+  const t = String(pem).trim().replace(/^["']|["']$/g, "").replace(/\\n/g, "\n").replace(/\r/g, "");
+  const m = t.match(/-----BEGIN (RSA )?PRIVATE KEY-----([\s\S]*?)-----END (RSA )?PRIVATE KEY-----/);
+  if (!m) throw new Error("Geen PRIVATE KEY-blok gevonden in het geheim");
+  if (m[1]) throw new Error("Sleutel is PKCS#1 (RSA PRIVATE KEY); PKCS#8 (PRIVATE KEY) is nodig");
+  const b64 = m[2].replace(/[^A-Za-z0-9+/=]/g, "");
   const bin = atob(b64);
   const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  for (let k = 0; k < bin.length; k++) bytes[k] = bin.charCodeAt(k);
   return bytes.buffer;
 }
 
@@ -275,6 +277,84 @@ async function afhandelenSessiesInwisselen(req: Request): Promise<Response> {
   return Response.json({ ok: true, koppeling_id: koppelingId }, { status: 200 });
 }
 
+
+type Bedrag = { amount?: string; currency?: string };
+type Partij = { name?: string | null };
+type Rekening = { iban?: string | null } | null;
+type Entry = {
+  entry_reference?: string | null; transaction_id?: string | null;
+  booking_date?: string | null; value_date?: string | null; transaction_date?: string | null;
+  transaction_amount?: Bedrag; credit_debit_indicator?: string; status?: string;
+  creditor?: Partij | null; debtor?: Partij | null;
+  creditor_account?: Rekening; debtor_account?: Rekening;
+  remittance_information?: string[] | null; note?: string | null;
+};
+
+async function afhandelenOphalen(req: Request): Promise<Response> {
+  const { supabase, user } = await clientEnGebruiker(req);
+  if (!user) return Response.json({ ok: false, fout: "Niet ingelogd." }, { status: 401 });
+  const secrets = leesEnableBankingSecrets();
+  if (!secrets) return Response.json({ ok: false, fout: "Enable Banking-secrets ontbreken." }, { status: 500 });
+
+  let body: { koppeling_id?: string; dagen?: number } = {};
+  try { body = await req.json(); } catch { /* standaardwaarden */ }
+  const koppelingId = body.koppeling_id;
+  if (!koppelingId || typeof koppelingId !== "string") {
+    return Response.json({ ok: false, fout: "koppeling_id ontbreekt." }, { status: 400 });
+  }
+  const dagen = Math.min(Math.max(Math.floor(Number(body.dagen) || 45), 1), 89);
+
+  // Sessie en rekening komen uit een database-functie die alleen eigen, geldige koppelingen teruggeeft.
+  const { data: rijen, error: sessieFout } = await supabase.rpc("bank_sessie_voor_ophalen", { p_id: koppelingId });
+  const sessie = Array.isArray(rijen) ? rijen[0] : null;
+  if (sessieFout || !sessie?.account_uid) {
+    return Response.json({ ok: false, fout: "Koppeling niet gevonden of verlopen. Koppel de rekening opnieuw." }, { status: 404 });
+  }
+  if (sessie.geldig_tot && new Date(sessie.geldig_tot).getTime() < Date.now()) {
+    return Response.json({ ok: false, fout: "De toestemming van de bank is verlopen. Koppel de rekening opnieuw." }, { status: 410 });
+  }
+
+  let jwt: string;
+  try { jwt = await ondertekenJwt(secrets.appId, secrets.privateKey); }
+  catch { return Response.json({ ok: false, fout: "Kon de aanvraag niet voorbereiden." }, { status: 500 }); }
+
+  const vanaf = new Date(Date.now() - dagen * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const resultaat: Record<string, unknown>[] = [];
+  let doorgaan: string | null = null;
+  for (let pagina = 0; pagina < 20; pagina++) {
+    const q = new URLSearchParams({ date_from: vanaf, transaction_status: "BOOK" });
+    if (doorgaan) q.set("continuation_key", doorgaan);
+    const r = await fetch(`https://api.enablebanking.com/accounts/${encodeURIComponent(sessie.account_uid)}/transactions?${q}`, {
+      headers: { Authorization: `Bearer ${jwt}` },
+    });
+    if (!r.ok) {
+      const kort = r.status === 401 || r.status === 403 || r.status === 422 ? "De bank weigert de toegang (is de toestemming verlopen?)." : "Ophalen bij de bank mislukt.";
+      return Response.json({ ok: false, fout: kort }, { status: 502 });
+    }
+    const d = await r.json().catch(() => null);
+    for (const e of ((d?.transactions || []) as Entry[])) {
+      const datum = String(e.booking_date || e.value_date || e.transaction_date || "").slice(0, 10);
+      const bedrag = Number(e.transaction_amount?.amount);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(datum) || !Number.isFinite(bedrag)) continue;
+      const credit = e.credit_debit_indicator === "CRDT";
+      const tegen = credit ? e.debtor : e.creditor;
+      const tegenIban = credit ? e.debtor_account?.iban : e.creditor_account?.iban;
+      const omschr = (e.remittance_information || []).join(" ").trim() || e.note || "";
+      resultaat.push({
+        id: e.entry_reference || e.transaction_id || `${datum}|${bedrag}|${tegen?.name || omschr}`.slice(0, 120),
+        datum,
+        totaal: credit ? Math.abs(bedrag) : -Math.abs(bedrag),
+        naam: tegen?.name || "",
+        omschr: omschr.slice(0, 200),
+        tegenIban: tegenIban || "",
+      });
+    }
+    doorgaan = d?.continuation_key || null;
+    if (!doorgaan) break;
+  }
+  return Response.json({ ok: true, vanaf, transacties: resultaat }, { status: 200 });
+}
+
 const CORS = {
   "Access-Control-Allow-Origin": "https://xtenate-dot.github.io",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -290,11 +370,14 @@ function metCors(r: Response): Response {
 
 Deno.serve(async (req: Request) => {
   // De browser vraagt eerst met OPTIONS of de aanroep vanaf GitHub Pages mag.
-  if (req.method === "OPTIONS") return new Response("ok", { status: 204, headers: CORS });
+  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
   try {
     const url = new URL(req.url);
     if (url.pathname.endsWith("/sessies")) {
       return metCors(await afhandelenSessiesInwisselen(req));
+    }
+    if (url.pathname.endsWith("/ophalen")) {
+      return metCors(await afhandelenOphalen(req));
     }
     return metCors(await afhandelenAuthStart(req));
   } catch {
