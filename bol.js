@@ -2,9 +2,9 @@
 // tabel bol_bestellingen en uitrekenen (stuks, omzet, commissie). Alleen lezen en tonen:
 // dit raakt je boekingen en je voorraad niet.
 
-import { getClient } from './supabase.js?v=20261024l';
-import { state } from './storage.js?v=20261024l';
-import { vandaagIso } from './jaren.js?v=20261024l';
+import { getClient } from './supabase.js?v=20261024m';
+import { state } from './storage.js?v=20261024m';
+import { vandaagIso } from './jaren.js?v=20261024m';
 
 const dag = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
 const r2 = n => Math.round(n * 100) / 100;
@@ -15,7 +15,7 @@ export async function leesBestellingen() {
   const alle = [];
   for (let van = 0; van < 20000; van += 1000) {
     const { data, error } = await sb.from('bol_bestellingen')
-      .select('order_id, besteld, datum, items, opgehaald_op').order('datum', { ascending: false }).range(van, van + 999);
+      .select('account, order_id, besteld, datum, items, opgehaald_op').order('datum', { ascending: false }).range(van, van + 999);
     if (error) throw new Error('lezen mislukt');
     alle.push(...(data || []));
     if (!data || data.length < 1000) break;
@@ -27,14 +27,14 @@ export async function leesBestellingen() {
  * Haalt een periode op bij Bol, in stukken van 31 dagen (de functie accepteert niet meer per keer).
  * `voortgang(tekst)` krijgt tussentijdse meldingen. Geeft { opgeslagen, onvolledig } of gooit een Error met een leesbare tekst.
  */
-export async function haalBijBol(van, tot, voortgang = () => {}) {
+export async function haalBijBol(van, tot, voortgang = () => {}, account = 'alle') {
   const sb = await getClient();
   let opgeslagen = 0, onvolledig = false;
   let start = van;
   while (start <= tot) {
     const eind = dag(start, 30) < tot ? dag(start, 30) : tot;
     voortgang(`Ophalen ${start} t/m ${eind}…`);
-    const { data, error } = await sb.functions.invoke('bol-koppeling', { body: { van: start, tot: eind } });
+    const { data, error } = await sb.functions.invoke('bol-koppeling', { body: { van: start, tot: eind, account } });
     let fout = data && data.fout, geenSleutels = data && data.geenSleutels;
     if (error && !fout) { try { const j = await error.context.json(); fout = j?.fout; geenSleutels = j?.geenSleutels; } catch { /* geen detail */ } }
     if (error || !data?.ok) {
@@ -47,6 +47,15 @@ export async function haalBijBol(van, tot, voortgang = () => {}) {
     start = dag(eind, 1);
   }
   return { opgeslagen, onvolledig };
+}
+
+/** Welke Bol-accounts zijn ingesteld? [{ nummer, naam }], of null als dat niet lukt (bijvoorbeeld nog geen sleutels). */
+export async function leesBolAccounts() {
+  try {
+    const sb = await getClient();
+    const { data, error } = await sb.functions.invoke('bol-koppeling', { body: { actie: 'info' } });
+    return !error && data?.ok ? data.accounts : null;
+  } catch { return null; }
 }
 
 /** Effectief aantal van een regel: besteld min geannuleerd. */

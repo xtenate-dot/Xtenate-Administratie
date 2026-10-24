@@ -2,9 +2,9 @@
 // verkocht per artikel, en een vergelijking met wat Bol op je bankrekening heeft gestort.
 // Alleen kijken: er wordt niets geboekt en de voorraad verandert niet.
 
-import { esc, fmt, ddmm } from './helpers.js?v=20261024l';
-import { lopendJaar } from './jaren.js?v=20261024l';
-import { leesBestellingen, haalBijBol, samenvatting, bolUitbetalingen, standaardPeriodes } from './bol.js?v=20261024l';
+import { esc, fmt, ddmm } from './helpers.js?v=20261024m';
+import { lopendJaar } from './jaren.js?v=20261024m';
+import { leesBestellingen, haalBijBol, samenvatting, bolUitbetalingen, standaardPeriodes, leesBolAccounts } from './bol.js?v=20261024m';
 
 const el = id => document.getElementById(id);
 const MAAND = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
@@ -12,6 +12,9 @@ let bestellingen = null;      // null = nog niet geladen
 let periode = 'maand';        // 'maand' (deze) | 'JJJJ-MM' | 'jaar:JJJJ' | 'alles'
 let ophaal = 'laatste31';
 let melding = '', bezig = false, laadFout = false;
+let accounts = null;          // [{ nummer, naam }] uit Supabase, of null
+let accountFilter = 'alle';   // weergave: 'alle' of een accountnummer
+let ophaalAccount = 'alle';   // welk account je ophaalt
 
 function bereik() {
   const nu = new Date().toISOString().slice(0, 10);
@@ -33,6 +36,7 @@ export async function renderBol() {
     doel.innerHTML = '<div class="card"><p class="muted">Laden…</p></div>';
     try { bestellingen = await leesBestellingen(); }
     catch { laadFout = true; }
+    leesBolAccounts().then(a => { if (a && JSON.stringify(a) !== JSON.stringify(accounts)) { accounts = a; teken(); } });
   }
   if (laadFout) {
     doel.innerHTML = `<div class="card"><p>De Bol-bestellingen konden niet gelezen worden. Is de tabel <code>bol_bestellingen</code> al aangemaakt in Supabase?</p>
@@ -41,6 +45,14 @@ export async function renderBol() {
   }
   teken();
 }
+
+/** Accounts voor de keuzelijsten: uit Supabase als bekend, anders wat er in de opgeslagen bestellingen voorkomt. */
+function accountLijst() {
+  if (accounts && accounts.length) return accounts;
+  const nrs = [...new Set((bestellingen || []).map(b => b.account || '1'))].sort();
+  return nrs.map(n => ({ nummer: n, naam: `Bol-account ${n}` }));
+}
+const accountNaam = n => (accountLijst().find(a => a.nummer === String(n)) || { naam: `Bol-account ${n}` }).naam;
 
 function maandenInData() {
   const s = new Set((bestellingen || []).map(b => (b.datum || '').slice(0, 7)).filter(Boolean));
@@ -51,7 +63,9 @@ function teken() {
   const doel = el('bol-inhoud');
   if (!doel) return;
   const [van, tot, label] = bereik();
-  const lijst = (bestellingen || []).filter(b => b.datum && b.datum >= van && b.datum <= tot);
+  const accs = accountLijst();
+  const meer = accs.length > 1;
+  const lijst = (bestellingen || []).filter(b => b.datum && b.datum >= van && b.datum <= tot && (accountFilter === 'alle' || String(b.account || '1') === accountFilter));
   const s = samenvatting(lijst);
   const bank = bolUitbetalingen(van, tot);
   const maanden = maandenInData();
@@ -68,7 +82,9 @@ function teken() {
   const eerste = (bestellingen || []).reduce((m, b) => (b.datum && (!m || b.datum < m) ? b.datum : m), '');
   const kop = `<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:var(--spacing-4)">
       <select onchange="zetBolPeriode(this.value)" aria-label="Periode" style="font-size:13px">${opties.map(([w, l]) => `<option value="${esc(w)}"${w === periode ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select>
+      ${meer ? `<select onchange="zetBolAccount(this.value)" aria-label="Account" style="font-size:13px"><option value="alle">Alle accounts</option>${accs.map(a => `<option value="${esc(a.nummer)}"${a.nummer === accountFilter ? ' selected' : ''}>${esc(a.naam)}</option>`).join('')}</select>` : ''}
       <span style="flex:1"></span>
+      ${meer ? `<select onchange="zetBolOphaalAccount(this.value)" aria-label="Welk account ophalen" style="font-size:13px"><option value="alle">Ophalen: alle accounts</option>${accs.map(a => `<option value="${esc(a.nummer)}"${a.nummer === ophaalAccount ? ' selected' : ''}>Ophalen: ${esc(a.naam)}</option>`).join('')}</select>` : ''}
       <select onchange="zetBolOphalen(this.value)" aria-label="Wat ophalen" style="font-size:13px">
         <option value="laatste7"${ophaal === 'laatste7' ? ' selected' : ''}>Laatste 7 dagen</option>
         <option value="laatste31"${ophaal === 'laatste31' ? ' selected' : ''}>Laatste 31 dagen</option>
@@ -84,7 +100,7 @@ function teken() {
   }
 
   const verschil = r2(bank.totaal - s.netto);
-  const vergelijk = `<div class="card" style="margin-bottom:var(--spacing-4)">
+  const vergelijk = accountFilter !== 'alle' ? `<p class="muted" style="font-size:12px;margin-bottom:var(--spacing-4)">De vergelijking met de bank staat alleen bij "Alle accounts", omdat de stortingen op de bank niet per Bol-account te scheiden zijn.</p>` : `<div class="card" style="margin-bottom:var(--spacing-4)">
       <div class="section-titel" style="margin-bottom:6px">Vergelijking met je bank (${esc(label)})</div>
       <table class="tbl-compact" style="max-width:520px"><tbody>
         <tr><td>Verkocht volgens Bol (netto na commissie)</td><td style="text-align:right">${fmt(s.netto)}</td></tr>
@@ -97,7 +113,7 @@ function teken() {
     const effect = (b.items || []).reduce((t, i) => t + Math.max(0, i.aantal - (i.geannuleerd || 0)) * (i.prijs || 0), 0);
     const comm = (b.items || []).reduce((t, i) => t + (Math.max(0, i.aantal - (i.geannuleerd || 0)) ? (i.commissie || 0) * (Math.max(0, i.aantal - (i.geannuleerd || 0)) / Math.max(1, i.aantal)) : 0), 0);
     const alleGeannuleerd = !regels.some(i => (i.aantal - (i.geannuleerd || 0)) > 0);
-    return `<tr${alleGeannuleerd ? ' style="opacity:.5"' : ''}><td>${esc(ddmm(b.datum))}</td><td>${esc(b.order_id)}</td>
+    return `<tr${alleGeannuleerd ? ' style="opacity:.5"' : ''}><td>${esc(ddmm(b.datum))}</td><td>${esc(b.order_id)}${meer ? `<div class="muted" style="font-size:11px">${esc(accountNaam(b.account || '1'))}</div>` : ''}</td>
       <td>${(b.items || []).map(i => `${esc(i.titel || i.ean)} <span class="muted">×${i.aantal - (i.geannuleerd || 0)}${i.geannuleerd ? ' (geannuleerd: ' + i.geannuleerd + ')' : ''}</span>`).join('<br>')}</td>
       <td style="text-align:right">${fmt(effect)}</td><td style="text-align:right">${fmt(comm)}</td></tr>`;
   }).join('');
@@ -127,6 +143,8 @@ const r2 = n => Math.round(n * 100) / 100;
 
 export function zetBolPeriode(w) { periode = w; teken(); }
 export function zetBolOphalen(w) { ophaal = w; }
+export function zetBolAccount(w) { accountFilter = w; teken(); }
+export function zetBolOphaalAccount(w) { ophaalAccount = w; }
 export function laadBolOpnieuw() { laadFout = false; bestellingen = null; renderBol(); }
 
 export async function haalBolBestellingenOp() {
@@ -134,8 +152,9 @@ export async function haalBolBestellingenOp() {
   bezig = true; melding = ''; teken();
   try {
     const [van, tot] = standaardPeriodes()[ophaal];
-    const uit = await haalBijBol(van, tot, t => { melding = t; teken(); });
+    const uit = await haalBijBol(van, tot, t => { melding = t; teken(); }, ophaalAccount);
     bestellingen = await leesBestellingen();
+    leesBolAccounts().then(a => { if (a) { accounts = a; teken(); } });
     melding = `✅ Klaar: ${uit.opgeslagen} bestellingen bijgewerkt (${van} t/m ${tot}).` + (uit.onvolledig ? '\nNiet alles paste in één keer; klik nog eens op Ophalen om de rest binnen te halen.' : '');
   } catch (e) {
     melding = e.geenSleutels
@@ -146,4 +165,4 @@ export async function haalBolBestellingenOp() {
   }
 }
 
-Object.assign(window, { zetBolPeriode, zetBolOphalen, laadBolOpnieuw, haalBolBestellingenOp });
+Object.assign(window, { zetBolPeriode, zetBolOphalen, zetBolAccount, zetBolOphaalAccount, laadBolOpnieuw, haalBolBestellingenOp });

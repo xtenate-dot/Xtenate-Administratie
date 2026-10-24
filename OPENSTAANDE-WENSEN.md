@@ -97,3 +97,4 @@ Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
 - Edge Function bol-koppeling (Retailer API v10, alleen lezen), tabel bol_bestellingen (bol_bestellingen.sql), pagina Bol.com (bol.js, bol-ui.js): omzet, commissie, per artikel, vergelijking met bankuitbetalingen (gb 8010 / naam bol).
 - Gebruiker moet BOL_CLIENT_ID en BOL_CLIENT_SECRET als Supabase-secret zetten. Daarna echte test: kloppen veldnamen (unitPrice, commission = per regel of per stuk?) tegen een Bol-factuur.
 - Nog niet: dagelijks automatisch ophalen (zoals bank), voorraad automatisch afboeken (voorraadartikelen hebben geen EAN).
+- Bol: meerdere accounts (tot 4). Account 1 = BOL_CLIENT_ID/BOL_CLIENT_SECRET/BOL_NAAM, account 2 = ..._2, enz. Kolom account in bol_bestellingen; pagina heeft account-filter en ophaal-keuze.
