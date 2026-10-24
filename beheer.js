@@ -5,14 +5,14 @@
 // ongewijzigd: elke tegel roept dezelfde globale functie aan als het
 // zijbalk-item, dus er verandert niets aan wat ze doen.
 
-import { herstelpuntenBlok } from './herstelpunt.js?v=20261024a';
-import { draaiControles } from './controle.js?v=20261024a';
-import { esc } from './helpers.js?v=20261024a';
-import { saveVoorraadInstellingen, standaardMinVoorraad, saveControleInstellingen, CONTROLE_INSTELLINGEN, saveBtwInstellingen, BTW_INSTELLINGEN, saveBedrijfsgegevens, BEDRIJFSGEGEVENS, saveKmInstellingen, KM_INSTELLINGEN, saveFactuurInstellingen, FACTUUR_INSTELLINGEN, appDataStatus, state, rekeningenLijst, bankKoppelingDagenTotVerval } from './storage.js?v=20261024a';
-import { werkBankKoppelingRekBijInSupabase } from './supabase-client-v2.js?v=20261024a';
-import { hertekenHuidigePagina } from './ui.js?v=20261024a';
-import { getPendingItems } from './supabase-client-v2.js?v=20261024a';
-import { syncNu } from './autosync.js?v=20261024a';
+import { herstelpuntenBlok } from './herstelpunt.js?v=20261024b';
+import { draaiControles } from './controle.js?v=20261024b';
+import { esc } from './helpers.js?v=20261024b';
+import { saveVoorraadInstellingen, standaardMinVoorraad, saveControleInstellingen, CONTROLE_INSTELLINGEN, saveBtwInstellingen, BTW_INSTELLINGEN, saveBedrijfsgegevens, BEDRIJFSGEGEVENS, saveKmInstellingen, KM_INSTELLINGEN, saveFactuurInstellingen, FACTUUR_INSTELLINGEN, appDataStatus, state, rekeningenLijst, bankKoppelingDagenTotVerval } from './storage.js?v=20261024b';
+import { werkBankKoppelingRekBijInSupabase } from './supabase-client-v2.js?v=20261024b';
+import { hertekenHuidigePagina } from './ui.js?v=20261024b';
+import { getPendingItems } from './supabase-client-v2.js?v=20261024b';
+import { syncNu } from './autosync.js?v=20261024b';
 
 const el = id => document.getElementById(id);
 

@@ -5,11 +5,11 @@
 // niet nog eens voorgesteld. Grootboek en soort worden afgeleid uit eerdere
 // boekingen met dezelfde naam; wat onbekend is kies je zelf.
 
-import { state, saveTxData, jaarIsVergrendeld } from './storage.js?v=20261024a';
-import { isTxJaar, jaarVan, EERSTE_TX_JAAR } from './jaren.js?v=20261024a';
-import { esc, fmt } from './helpers.js?v=20261024a';
-import { addToPendingQueue } from './supabase-client-v2.js?v=20261024a';
-import { maakHerstelpunt } from './herstelpunt.js?v=20261024a';
+import { state, saveTxData, jaarIsVergrendeld } from './storage.js?v=20261024b';
+import { isTxJaar, jaarVan, EERSTE_TX_JAAR } from './jaren.js?v=20261024b';
+import { esc, fmt } from './helpers.js?v=20261024b';
+import { addToPendingQueue } from './supabase-client-v2.js?v=20261024b';
+import { maakHerstelpunt } from './herstelpunt.js?v=20261024b';
 
 const REK = '1010';          // zo staat Revolut nu in je administratie
 const el = id => document.getElementById(id);
@@ -284,7 +284,7 @@ export function renderBankimport() {
   const overg = voorstel.overgeslagen.length
     ? `<p class="muted" style="font-size:12px">${voorstel.overgeslagen.length} regels overgeslagen (niet afgerond of onleesbaar).</p>` : '';
 
-  doel.innerHTML = knop + `
+  doel.innerHTML = knop + wacht + `
     <div class="kpi-grid" style="margin-bottom:var(--spacing-4)">
       <div class="kpi kpi--secondary"><div class="kpi-lbl">Regels in bestand</div><div class="kpi-val">${voorstel.rijen.length}</div><div class="kpi-sub">${esc(voorstel.van)} t/m ${esc(voorstel.tot)}</div></div>
       <div class="kpi kpi--secondary"><div class="kpi-lbl">Staat al</div><div class="kpi-val">${voorstel.rijen.length - nieuw.length}</div></div>
@@ -295,5 +295,5 @@ export function renderBankimport() {
       <thead><tr><th></th><th>Datum</th><th>Naam</th><th style="text-align:right">Bedrag</th><th>Grootboek</th><th>Soort</th><th></th></tr></thead>
       <tbody>${rijen}</tbody></table></div></div>
     <div style="margin:var(--spacing-4) 0"><button class="btn btn-primary" onclick="importeerRevolut()">Importeer ${kies.length} geselecteerde boekingen</button></div>
-    ${overg}${wacht}${ontbreekt}`;
+    ${overg}${ontbreekt}`;
 }

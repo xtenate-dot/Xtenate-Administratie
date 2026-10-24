@@ -5,9 +5,9 @@
 // altijd eerst duwen en dan halen: andersom zou je eigen werk overschreven
 // worden door een oudere versie uit de cloud.
 
-import { state, loadDataHybrid, duwOpenstaandeAppData, herstartVastgelopenAppData, appDataStatus } from './storage.js?v=20261024a';
-import { herstartVastgelopen, isSupabaseReady, syncPendingQueue, wachtrijStatus } from './supabase-client-v2.js?v=20261024a';
-import { hertekenHuidigePagina } from './ui.js?v=20261024a';
+import { state, loadDataHybrid, duwOpenstaandeAppData, herstartVastgelopenAppData, appDataStatus } from './storage.js?v=20261024b';
+import { herstartVastgelopen, isSupabaseReady, syncPendingQueue, wachtrijStatus } from './supabase-client-v2.js?v=20261024b';
+import { hertekenHuidigePagina } from './ui.js?v=20261024b';
 
 const TIK_MS = 30000;        // hoe vaak we kijken of er iets te doen is
 const MIN_OPHAAL_MS = 20000; // niet vaker ophalen dan dit, ook niet bij snel wisselen
