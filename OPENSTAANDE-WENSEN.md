@@ -71,3 +71,9 @@ Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
 - Enable Banking: productie-app "Xtenate Administratie" (restricted, gratis), Revolut Business gekoppeld door de gebruiker. Supabase-secrets APP_ID/PRIVATE_KEY zijn door de gebruiker vervangen (app-id digest geverifieerd). Edge Function bank-koppeling geüpdatet en uitgerold (NL, Revolut, business, 89 dagen, redirect Xtenate-Administratie).
 - Gebouwd: knop "Bankrekening koppelen" in Beheer + opvang van ?code&state (bankkoppelen.js).
 - Nog te doen: de koppeling zelf doorlopen (door de gebruiker, in Revolut), dan: transacties ophalen (4b-4, dedup op entry_reference), knop "Nu ophalen", inbox (4c). Functie kiest nu alleen het eerste account uit de sessie.
+
+## Bankkoppeling: ophalen (24-10) — GEDAAN, getest live
+- Revolut Business gekoppeld (1 koppeling). Edge Function bank-koppeling heeft acties: (start), /sessies, /ophalen (laatste 45 dagen, BOOK). Verify JWT staat UIT (functie controleert zelf). CORS alleen voor xtenate-dot.github.io.
+- Database: SQL-functie bank_sessie_voor_ophalen (security definer, alleen eigen rijen) — zie bank_sessie_voor_ophalen.sql.
+- App: Bank importeren > "Ophalen bij de bank" -> zelfde voorstel als CSV (dubbelen herkend, grootboek geleerd van eerdere boekingen). Test 24-10: 73 regels (9 sep-23 okt), 46 staan al, 27 nieuw, 10 zonder rekening.
+- Nog te doen: automatische dagelijkse ronde (pg_cron + opslag in bank_inbox), laatste_sync bijhouden, nette weergave van fouten, 90-dagen verlenging.
