@@ -6,10 +6,10 @@
 // (zie facturen.js). De voorraad en de boekingen worden NIET aangepast: de
 // verkoop komt via de bank binnen, zoals altijd.
 
-import { state, BEDRIJFSGEGEVENS } from './storage.js?v=20261024g';
-import { esc, fmt } from './helpers.js?v=20261024g';
-import { modelNaarPdf } from './pdf.js?v=20261024g';
-import { voegFactuurToe, werkFactuurBij, vindFactuur, plusDagen, vandaagISO, standaardTermijn, factuurnummerInGebruik } from './facturen.js?v=20261024g';
+import { state, BEDRIJFSGEGEVENS, bewaarFactuurmakerInstellingen } from './storage.js?v=20261024h';
+import { esc, fmt } from './helpers.js?v=20261024h';
+import { modelNaarPdf } from './pdf.js?v=20261024h';
+import { voegFactuurToe, werkFactuurBij, vindFactuur, plusDagen, vandaagISO, standaardTermijn, factuurnummerInGebruik } from './facturen.js?v=20261024h';
 
 const KEY = 'xtenate_factuurmaker';
 const el = id => document.getElementById(id);
@@ -34,8 +34,27 @@ function lees() {
 }
 
 let opslag = lees();
+let laatsteInCloud = JSON.stringify(opslag.instellingen);
+let cloudOvergenomen = false;
 function bewaar() {
   try { localStorage.setItem(KEY, JSON.stringify(opslag)); } catch { /* vol of geweigerd: voorbeeld blijft werken */ }
+  // Alleen de indeling gaat naar de cloud (niet het concept, dat verandert bij elke toetsaanslag).
+  const j = JSON.stringify(opslag.instellingen);
+  if (cloudOvergenomen && j !== laatsteInCloud) { laatsteInCloud = j; bewaarFactuurmakerInstellingen(opslag.instellingen); }
+}
+
+/** Eenmaal per sessie: de indeling uit de cloud overnemen, of de lokale indeling er eenmalig naartoe zetten. */
+function neemCloudOver() {
+  if (cloudOvergenomen || !state.dataKlaar) return;
+  cloudOvergenomen = true;
+  if (state.FACTUURMAKER) {
+    opslag.instellingen = { ...STANDAARD.instellingen, ...state.FACTUURMAKER };
+    laatsteInCloud = JSON.stringify(opslag.instellingen);
+    try { localStorage.setItem(KEY, JSON.stringify(opslag)); } catch { /* niet erg */ }
+  } else if (JSON.stringify(opslag.instellingen) !== JSON.stringify(STANDAARD.instellingen)) {
+    laatsteInCloud = JSON.stringify(opslag.instellingen);
+    bewaarFactuurmakerInstellingen(opslag.instellingen);
+  }
 }
 
 const jaarVan = d => String(d || vandaagISO()).slice(0, 4);
@@ -266,6 +285,7 @@ function regelsHtml() {
 }
 
 export function renderFactuurmaker() {
+  neemCloudOver();
   const host = el('factuurmaker-inhoud');
   if (!host) return;
   const c = concept();

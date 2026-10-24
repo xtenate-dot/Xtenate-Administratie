@@ -19,7 +19,7 @@ import {
   saveAppData,
   loadAppData,
   laatsteAppDataFout
-} from './supabase-client-v2.js?v=20261024g';
+} from './supabase-client-v2.js?v=20261024h';
 
 /**
  * Stuurt een los lijstje (groepen, facturen, tellers) naar de cloud zonder
@@ -111,6 +111,8 @@ function appDataWaarde(sleutel) {
   if (sleutel === 'bedrijfsgegevens') return BEDRIJFSGEGEVENS;
   if (sleutel === 'km_instellingen') return KM_INSTELLINGEN;
   if (sleutel === 'ritten') return { lijst: state.RITTEN, volgende: state.nxtRit };
+  if (sleutel === 'voorraad') return { lijst: state.COVERS, volgende: state.nxtCover };
+  if (sleutel === 'factuurmaker') return state.FACTUURMAKER || undefined;
   if (sleutel === 'uren') return { lijst: state.UREN, volgende: state.nxtUur };
   if (sleutel === 'activa') return { lijst: state.ACTIVA, volgende: state.nxtActivum };
   if (sleutel === 'veiling') return state.VEILING;
@@ -467,7 +469,17 @@ export function saveTxData() { save('xtenate_tx', state.TX); save('xtenate_nxtTx
 /** Bewaart wijzigingen in de historische jaren (2022 t/m 2025). */
 export function saveHistTxData() { save('xtenate_hist_tx_override', state.HIST_TX); }
 
-export function saveCoversData() { save('xtenate_covers', state.COVERS); save('xtenate_nxtCover', state.nxtCover); duwTellers(); }
+export function saveCoversData() {
+  save('xtenate_covers', state.COVERS); save('xtenate_nxtCover', state.nxtCover); duwTellers();
+  duwAppData('voorraad', { lijst: state.COVERS, volgende: state.nxtCover });
+}
+
+/** Instellingen van de factuurmaker (indeling, kleur, logo) naar de cloud; het concept blijft lokaal. */
+state.FACTUURMAKER = null;
+export function bewaarFactuurmakerInstellingen(instellingen) {
+  state.FACTUURMAKER = instellingen;
+  duwAppData('factuurmaker', instellingen);
+}
 
 // Verkoopdatums van HNVI-loten staan ook los in app_data. De tabel hnvi_loten
 // heeft daar mogelijk nog geen kolom voor; zonder deze kopie verdwijnt de datum
@@ -892,6 +904,25 @@ export async function loadDataHybrid() {
           if (Number(extra.ritten.volgende) > 0) state.nxtRit = Number(extra.ritten.volgende);
           console.log(`✅ Ritten uit Supabase: ${state.RITTEN.length}`);
         }
+        // Voorraad: de cloudversie is leidend zodra die er is. Staat er nog niets in de cloud,
+        // dan gaat wat op dit apparaat staat er eenmalig naartoe.
+        if (extra.voorraad && Array.isArray(extra.voorraad.lijst)) {
+          const cloud = extra.voorraad.lijst.filter(c => c && c.id != null && c.artikel != null);
+          if (JSON.stringify(cloud) !== JSON.stringify(state.COVERS)) {
+            // Wat lokaal afwijkt bewaren we nog één keer apart, voor het geval dat nodig is.
+            if (state.COVERS.length) save('xtenate_covers_voor_cloud', state.COVERS);
+            state.COVERS = cloud;
+            save('xtenate_covers', state.COVERS);
+          }
+          if (Number(extra.voorraad.volgende) > state.nxtCover) state.nxtCover = Number(extra.voorraad.volgende);
+          console.log(`✅ Voorraad uit Supabase: ${state.COVERS.length} artikelen`);
+        } else if (state.COVERS.length) {
+          duwAppData('voorraad', { lijst: state.COVERS, volgende: state.nxtCover });
+          console.log('⬆️  Voorraad eenmalig naar de cloud gezet');
+        }
+        if (extra.factuurmaker && typeof extra.factuurmaker === 'object') {
+          state.FACTUURMAKER = extra.factuurmaker;
+        }
         if (extra.uren && Array.isArray(extra.uren.lijst)) {
           state.UREN = extra.uren.lijst;
           if (Number(extra.uren.volgende) > 0) state.nxtUur = Number(extra.uren.volgende);
@@ -945,4 +976,5 @@ export async function loadDataHybrid() {
   
   state.dataKlaar = true;
   console.log('✅ Data loading complete');
+  try { window.synchroniseerBonnetjes && window.synchroniseerBonnetjes(); } catch { /* niet kritiek */ }
 }

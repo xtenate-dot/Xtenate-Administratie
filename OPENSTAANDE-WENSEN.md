@@ -17,7 +17,7 @@ Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
 - Logo staat nu ook in de pdf van Mailen (pdf.js ondersteunt een jpeg-logo bovenaan pagina 1).
 - Bonnetjes bij boekingen (bonnetjes.js): bijlage toevoegen in boekingsvenster, paperclip in banklijst + detailpaneel, back-up/terugzetten in Beheer. Alleen in IndexedDB van de browser (keuze gebruiker); koppeling via boeking-id.
 
-- PAUZE (gebruiker 23-10): cloud-synchronisatie van voorraad (vervang_voorraad.sql in Supabase uitvoeren), factuurinstellingen en bonnetjes (Supabase Storage bucket) -- later oppakken; telefoon/computer delen nu alleen boekingen, loten, facturen, bedrijfsgegevens.
+- GEDAAN 24-10: cloud-sync van voorraad (app_data 'voorraad', eenmalig geseed vanaf dit apparaat; afwijkende lokale kopie blijft in xtenate_covers_voor_cloud), factuurmaker-indeling (app_data 'factuurmaker'; concept blijft lokaal) en bonnetjes (Supabase Storage bucket 'bonnetjes' + tabel bonnetjes, zie bonnetjes_cloud.sql). Nog lokaal: voorraad-mutatielog (voorraadlog.js), factuurmaker-concept.
 
 ## Jaarwisseling 2027: GEDAAN op 23-10-2026 (v20261023t), getest met nagemaakte 2027-boekingen
 - jaren.js is de enige plek voor jaarlogica: `txVanJaar(jaar)` (op datum, uit TX en HIST_TX), `lopendJaar()`, `isTxJaar`, `banksaldoTot`, `berekendMaandSaldo`. TX = alle boekingen vanaf 2026 (in de cloud archief_jaar NULL), HIST_TX = eerdere jaren.

@@ -1,13 +1,16 @@
 // bonnetjes.js — bonnetjes en facturen als bijlage bij een boeking.
 //
 // De bestanden staan in IndexedDB van deze browser (niet in localStorage: te
-// klein) en worden NIET naar de cloud gestuurd. Foto's worden verkleind tot
-// een leesbare jpg; pdf's blijven zoals ze zijn. De koppeling loopt via het
-// boekingnummer. Een back-up als bestand staat in Beheer: de fiscus wil de
-// stukken zeven jaar zien, en browserdata kan verdwijnen.
+// klein) en gaan daarnaast naar een PRIVÉ-opslag in je eigen Supabase-project
+// (bucket "bonnetjes", per gebruiker afgeschermd), zodat telefoon en computer
+// dezelfde bijlagen zien en ze niet kwijt zijn als de browser wordt gewist.
+// Foto's worden verkleind tot een leesbare jpg; pdf's blijven zoals ze zijn.
+// De koppeling loopt via het boekingnummer. Een back-up als bestand staat in
+// Beheer: de fiscus wil de stukken zeven jaar zien.
 
-import { state } from './storage.js?v=20261024g';
-import { esc } from './helpers.js?v=20261024g';
+import { state } from './storage.js?v=20261024h';
+import { esc } from './helpers.js?v=20261024h';
+import { getClient, heeftClient } from './supabase.js?v=20261024h';
 
 const DB_NAAM = 'xtenate_bonnetjes';
 const MAX_PDF = 8 * 1024 * 1024;
@@ -48,6 +51,7 @@ export async function initBonnetjes() {
     perTx.clear();
     alle.forEach(opslaanInMeta);
     bonnetjesBeschikbaar = true;
+    setTimeout(() => synchroniseerBonnetjes(), 3000);
     try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch { /* niet erg */ }
   } catch (e) {
     console.warn('Bonnetjes niet beschikbaar:', e);
@@ -58,6 +62,125 @@ export async function initBonnetjes() {
 export const aantalBonnetjes = txId => (perTx.get(String(txId)) || []).length;
 export const heeftBonnetje = txId => aantalBonnetjes(txId) > 0;
 export const totaalBonnetjes = () => [...perTx.values()].reduce((s, l) => s + l.length, 0);
+
+
+// ─── Cloud (Supabase Storage + tabel bonnetjes) ────────────────────────────
+// Alles hieronder is "best effort": lukt het niet (offline, niet ingelogd), dan
+// blijft het bestand lokaal staan en probeert de volgende synchronisatie het opnieuw.
+
+const WIS_KEY = 'xtenate_bonnetjes_wis';
+let bezigMetSync = false;
+let gebruikersId = null;
+
+async function cloudClient() {
+  if (!heeftClient()) return null;
+  try {
+    const sb = await getClient();
+    if (!gebruikersId) {
+      const { data } = await sb.auth.getUser();
+      gebruikersId = data?.user?.id || null;
+    }
+    return gebruikersId ? sb : null;
+  } catch { return null; }
+}
+
+const padVan = bid => `${gebruikersId}/${bid}`;
+const leesWis = () => { try { return JSON.parse(localStorage.getItem(WIS_KEY)) || []; } catch { return []; } };
+const zetWis = l => { try { localStorage.setItem(WIS_KEY, JSON.stringify(l)); } catch { /* niet erg */ } };
+
+async function zetMeta(m) {
+  const t = db.transaction('meta', 'readwrite');
+  t.objectStore('meta').put(m);
+  await new Promise(ok => { t.oncomplete = ok; t.onerror = ok; t.onabort = ok; });
+}
+
+/** Zet één lokaal bestand in de cloud. Geeft true als dat gelukt is. */
+async function uploadBijlage(sb, m) {
+  try {
+    const r = await vraag(db.transaction('blob').objectStore('blob').get(m.bid));
+    if (!r) return false;
+    const up = await sb.storage.from('bonnetjes').upload(padVan(m.bid), r.blob, { contentType: m.type, upsert: true });
+    if (up.error) return false;
+    const { error } = await sb.from('bonnetjes').upsert({
+      user_id: gebruikersId, bid: m.bid, tx_id: String(m.txId), naam: m.naam, type: m.type,
+      grootte: m.grootte, toegevoegd: m.toegevoegd
+    }, { onConflict: 'user_id,bid' });
+    if (error) return false;
+    m.cloud = true;
+    await zetMeta(m);
+    return true;
+  } catch { return false; }
+}
+
+async function haalBlobUitCloud(bid) {
+  const sb = await cloudClient();
+  if (!sb) return null;
+  try {
+    const { data, error } = await sb.storage.from('bonnetjes').download(padVan(bid));
+    if (error || !data) return null;
+    const t = db.transaction('blob', 'readwrite');
+    t.objectStore('blob').put({ bid, blob: data });
+    await new Promise(ok => { t.oncomplete = ok; t.onerror = ok; t.onabort = ok; });
+    return data;
+  } catch { return null; }
+}
+
+/** Gelijktrekken met de cloud: ontbrekende bijlagen ophalen (alleen de gegevens), lokale uploaden, verwijderingen doorvoeren. */
+export async function synchroniseerBonnetjes() {
+  if (!bonnetjesBeschikbaar || bezigMetSync) return;
+  bezigMetSync = true;
+  try {
+    const sb = await cloudClient();
+    if (!sb) return;
+    // 1. Eerst openstaande verwijderingen.
+    let wis = leesWis();
+    if (wis.length) {
+      const over = [];
+      for (const bid of wis) {
+        const a = await sb.storage.from('bonnetjes').remove([padVan(bid)]);
+        const b = await sb.from('bonnetjes').delete().eq('bid', bid);
+        if (a.error || b.error) over.push(bid);
+      }
+      zetWis(over);
+      wis = over;
+    }
+    // 2. Wat staat er in de cloud?
+    const { data: rijen, error } = await sb.from('bonnetjes').select('bid, tx_id, naam, type, grootte, toegevoegd').limit(5000);
+    if (error) return;
+    const cloudBids = new Set(rijen.map(r => r.bid));
+    const lokaal = await vraag(db.transaction('meta').objectStore('meta').getAll());
+    const lokaalBids = new Set(lokaal.map(m => m.bid));
+    let veranderd = false;
+    // 3. In de cloud, hier nog niet: alleen de gegevens overnemen (het bestand volgt bij openen).
+    for (const r of rijen) {
+      if (lokaalBids.has(r.bid) || wis.includes(r.bid)) continue;
+      const m = { bid: r.bid, txId: String(r.tx_id), naam: r.naam, type: r.type, grootte: r.grootte, toegevoegd: r.toegevoegd, cloud: true };
+      await zetMeta(m); opslaanInMeta(m); veranderd = true;
+    }
+    // 4. Hier wel, in de cloud niet: óf nog nooit geüpload (uploaden), óf elders verwijderd (hier ook weg).
+    for (const m of lokaal) {
+      if (cloudBids.has(m.bid)) { if (!m.cloud) { m.cloud = true; await zetMeta(m); } continue; }
+      if (m.cloud === true && rijen.length) {
+        const t = db.transaction(['meta', 'blob'], 'readwrite');
+        t.objectStore('meta').delete(m.bid); t.objectStore('blob').delete(m.bid);
+        await new Promise(ok => { t.oncomplete = ok; t.onerror = ok; t.onabort = ok; });
+        for (const [k, l] of perTx) {
+          const rest = l.filter(x => x.bid !== m.bid);
+          if (rest.length) perTx.set(k, rest); else perTx.delete(k);
+        }
+        veranderd = true;
+      } else if (m.cloud !== true) {
+        await uploadBijlage(sb, m);
+      }
+    }
+    if (veranderd) window.hertekenBankNaBonnetje && window.hertekenBankNaBonnetje();
+  } catch (e) {
+    console.warn('Bonnetjes synchroniseren mislukt:', e);
+  } finally {
+    bezigMetSync = false;
+  }
+}
+window.synchroniseerBonnetjes = synchroniseerBonnetjes;
 
 // ─── Bestand voorbereiden ──────────────────────────────────────────────────
 
@@ -102,6 +225,7 @@ async function schrijf(txId, bijlage) {
   t.objectStore('blob').put({ bid, blob: bijlage.blob });
   await new Promise((ok, fout) => { t.oncomplete = ok; t.onerror = () => fout(t.error); t.onabort = () => fout(t.error); });
   opslaanInMeta(m);
+  cloudClient().then(sb => sb && uploadBijlage(sb, m));
   return m;
 }
 
@@ -173,8 +297,9 @@ export function bewaarWachtende(txId) {
 export async function openBonnetje(bid) {
   try {
     const r = await vraag(db.transaction('blob').objectStore('blob').get(bid));
-    if (!r) { alert('Dit bestand is niet gevonden.'); return; }
-    const url = URL.createObjectURL(r.blob);
+    const blob = r ? r.blob : await haalBlobUitCloud(bid);
+    if (!blob) { alert('Dit bestand is niet gevonden (en kon niet uit de cloud worden gehaald).'); return; }
+    const url = URL.createObjectURL(blob);
     window.open(url, '_blank');
     setTimeout(() => URL.revokeObjectURL(url), 60000);
   } catch (e) { alert('Openen mislukt: ' + (e.message || e)); }
@@ -190,6 +315,8 @@ export async function verwijderBonnetje(bid) {
     const rest = l.filter(m => m.bid !== bid);
     if (rest.length) perTx.set(k, rest); else perTx.delete(k);
   }
+  zetWis([...new Set([...leesWis(), bid])]);   // ook in de cloud verwijderen (bij de volgende kans)
+  synchroniseerBonnetjes();
   tekenModalBonnetjes();
   window.hertekenBankNaBonnetje && window.hertekenBankNaBonnetje();
 }
@@ -214,7 +341,8 @@ export async function downloadBonnetjesBackup() {
   const items = [];
   for (const m of metas) {
     const r = await vraag(db.transaction('blob').objectStore('blob').get(m.bid));
-    if (r) items.push({ ...m, data: await naarDataUrl(r.blob) });
+    const blob = r ? r.blob : await haalBlobUitCloud(m.bid);
+    if (blob) items.push({ ...m, data: await naarDataUrl(blob) });
   }
   const bestand = new Blob([JSON.stringify({ soort: 'xtenate-bonnetjes', versie: 1, gemaakt: new Date().toISOString(), aantal: items.length, items })], { type: 'application/json' });
   const url = URL.createObjectURL(bestand);
