@@ -1,10 +1,10 @@
 // grootboek.js — Grootboek: compacte saldotabel per rekening, met doorklik
 // naar de losse boekingen van één rekening.
 
-import { ddmm, esc, fmt, isInkomst, isUitgave, leegVlak, rekBadge, teltBij, typeBadge, vulMaandSelect, weergaveNaam } from './helpers.js?v=20261024d';
-import { state, grootboekNamen, rekeningNamen, rekeningenLijst, saveGrootboek, saveRekeningen } from './storage.js?v=20261024d';
-import { maakSorteerbaar } from './tables.js?v=20261024d';
-import { txVanJaar, lopendJaar } from './jaren.js?v=20261024d';
+import { ddmm, esc, fmt, isInkomst, isUitgave, leegVlak, rekBadge, teltBij, typeBadge, vulMaandSelect, weergaveNaam } from './helpers.js?v=20261024e';
+import { state, grootboekNamen, rekeningNamen, rekeningenLijst, saveGrootboek, saveRekeningen } from './storage.js?v=20261024e';
+import { maakSorteerbaar } from './tables.js?v=20261024e';
+import { txVanJaar, lopendJaar } from './jaren.js?v=20261024e';
 
 const el = id => document.getElementById(id);
 const waarde = id => (el(id) ? el(id).value.trim() : '');

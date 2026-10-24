@@ -325,6 +325,10 @@ async function afhandelenOphalen(req: Request): Promise<Response> {
   // De bank geeft niet verder terug dan ongeveer 90 dagen.
   const afgekapt = vanaf < grens;
   if (afgekapt) vanaf = grens;
+  // Periode volledig ouder dan wat de bank teruggeeft: niets te halen (en de bank zou een fout geven).
+  if (tot && tot < vanaf) {
+    return Response.json({ ok: true, vanaf, tot, afgekapt, buitenBereik: true, transacties: [] }, { status: 200 });
+  }
   const resultaat: Record<string, unknown>[] = [];
   let doorgaan: string | null = null;
   for (let pagina = 0; pagina < 20; pagina++) {

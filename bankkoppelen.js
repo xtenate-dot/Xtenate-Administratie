@@ -8,10 +8,10 @@
 //   de code via dezelfde Edge Function in.
 // De functie zelf bewaart de sessie in de database; de app ziet die nooit.
 
-import { getClient } from './supabase.js?v=20261024d';
-import { state } from './storage.js?v=20261024d';
-import { laadVoorstelUitBank, periodeBereik } from './bankimport.js?v=20261024d';
-import { loadBankKoppelingenFromSupabase } from './supabase-client-v2.js?v=20261024d';
+import { getClient } from './supabase.js?v=20261024e';
+import { state } from './storage.js?v=20261024e';
+import { laadVoorstelUitBank, periodeBereik } from './bankimport.js?v=20261024e';
+import { loadBankKoppelingenFromSupabase } from './supabase-client-v2.js?v=20261024e';
 
 const STATE_KEY = 'xtenate_bank_state';
 const el = id => document.getElementById(id);
@@ -92,6 +92,7 @@ export async function haalBankTransactiesOp() {
       let fout = data?.fout;
       if (error && !fout) { try { fout = (await error.context.json())?.fout; } catch { /* geen detail */ } }
       if (error || !data?.ok) { window.alert(`Ophalen is niet gelukt${fout ? ': ' + fout : '.'}`); return; }
+      if (data.buitenBereik) { window.alert('Deze periode ligt buiten wat de bank teruggeeft (ongeveer de laatste 90 dagen). Controleer oudere periodes met een CSV-afschrift of de Excel-import.'); return; }
       if (data.afgekapt) { afgekapt = true; vanTekst = data.vanaf; }
       for (const t of data.transacties || []) alle.set(t.id, t);
     }
