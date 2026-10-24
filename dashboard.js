@@ -1,21 +1,21 @@
 // dashboard.js — Home: het financiële dashboard.
 
-import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261023y';
+import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261023z';
 import {
   BEGINSALDO_2026, calcIB, ddmm, esc, fmt, fmtKort, isInkomst, isKostenBoeking, isOmzet, isUitgave,
   maandLabel, rekBadge, saldoDelta, typeBadge, weergaveNaam
-} from './helpers.js?v=20261023y';
-import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261023y';
-import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261023y';
-import { draaiControles } from './controle.js?v=20261023y';
-import { aangifteModel, ibOver } from './belasting.js?v=20261023y';
-import { splitsLoten } from './hnvilot.js?v=20261023y';
-import { factuurSamenvatting } from './facturen.js?v=20261023y';
-import { korStatus } from './kor.js?v=20261023y';
-import { maakSorteerbaar } from './tables.js?v=20261023y';
-import { hertekenHuidigePagina } from './ui.js?v=20261023y';
-import { txVanJaar, lopendJaar, isTxJaar, banksaldoTot } from './jaren.js?v=20261023y';
-import { tarievenVoor } from './tarieven.js?v=20261023y';
+} from './helpers.js?v=20261023z';
+import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261023z';
+import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261023z';
+import { draaiControles } from './controle.js?v=20261023z';
+import { aangifteModel, ibOver } from './belasting.js?v=20261023z';
+import { splitsLoten } from './hnvilot.js?v=20261023z';
+import { factuurSamenvatting } from './facturen.js?v=20261023z';
+import { korStatus } from './kor.js?v=20261023z';
+import { maakSorteerbaar } from './tables.js?v=20261023z';
+import { hertekenHuidigePagina } from './ui.js?v=20261023z';
+import { txVanJaar, lopendJaar, isTxJaar, banksaldoTot } from './jaren.js?v=20261023z';
+import { tarievenVoor } from './tarieven.js?v=20261023z';
 
 
 export function wisselJaar() {

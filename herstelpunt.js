@@ -4,10 +4,10 @@
 
 import {
   state, load, save, saveTxData, saveHistTxData, saveCoversData, saveHnviData
-} from './storage.js?v=20261023y';
+} from './storage.js?v=20261023z';
 import {
   vervangBoekingenInSupabase, vervangVoorraadInSupabase, saveHnviToSupabase, deleteFromSupabase
-} from './supabase-client-v2.js?v=20261023y';
+} from './supabase-client-v2.js?v=20261023z';
 
 const SLEUTEL = 'xtenate_herstelpunten';
 const MAX = 3;

@@ -8,9 +8,10 @@
 //   de code via dezelfde Edge Function in.
 // De functie zelf bewaart de sessie in de database; de app ziet die nooit.
 
-import { getClient } from './supabase.js?v=20261023y';
-import { state } from './storage.js?v=20261023y';
-import { loadBankKoppelingenFromSupabase } from './supabase-client-v2.js?v=20261023y';
+import { getClient } from './supabase.js?v=20261023z';
+import { state } from './storage.js?v=20261023z';
+import { laadVoorstelUitBank } from './bankimport.js?v=20261023z';
+import { loadBankKoppelingenFromSupabase } from './supabase-client-v2.js?v=20261023z';
 
 const STATE_KEY = 'xtenate_bank_state';
 const el = id => document.getElementById(id);
@@ -73,4 +74,25 @@ export async function verwerkBankTerugkeer() {
   }
 }
 
+/** Knop "Ophalen bij de bank" (op de pagina Bank importeren): haalt de laatste ~45 dagen op en toont ze als voorstel. */
+export async function haalBankTransactiesOp() {
+  const koppelingen = state.BANK_KOPPELINGEN || [];
+  if (!koppelingen.length) { window.alert('Er is nog geen bankrekening gekoppeld. Doe dat in Beheer.'); return; }
+  try {
+    const sb = await getClient();
+    const alle = new Map();
+    for (const k of koppelingen) {
+      const { data, error } = await sb.functions.invoke('bank-koppeling/ophalen', { body: { koppeling_id: k.id, dagen: 45 } });
+      let fout = data?.fout;
+      if (error && !fout) { try { fout = (await error.context.json())?.fout; } catch { /* geen detail */ } }
+      if (error || !data?.ok) { window.alert(`Ophalen is niet gelukt${fout ? ': ' + fout : '.'}`); return; }
+      for (const t of data.transacties || []) alle.set(t.id, t);
+    }
+    laadVoorstelUitBank([...alle.values()]);
+  } catch {
+    window.alert('Ophalen is niet gelukt. Probeer het later opnieuw.');
+  }
+}
+
 window.startBankKoppeling = startBankKoppeling;
+window.haalBankTransactiesOp = haalBankTransactiesOp;

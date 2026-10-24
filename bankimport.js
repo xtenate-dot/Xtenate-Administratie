@@ -5,11 +5,11 @@
 // niet nog eens voorgesteld. Grootboek en soort worden afgeleid uit eerdere
 // boekingen met dezelfde naam; wat onbekend is kies je zelf.
 
-import { state, saveTxData, jaarIsVergrendeld } from './storage.js?v=20261023y';
-import { isTxJaar, jaarVan, EERSTE_TX_JAAR } from './jaren.js?v=20261023y';
-import { esc, fmt } from './helpers.js?v=20261023y';
-import { addToPendingQueue } from './supabase-client-v2.js?v=20261023y';
-import { maakHerstelpunt } from './herstelpunt.js?v=20261023y';
+import { state, saveTxData, jaarIsVergrendeld } from './storage.js?v=20261023z';
+import { isTxJaar, jaarVan, EERSTE_TX_JAAR } from './jaren.js?v=20261023z';
+import { esc, fmt } from './helpers.js?v=20261023z';
+import { addToPendingQueue } from './supabase-client-v2.js?v=20261023z';
+import { maakHerstelpunt } from './herstelpunt.js?v=20261023z';
 
 const REK = '1010';          // zo staat Revolut nu in je administratie
 const el = id => document.getElementById(id);
@@ -155,6 +155,23 @@ export function maakVoorstel(uit, bestaand = [...state.TX, ...state.HIST_TX], be
 
 // ----------------------------------------------------------------------- UI
 
+/** Zet transacties die de bank-koppeling heeft opgehaald om in hetzelfde voorstel als een CSV-afschrift. */
+export function laadVoorstelUitBank(transacties, label = 'Bank (automatisch)') {
+  const rijen = transacties.map(t => {
+    const naam = String(t.naam || '').trim();
+    const tekst = naam || String(t.omschr || '').trim() || 'Onbekend';
+    const fee = /fee|kosten|abonnement.*revolut|revolut.*abonnement/i.test(tekst) && /revolut/i.test(tekst);
+    return {
+      id: 'api:' + t.id, datum: t.datum, soort: fee ? 'FEE' : 'CARD_PAYMENT', status: 'COMPLETED',
+      omschrijving: (t.totaal < 0 ? 'To ' : 'From ') + tekst, referentie: String(t.omschr || ''),
+      totaal: Number(t.totaal), saldo: NaN, begunstigde: naam
+    };
+  }).filter(r => /^\d{4}-\d{2}-\d{2}$/.test(r.datum) && Number.isFinite(r.totaal));
+  voorstel = maakVoorstel({ rijen, overgeslagen: [] }, undefined, label);
+  melding = '';
+  renderBankimport();
+}
+
 export function kiesRevolutBestand() {
   const veld = el('bankimport-bestand');
   if (veld) { veld.value = ''; veld.click(); }
@@ -225,6 +242,7 @@ export function renderBankimport() {
   if (!doel) return;
   const knop = `<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:var(--spacing-4)">
     <button class="btn btn-primary" onclick="kiesRevolutBestand()">Revolut-afschrift kiezen (CSV)</button>
+    ${(state.BANK_KOPPELINGEN || []).length ? `<button class="btn" onclick="haalBankTransactiesOp()">Ophalen bij de bank</button>` : ''}
     <span class="muted" style="font-size:12px">In Revolut: Rekeningen → Afschrift → CSV, voor de periode die je wilt.</span>
     ${melding ? `<span style="font-size:13px">${esc(melding)}</span>` : ''}</div>`;
   if (!voorstel) {
