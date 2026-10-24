@@ -76,7 +76,8 @@ Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
 - Revolut Business gekoppeld (1 koppeling). Edge Function bank-koppeling heeft acties: (start), /sessies, /ophalen (laatste 45 dagen, BOOK). Verify JWT staat UIT (functie controleert zelf). CORS alleen voor xtenate-dot.github.io.
 - Database: SQL-functie bank_sessie_voor_ophalen (security definer, alleen eigen rijen) — zie bank_sessie_voor_ophalen.sql.
 - App: Bank importeren > "Ophalen bij de bank" -> zelfde voorstel als CSV (dubbelen herkend, grootboek geleerd van eerdere boekingen). Test 24-10: 73 regels (9 sep-23 okt), 46 staan al, 27 nieuw, 10 zonder rekening.
-- Nog te doen: automatische dagelijkse ronde (pg_cron + opslag in bank_inbox), laatste_sync bijhouden, nette weergave van fouten, 90-dagen verlenging.
+- GEDAAN: automatische dagelijkse ronde (pg_cron 06:00 UTC = 07:00 winter / 08:00 zomer → Edge Function /dagelijks → bank_inbox), laatste_sync/laatste_fout in Beheer, inbox-knop in Bank verwerken, dashboard-melding bij bijna verlopen koppeling of mislukte ronde. Geheim staat in tabel bank_cron_geheim (zie bank_dagronde.sql).
+- Nog te doen: verlenging van de toestemming (na ~89 dagen opnieuw koppelen in Beheer), eventueel e-mail bij mislukte ronde.
 
 ## WENS (later uitvoeren, nog NIET gebouwd): bank ophalen per periode
 - Bij "Ophalen bij de bank" een periode kunnen kiezen: week, maand, kwartaal of jaar (of eigen van/tot), bijvoorbeeld voor een controle van een bepaalde periode tegen de administratie.
