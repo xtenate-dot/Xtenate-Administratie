@@ -2,9 +2,9 @@
 // verkocht per artikel, en een vergelijking met wat Bol op je bankrekening heeft gestort.
 // Alleen kijken: er wordt niets geboekt en de voorraad verandert niet.
 
-import { esc, fmt, ddmm } from './helpers.js?v=20261024o';
-import { lopendJaar } from './jaren.js?v=20261024o';
-import { leesBestellingen, leesRetouren, retourSamenvatting, haalBijBol, samenvatting, bolUitbetalingen, standaardPeriodes, leesBolAccounts } from './bol.js?v=20261024o';
+import { esc, fmt, ddmm } from './helpers.js?v=20261024p';
+import { lopendJaar } from './jaren.js?v=20261024p';
+import { leesBestellingen, leesRetouren, retourSamenvatting, haalBijBol, samenvatting, bolUitbetalingen, standaardPeriodes, leesBolAccounts } from './bol.js?v=20261024p';
 
 const el = id => document.getElementById(id);
 const MAAND = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
@@ -147,7 +147,7 @@ function teken() {
       <div class="kpi kpi--secondary"><div class="kpi-lbl">Stuks verkocht</div><div class="kpi-val">${s.stuks}</div></div>
       <div class="kpi kpi--secondary"><div class="kpi-lbl">Omzet (klantprijs)</div><div class="kpi-val">${fmt(s.omzet)}</div></div>
       <div class="kpi kpi--secondary"><div class="kpi-lbl">Commissie van Bol</div><div class="kpi-val">${fmt(s.commissie)}</div><div class="kpi-sub">netto ${fmt(s.netto)}</div></div>
-      ${retouren ? `<div class="kpi kpi--secondary"><div class="kpi-lbl">Retouren</div><div class="kpi-val">${rs.stuks}</div><div class="kpi-sub">${fmt(rs.bedrag)} terugbetaald${rs.inBehandeling ? ` · ${rs.inBehandeling} nog in behandeling` : ''}</div></div>` : ''}
+      ${retouren ? `<div class="kpi kpi--secondary"><div class="kpi-lbl">Retouren</div><div class="kpi-val">${rs.stuks}</div><div class="kpi-sub">${fmt(rs.bedrag)} terugbetaald${rs.inBehandeling ? ` · ${rs.inBehandeling} nog in behandeling` : ''}${rs.onbekend ? ` · van ${rs.onbekend} stuks is het bedrag onbekend (bestelling van vóór de opgeslagen periode)` : ''}</div></div>` : ''}
     </div>
     ${retouren === null ? `<p class="muted" style="font-size:12px;margin-bottom:var(--spacing-4)">Retouren staan hier nog niet in: de tabel <code>bol_retouren</code> bestaat nog niet in Supabase.</p>` : ''}
     ${vergelijk}
