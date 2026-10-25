@@ -5,15 +5,15 @@
 // ongewijzigd: elke tegel roept dezelfde globale functie aan als het
 // zijbalk-item, dus er verandert niets aan wat ze doen.
 
-import { herstelpuntenBlok } from './herstelpunt.js?v=20261024r';
-import { cloudBackupBlok } from './cloudbackup.js?v=20261024r';
-import { draaiControles } from './controle.js?v=20261024r';
-import { esc } from './helpers.js?v=20261024r';
-import { saveVoorraadInstellingen, standaardMinVoorraad, saveControleInstellingen, CONTROLE_INSTELLINGEN, saveBtwInstellingen, BTW_INSTELLINGEN, saveBedrijfsgegevens, BEDRIJFSGEGEVENS, saveKmInstellingen, KM_INSTELLINGEN, saveFactuurInstellingen, FACTUUR_INSTELLINGEN, appDataStatus, state, rekeningenLijst, bankKoppelingDagenTotVerval } from './storage.js?v=20261024r';
-import { werkBankKoppelingRekBijInSupabase } from './supabase-client-v2.js?v=20261024r';
-import { hertekenHuidigePagina } from './ui.js?v=20261024r';
-import { getPendingItems } from './supabase-client-v2.js?v=20261024r';
-import { syncNu } from './autosync.js?v=20261024r';
+import { herstelpuntenBlok } from './herstelpunt.js?v=20261024s';
+import { cloudBackupBlok } from './cloudbackup.js?v=20261024s';
+import { draaiControles } from './controle.js?v=20261024s';
+import { esc } from './helpers.js?v=20261024s';
+import { saveVoorraadInstellingen, standaardMinVoorraad, saveControleInstellingen, CONTROLE_INSTELLINGEN, saveBtwInstellingen, BTW_INSTELLINGEN, saveBedrijfsgegevens, BEDRIJFSGEGEVENS, saveKmInstellingen, KM_INSTELLINGEN, saveFactuurInstellingen, FACTUUR_INSTELLINGEN, appDataStatus, state, rekeningenLijst, bankKoppelingDagenTotVerval } from './storage.js?v=20261024s';
+import { werkBankKoppelingRekBijInSupabase } from './supabase-client-v2.js?v=20261024s';
+import { hertekenHuidigePagina } from './ui.js?v=20261024s';
+import { getPendingItems } from './supabase-client-v2.js?v=20261024s';
+import { syncNu } from './autosync.js?v=20261024s';
 
 const el = id => document.getElementById(id);
 

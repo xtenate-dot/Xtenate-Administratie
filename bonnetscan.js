@@ -8,10 +8,10 @@
 //      passende naam, en tonen de beste voorstellen. Jij kiest er één: de foto wordt dan als bijlage bewaard.
 // Je kunt het bedrag en de datum altijd zelf corrigeren als de tekst niet goed is gelezen.
 
-import { state } from './storage.js?v=20261024r';
-import { esc, fmt, ddmm, isUitgave } from './helpers.js?v=20261024r';
-import { heeftBonnetje, voegBonnetjeToe, bonnetjesBeschikbaar } from './bonnetjes.js?v=20261024r';
-import { haalInboxOp } from './bankinbox.js?v=20261024r';
+import { state } from './storage.js?v=20261024s';
+import { esc, fmt, ddmm, isUitgave } from './helpers.js?v=20261024s';
+import { heeftBonnetje, voegBonnetjeToe, bonnetjesBeschikbaar } from './bonnetjes.js?v=20261024s';
+import { haalInboxOp } from './bankinbox.js?v=20261024s';
 
 const TESSERACT = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
 const MAANDEN = { jan: 1, feb: 2, mrt: 3, maa: 3, mar: 3, apr: 4, mei: 5, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, okt: 10, oct: 10, nov: 11, dec: 12 };
@@ -62,7 +62,9 @@ const dagenTussen = (a, b) => Math.round((new Date(a + 'T12:00:00Z') - new Date(
  * Alleen uitgaven zonder bijlage. Een bankboeking staat meestal 0 tot ~10 dagen na de bondatum.
  */
 export function zoekBoekingen(boekingen, bedragen, datum, woorden, heeftAl = () => false) {
-  const perBedrag = new Map(bedragen.map(b => [r2(b.bedrag), b.prio]));
+  // Staat er een duidelijk totaal op de bon, gebruik dan alleen dat; losse artikelprijzen geven te veel toevalstreffers.
+  const hoogste = Math.max(0, ...bedragen.map(b => b.prio));
+  const perBedrag = new Map(bedragen.filter(b => b.prio >= (hoogste >= 3 ? 3 : 1)).map(b => [r2(b.bedrag), b.prio]));
   const uit = [];
   for (const t of boekingen) {
     if (!isUitgave(t) || heeftAl(t.id)) continue;
@@ -140,7 +142,7 @@ function teken() {
   const gelezen = toestand.bedragen.length || toestand.datum || toestand.tekst;
   const lijst = heeftBestand && gelezen ? voorstellen() : [];
   const man = Number(String(toestand.handmatig).replace(',', '.')) > 0;
-  const inboxHits = (heeftBestand && gelezen) ? inboxRegels.filter(r => (man ? [Number(String(toestand.handmatig).replace(',', '.'))] : toestand.bedragen.map(b => b.bedrag)).some(b => r2(Math.abs(Number(r.bedrag) || 0)) === r2(b))).slice(0, 3) : [];
+  const inboxHits = (heeftBestand && gelezen) ? inboxRegels.filter(r => (man ? [Number(String(toestand.handmatig).replace(',', '.'))] : toestand.bedragen.filter(b => b.prio >= (toestand.bedragen.some(x => x.prio >= 3) ? 3 : 1)).map(b => b.bedrag)).some(b => r2(Math.abs(Number(r.bedrag) || 0)) === r2(b))).slice(0, 3) : [];
   l.innerHTML = `<div class="pm-venster" role="dialog" aria-label="Bonnetje scannen" style="max-width:640px">
     <div class="pm-kop"><div><h3>📷 Bonnetje scannen</h3><p class="pm-sub">Maak een foto; de app zoekt de bijbehorende bankboeking en bewaart de foto als bijlage.</p></div>
       <button class="pm-kruis" onclick="sluitBonScan()" aria-label="Sluiten">×</button></div>
@@ -169,7 +171,7 @@ function teken() {
             <span style="flex:1"><b>${esc(ddmm(v.t.datum))}</b> · ${esc(v.t.naam || v.t.omschr || '')} · <b>${fmt(v.t.bedrag)}</b>
               <span class="muted" style="display:block;font-size:12px">${esc(v.redenen.join(' · '))}${v.t.omschr && v.t.omschr !== v.t.naam ? ' · ' + esc(String(v.t.omschr).slice(0, 50)) : ''}</span></span></label>`).join('')
           : `<p class="muted" style="font-size:13px">Geen boeking gevonden met dit bedrag${man ? '' : ' (zonder bijlage)'}.${inboxHits.length ? '' : ' Is de bankregel al geboekt? Zo niet: boek hem eerst via Bank verwerken en probeer het opnieuw.'}</p>`}
-        ${inboxHits.length ? `<p style="font-size:13px;margin-top:8px">📥 Er staat wel een passende regel in je bank-inbox die nog niet is geboekt: ${inboxHits.map(r => `${esc(ddmm(r.datum))} ${esc(String(r.naam || '').slice(0, 25))} ${fmt(Math.abs(r.bedrag))}`).join('; ')}. Boek die eerst, dan kun je de bon eraan koppelen.</p>` : ''}` : ''}
+        ${inboxHits.length && !lijst.length ? `<p style="font-size:13px;margin-top:8px">📥 Er staat wel een passende regel in je bank-inbox die nog niet is geboekt: ${inboxHits.map(r => `${esc(ddmm(r.datum))} ${esc(String(r.naam || '').slice(0, 25))} ${fmt(Math.abs(r.bedrag))}`).join('; ')}. Boek die eerst, dan kun je de bon eraan koppelen.</p>` : ''}` : ''}
     </div>
     <div class="pm-voet"><span class="pm-hint">De foto wordt verkleind en veilig in je eigen opslag bewaard (zeven jaar bewaarplicht).</span>
       <div class="pm-knoppen"><button class="btn" onclick="sluitBonScan()">Sluiten</button>
