@@ -103,4 +103,5 @@ Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
 - Koppeling werkt voor 2 accounts (53 bestellingen sinds 25-07; Bol geeft ~90 dagen terug). Commissie ~18-20% van klantprijs; alle regels 1 stuk, dus per stuk/per regel nog niet te onderscheiden. Prijzen zijn incl. btw.
 - Nachtelijke ophaalronde: pg_cron `bol-nachtronde` (03:15 UTC, bol_nachtronde.sql) -> /bol-koppeling/dagelijks (laatste 7 dagen, getest: 7 orders).
 - Bankvergelijking telt alleen stortingen vanaf de eerste opgehaalde bestelling. Periodes: maand, kwartaal, jaar, alles.
-- Nog te doen: RETOUREN (aparte Bol-endpoint, nog niet gebouwd/getest); export uit partnerplatform voor oudere periodes; BOL_NAAM/BOL_NAAM_2 secrets zijn optioneel.
+- RETOUREN gebouwd (25-10): tabel bol_retouren (bol_retouren.sql), opgehaald bij elke ophaalronde (ook nachtelijk). Terugbetaald = geaccepteerde stuks x verkoopprijs van de bijbehorende bestelling; teruggekregen commissie naar verhouding (AANNAME, nog niet met Bol-afrekening vergeleken). Retouren van bestellingen van vóór 25-07: bedrag onbekend. CANCELLED_BY_CUSTOMER/EXPIRED tellen niet als terugbetaling.
+- Nog te doen: export uit partnerplatform voor oudere periodes; BOL_NAAM/BOL_NAAM_2 secrets zijn optioneel.
