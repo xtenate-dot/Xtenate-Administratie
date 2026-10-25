@@ -10,11 +10,12 @@
 // samenvoegen op basis van relatieSleutel() bleek op de echte data lang
 // niet betrouwbaar genoeg (114 rauwe schrijfwijzen → maar 108 sleutels).
 
-import { state, saveFacturen } from './storage.js?v=20261024v';
+import { state, saveFacturen } from './storage.js?v=20261024w';
+import { getClient } from './supabase.js?v=20261024w';
 import {
   loadRelatiesFromSupabase, maakRelatieInSupabase,
   werkRelatieBijInSupabase, verwijderRelatieInSupabase
-} from './supabase-client-v2.js?v=20261024v';
+} from './supabase-client-v2.js?v=20261024w';
 
 export function vindRelatie(id) {
   return state.RELATIES.find(r => r.id === id) || null;
@@ -119,4 +120,25 @@ export async function voegRelatiesSamen(behoudenId, opTeHevenId) {
   const verwijderd = await verwijderRelatieInSupabase(opTeHevenId);
   if (verwijderd) state.RELATIES = state.RELATIES.filter(r => r.id !== opTeHevenId);
   return verwijderd;
+}
+
+/** Het nummer van een relatie voor een soort ('debiteur' vanaf 10000, 'crediteur' vanaf 20000), of null als er nog geen is. */
+export function relatieNummer(relatie, soort) {
+  if (!relatie) return null;
+  return (soort === 'crediteur' ? relatie.crediteurnr : relatie.debiteurnr) || null;
+}
+
+/** Zorgt dat de relatie een nummer heeft voor deze soort (de database deelt het volgende vrije nummer uit). Geeft het nummer of null. */
+export async function zorgRelatienummer(relatieId, soort) {
+  const r = vindRelatie(relatieId);
+  if (!r) return null;
+  const bestaand = relatieNummer(r, soort);
+  if (bestaand) return bestaand;
+  try {
+    const sb = await getClient();
+    const { data, error } = await sb.rpc('geef_relatienummer', { p_relatie: relatieId, p_soort: soort });
+    if (error || !data) return null;
+    if (soort === 'crediteur') r.crediteurnr = data; else r.debiteurnr = data;
+    return data;
+  } catch { return null; }
 }

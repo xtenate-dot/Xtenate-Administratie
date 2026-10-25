@@ -8,9 +8,9 @@
 // De koppeling loopt via het boekingnummer. Een back-up als bestand staat in
 // Beheer: de fiscus wil de stukken zeven jaar zien.
 
-import { state } from './storage.js?v=20261024v';
-import { esc } from './helpers.js?v=20261024v';
-import { getClient, heeftClient } from './supabase.js?v=20261024v';
+import { state } from './storage.js?v=20261024w';
+import { esc } from './helpers.js?v=20261024w';
+import { getClient, heeftClient } from './supabase.js?v=20261024w';
 
 const DB_NAAM = 'xtenate_bonnetjes';
 const MAX_PDF = 8 * 1024 * 1024;
@@ -397,3 +397,6 @@ export async function voegBonnetjeToe(txId, bestand) {
 
 /** Alle bijlagen (alleen de gegevens, niet de bestanden): [{ bid, txId, naam, type, toegevoegd }]. */
 export const alleBonnetjes = () => [...perTx.values()].flat();
+
+/** De bijlagen (gegevens) bij een sleutel: een boeking-id, of "F-<factuurid>" voor een factuur. */
+export const bijlagenVan = sleutel => perTx.get(String(sleutel)) || [];

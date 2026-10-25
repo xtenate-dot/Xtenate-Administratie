@@ -11,7 +11,7 @@
  * Fase 3A Implementation
  */
 
-import { getClient, heeftClient, leesbareFout } from './supabase.js?v=20261024v';
+import { getClient, heeftClient, leesbareFout } from './supabase.js?v=20261024w';
 
 // ===== NOODREM =====
 export function syncIsAangezet() {
@@ -286,7 +286,9 @@ function relatieUitRij(r) {
     adres: r.adres || null,
     postcodePlaats: r.postcode_plaats || null,
     kvkNummer: r.kvk_nummer || null,
-    btwNummer: r.btw_nummer || null
+    btwNummer: r.btw_nummer || null,
+    debiteurnr: r.debiteurnr || null,
+    crediteurnr: r.crediteurnr || null
   };
 }
 
@@ -296,7 +298,7 @@ export async function loadRelatiesFromSupabase() {
     const sb = await getClient();
     const { data, error } = await sb
       .from('relaties')
-      .select('id, naam, aliassen, adres, postcode_plaats, kvk_nummer, btw_nummer')
+      .select('id, naam, aliassen, adres, postcode_plaats, kvk_nummer, btw_nummer, debiteurnr, crediteurnr')
       .is('deleted_at', null)
       .order('naam');
     if (error) {
@@ -319,7 +321,7 @@ export async function maakRelatieInSupabase(naam) {
     if (!userId) return null;
     const { data, error } = await sb.from('relaties')
       .insert([{ user_id: userId, naam }])
-      .select('id, naam, aliassen, adres, postcode_plaats, kvk_nummer, btw_nummer')
+      .select('id, naam, aliassen, adres, postcode_plaats, kvk_nummer, btw_nummer, debiteurnr, crediteurnr')
       .single();
     if (error) {
       console.warn('⚠️  Relatie aanmaken mislukt:', error.message);

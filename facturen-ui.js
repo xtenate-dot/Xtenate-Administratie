@@ -14,17 +14,26 @@ import {
   facturenVan, openstaandSaldo, factuurnummerInGebruik,
   vindBoeking, koppelBetaling, ontkoppelBetaling,
   ouderdomsanalyse, OUDERDOM_VOLGORDE
-} from './facturen.js?v=20261024v';
-import { esc, fmt, ddmm, bedragUit, leegVlak, isInkomst, isUitgave, weergaveNaam } from './helpers.js?v=20261024v';
-import { downloadModelPdf } from './pdf.js?v=20261024v';
-import { state, grootboekNamen, grootboekOptgroepen, BEDRIJFSGEGEVENS } from './storage.js?v=20261024v';
-import { zoekBoekingen } from './search.js?v=20261024v';
-import { vindRelatie, zoekRelaties, maakRelatie, hernoemRelatie, voegRelatiesSamen, herlaadRelaties, bewaarRelatieAdres } from './relaties.js?v=20261024v';
+} from './facturen.js?v=20261024w';
+import { esc, fmt, ddmm, bedragUit, leegVlak, isInkomst, isUitgave, weergaveNaam } from './helpers.js?v=20261024w';
+import { downloadModelPdf } from './pdf.js?v=20261024w';
+import { state, grootboekNamen, grootboekOptgroepen, BEDRIJFSGEGEVENS } from './storage.js?v=20261024w';
+import { zoekBoekingen } from './search.js?v=20261024w';
+import { vindRelatie, zoekRelaties, maakRelatie, hernoemRelatie, voegRelatiesSamen, herlaadRelaties, bewaarRelatieAdres, relatieNummer, zorgRelatienummer } from './relaties.js?v=20261024w';
+import { bijlagenVan, voegBonnetjeToe, bonnetjesBeschikbaar } from './bonnetjes.js?v=20261024w';
 
 const el = id => document.getElementById(id);
 
 /** Welk tabblad open staat: 'debiteur' of 'crediteur'. */
 let actiefTab = 'debiteur';
+
+/** Waar de lijst getekend wordt: de pagina Facturen (met tabbladen) of de losse pagina's Inkoop-/Verkoopfacturen. */
+const DOEL_FACTUREN = { tabs: 'facturen-tabs', inhoud: 'facturen-inhoud', vast: false, titel: '' };
+let doelIds = DOEL_FACTUREN;
+
+export function renderFacturenPagina() { doelIds = DOEL_FACTUREN; renderFacturen(); }
+export function renderInkoopfacturen() { actiefTab = 'crediteur'; doelIds = { tabs: 'inkoop-tabs', inhoud: 'inkoop-inhoud', vast: true, titel: 'Inkoopfacturen' }; renderFacturen(); }
+export function renderVerkoopfacturen() { actiefTab = 'debiteur'; doelIds = { tabs: 'verkoop-tabs', inhoud: 'verkoop-inhoud', vast: true, titel: 'Verkoopfacturen' }; renderFacturen(); }
 
 const TABS = [
   { id: 'debiteur', naam: 'Debiteuren' },
@@ -42,8 +51,9 @@ export function kiesFactuurTab(id) {
 }
 
 function tekenTabs() {
-  const balk = el('facturen-tabs');
+  const balk = el(doelIds.tabs);
   if (!balk) return;
+  if (doelIds.vast) { balk.innerHTML = ''; return; }
   balk.innerHTML = TABS.map(t => `
     <div class="vtab${t.id === actiefTab ? ' active' : ''}" onclick="kiesFactuurTab('${t.id}')"
          role="tab" tabindex="0" aria-selected="${t.id === actiefTab}">
@@ -75,7 +85,7 @@ export function statusWeergave(f, peildatum = vandaagISO()) {
 
 export function renderFacturen() {
   tekenTabs();
-  const doel = el('facturen-inhoud');
+  const doel = el(doelIds.inhoud);
   if (!doel) return;
 
   const soort = actiefTab;
@@ -98,9 +108,10 @@ export function renderFacturen() {
         <div class="kpi kpi--secondary"><div class="kpi-lbl">Te laat</div><div class="kpi-val${teLaat ? ' neg' : ''}">${teLaat}</div></div>
         <div class="kpi kpi--secondary"><div class="kpi-lbl">Vervalt binnenkort</div><div class="kpi-val">${binnenkort}</div></div>
       </div>
+      <button class="btn btn-ghost btn-sm" onclick="kenRelatienummersToe()" title="Geeft elke relatie met een factuur hier een ${isDeb ? 'debiteurnummer (vanaf 10000)' : 'crediteurnummer (vanaf 20000)'}">Nummers toekennen</button>
       <button class="btn btn-ghost btn-sm" onclick="openRelatiesBeheerModal()">Relaties beheren</button>
       <button class="btn btn-ghost btn-sm" onclick="openIbanClusterScherm()">Boekingen koppelen aan relaties</button>
-      <button class="btn btn-primary" onclick="openFactuurModal()">Nieuwe factuur</button>
+      <button class="btn btn-primary" onclick="openFactuurModal()">${isDeb ? 'Nieuwe verkoopfactuur' : 'Nieuwe inkoopfactuur'}</button>
     </div>
     <div class="table-wrap" style="margin-bottom:var(--spacing-4)"><table class="tbl-compact">
       <thead><tr>${OUDERDOM_VOLGORDE.map((g, i) =>
@@ -125,11 +136,12 @@ export function renderFacturen() {
     return `
       <tr>
         <td class="muted" style="padding-left:16px">${ddmm(f.vervaldatum || f.datum)}</td>
-        <td class="td-trunc">${esc(f.relatie || '(geen relatie)')}${f.omschrijving
+        <td class="td-trunc">${(() => { const nr = relatieNummer(vindRelatie(f.relatieId), f.soort); return nr ? `<span class="muted" style="font-size:11px">${nr}</span> ` : ''; })()}${esc(f.relatie || '(geen relatie)')}${f.omschrijving
           ? ` <span style="color:var(--text-muted);font-size:10px">· ${esc(f.omschrijving)}</span>` : ''}</td>
         <td class="muted" style="font-size:12px">${esc(f.factuurnummer || '—')}</td>
         <td style="text-align:right" class="${teken}">${fmt(f.bedrag)}</td>
         <td><span class="badge ${sw.klasse}">${esc(sw.tekst)}</span></td>
+        <td style="white-space:nowrap">${bijlagenVan('F-' + f.id).map(m => `<a href="#" onclick="openBonnetje('${esc(m.bid)}');return false" title="${esc(m.naam)}">📎</a>`).join(' ')} <button type="button" class="btn-details" data-bijlage="${esc(f.id)}">+ bijlage</button></td>
         <td style="text-align:right;padding-right:16px;white-space:nowrap">
           <button type="button" class="btn-details" data-bewerk="${esc(f.id)}">Bewerken</button>
           <button type="button" class="btn-details" data-koppel="${esc(f.id)}">Koppelen${f.txIds && f.txIds.length ? ` (${f.txIds.length})` : ''}</button>
@@ -147,6 +159,7 @@ export function renderFacturen() {
         <th>Nr.</th>
         <th style="text-align:right">Bedrag</th>
         <th>Status</th>
+        <th>Bijlage</th>
         <th style="padding-right:16px"></th>
       </tr></thead>
       <tbody>${rijen}</tbody>
@@ -156,6 +169,8 @@ export function renderFacturen() {
     k.addEventListener('click', () => openFactuurModal(k.dataset.bewerk)));
   doel.querySelectorAll('[data-koppel]').forEach(k =>
     k.addEventListener('click', () => openKoppelModal(k.dataset.koppel)));
+  doel.querySelectorAll('[data-bijlage]').forEach(k =>
+    k.addEventListener('click', () => kiesFactuurBijlage(k.dataset.bijlage)));
   doel.querySelectorAll('[data-pdf]').forEach(k =>
     k.addEventListener('click', () => downloadFactuurPdf(k.dataset.pdf)));
   doel.querySelectorAll('[data-verwijder]').forEach(k =>
@@ -287,6 +302,37 @@ export function saveFactuur() {
   }
 
   sluitFactuurModal();
+  renderFacturen();
+  // Een relatie krijgt bij de eerste factuur een debiteur- of crediteurnummer.
+  if (relatieId) zorgRelatienummer(relatieId, actiefTab).then(nr => { if (nr) renderFacturen(); });
+}
+
+/** Foto of pdf van de factuur bewaren (zelfde veilige opslag als bonnetjes). */
+export function kiesFactuurBijlage(factuurId) {
+  if (!bonnetjesBeschikbaar) { alert('Bijlagen zijn in deze browser niet beschikbaar (privévenster?).'); return; }
+  const i = document.createElement('input');
+  i.type = 'file'; i.accept = 'image/*,application/pdf'; i.multiple = true;
+  i.onchange = async () => {
+    const fouten = [];
+    for (const f of i.files) {
+      try { await voegBonnetjeToe('F-' + factuurId, f); } catch (e) { fouten.push(e.message || String(e)); }
+    }
+    if (fouten.length) alert(fouten.join('\n'));
+    renderFacturen();
+  };
+  i.click();
+}
+
+/** Geeft alle relaties met een factuur van de getoonde soort een nummer (die nog geen nummer hebben). */
+export async function kenRelatienummersToe() {
+  const ids = [...new Set(facturenVan(actiefTab).map(f => f.relatieId).filter(Boolean))];
+  let nieuw = 0;
+  for (const id of ids) {
+    const r = vindRelatie(id);
+    if (r && !relatieNummer(r, actiefTab) && await zorgRelatienummer(id, actiefTab)) nieuw++;
+  }
+  const zonder = facturenVan(actiefTab).filter(f => !f.relatieId).length;
+  alert(`${nieuw} nummer${nieuw === 1 ? '' : 's'} toegekend.` + (zonder ? `\n${zonder} factu${zonder === 1 ? 'ur heeft' : 'ren hebben'} nog geen gekozen relatie; kies bij die facturen eerst een relatie uit de lijst (Bewerken), dan krijgt die een nummer.` : ''));
   renderFacturen();
 }
 
