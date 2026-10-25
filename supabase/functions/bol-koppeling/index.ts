@@ -139,7 +139,7 @@ async function afhandelen(req: Request): Promise<Response> {
         const q = new URLSearchParams({ "fulfilment-method": "ALL", status: "ALL", "latest-change-date": dag, page: String(pagina) });
         const r = await haal(`https://api.bol.com/retailer/orders?${q}`, tok);
         if (r.status === 401 || r.status === 403) return Response.json({ ok: false, fout: `Bol weigert de toegang voor "${acc.naam}". Controleer de sleutels.` }, { status: 502 });
-        if (!r.data) { if (r.status === 404) break; return Response.json({ ok: false, fout: "Ophalen bij Bol mislukt." }, { status: 502 }); }
+        if (!r.data) { if (r.status === 404) break; return Response.json({ ok: false, fout: `Ophalen bij Bol mislukt (status ${r.status}, dag ${dag}, pagina ${pagina}).` }, { status: 502 }); }
         const lijst = r.data.orders || [];
         for (const o of lijst) if (o?.orderId) orderIds.set(String(o.orderId), o.orderPlacedDateTime || null);
         if (lijst.length < 50) break;
