@@ -4,7 +4,7 @@
 // tabel bank_inbox (status "nieuw"). Hier lees je ze, en zet je ze om / negeer je ze.
 // Er wordt niets automatisch geboekt: de regels gaan eerst door het voorstel.
 
-import { getClient } from './supabase.js?v=20261025e';
+import { getClient } from './supabase.js?v=20261025f';
 
 const KOLOMMEN = 'id, entry_reference, datum, bedrag, richting, naam, omschr';
 
