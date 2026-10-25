@@ -8,7 +8,7 @@
 // heeft. Deze module mag na het onderzoek weer weg.
 
 import { HIST_TX_DEFAULT, HOME_TOTALS_DEFAULT, MAAND_SALDOS_DEFAULT, state }
-  from './storage.js?v=20261025c';
+  from './storage.js?v=20261025d';
 
 const JAREN = ['2022', '2023', '2024', '2025', '2026'];
 

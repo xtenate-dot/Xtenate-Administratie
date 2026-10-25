@@ -2,9 +2,9 @@
 // tabel bol_bestellingen en uitrekenen (stuks, omzet, commissie). Alleen lezen en tonen:
 // dit raakt je boekingen en je voorraad niet.
 
-import { getClient } from './supabase.js?v=20261025c';
-import { state } from './storage.js?v=20261025c';
-import { vandaagIso } from './jaren.js?v=20261025c';
+import { getClient } from './supabase.js?v=20261025d';
+import { state } from './storage.js?v=20261025d';
+import { vandaagIso } from './jaren.js?v=20261025d';
 
 const dag = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
 const r2 = n => Math.round(n * 100) / 100;
