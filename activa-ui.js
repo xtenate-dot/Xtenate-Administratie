@@ -4,12 +4,12 @@
 // Kleinste eerste versie: geen koppeling met boekingen of de winstberekening
 // in belasting.js — dat is een latere, bewuste stap, net als bij kilometers.
 
-import { state } from './storage.js?v=20261024x';
-import { esc, fmt, ddmm } from './helpers.js?v=20261024x';
+import { state } from './storage.js?v=20261024y';
+import { esc, fmt, ddmm } from './helpers.js?v=20261024y';
 import {
   activaLijst, jaarlijkseAfschrijving, afschrijvingInJaar, boekwaardeEindJaar,
   vindActivum, voegActivumToe, werkActivumBij, verwijderActivum, vandaagISO
-} from './activa.js?v=20261024x';
+} from './activa.js?v=20261024y';
 
 const el = id => document.getElementById(id);
 

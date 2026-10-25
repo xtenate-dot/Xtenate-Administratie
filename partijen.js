@@ -11,15 +11,16 @@
 //    op display:none en gaan alleen open via .open. Een eigen regel voor
 //    .modal-overlay zou dat overschrijven en elk venster tegelijk tonen.
 
-import { state, saveTxData, saveHistTxData } from './storage.js?v=20261024x';
-import { fmt } from './helpers.js?v=20261024x';
+import { state, saveTxData, saveHistTxData } from './storage.js?v=20261024y';
+import { fmt } from './helpers.js?v=20261024y';
 import {
   saveToSupabase,
   deleteFromSupabase,
   addToPendingQueue
-} from './supabase-client-v2.js?v=20261024x';
-import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking } from './facturen.js?v=20261024x';
-import { txVanJaar, lopendJaar } from './jaren.js?v=20261024x';
+} from './supabase-client-v2.js?v=20261024y';
+import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking, facturenVan, isOpenstaand, factuurStatus } from './facturen.js?v=20261024y';
+import { vindRelatie, relatieNummer } from './relaties.js?v=20261024y';
+import { txVanJaar, lopendJaar } from './jaren.js?v=20261024y';
 
 export const veilig = s => String(s ?? '').replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -33,6 +34,30 @@ export function boekingenVoorJaar(jaar) {
 }
 
 const partijNaamVan = b => (b.naam || '').trim() || '(geen naam)';
+
+// ------------------------------------------------------------ facturen per partij
+
+const norm = t => String(t || '').trim().toLowerCase();
+const factuurSoortVan = o => o.soort === 'inkomst' ? 'debiteur' : 'crediteur';
+
+/** Facturen die bij deze partij horen: zelfde gekozen relatie als de boekingen, of dezelfde naam. */
+function facturenVanPartij(naam, boekingen, o) {
+  const relIds = new Set(boekingen.map(b => b.relatieId).filter(Boolean));
+  return facturenVan(factuurSoortVan(o)).filter(f => {
+    if (f.relatieId && relIds.has(f.relatieId)) return true;
+    if (norm(f.relatie) === norm(naam)) return true;
+    const r = f.relatieId ? vindRelatie(f.relatieId) : null;
+    return !!(r && norm(r.naam) === norm(naam));
+  });
+}
+
+/** Nummer van de relatie (10000-reeks of 20000-reeks), als die er is. */
+function nummerVanPartij(facturen, boekingen, o) {
+  const soort = factuurSoortVan(o);
+  const ids = [...new Set([...facturen.map(f => f.relatieId), ...boekingen.map(b => b.relatieId)].filter(Boolean))];
+  for (const id of ids) { const n = relatieNummer(vindRelatie(id), soort); if (n) return n; }
+  return null;
+}
 
 // ------------------------------------------------------------------ lijst
 
@@ -54,7 +79,9 @@ export function tekenPartijen(o) {
   const jaar = state.huidigJaar || lopendJaar();
   const boekingen = boekingenVoorJaar(jaar).filter(t => t.type === o.soort);
 
-  if (boekingen.length === 0) {
+  const soortF = factuurSoortVan(o);
+  const openF = facturenVan(soortF).filter(f => isOpenstaand(f));
+  if (boekingen.length === 0 && openF.length === 0) {
     const periode = jaar === 'all' ? 'de administratie' : jaar;
     lijst.innerHTML = `<div class="leeg">${o.leegTekst} in ${veilig(periode)}</div>`;
     totaalVeld.textContent = fmt(0);
@@ -71,13 +98,26 @@ export function tekenPartijen(o) {
     groepen.set(naam, g);
   }
 
+  // Wie nog een open factuur heeft maar dit jaar geen boekingen, hoort er toch bij te staan.
+  for (const f of openF) {
+    const naam = (f.relatie || '').trim() || '(geen naam)';
+    if (![...groepen.keys()].some(k => norm(k) === norm(naam))) groepen.set(naam, { totaal: 0, aantal: 0 });
+  }
+
   const gesorteerd = [...groepen.entries()].sort((a, b) => b[1].totaal - a[1].totaal);
   const teken = o.soort === 'inkomst' ? 'pos' : 'neg';
   const plus = o.soort === 'inkomst' ? '+&nbsp;' : '';
 
+  const perPartij = gesorteerd.map(([naam]) => {
+    const bk = boekingen.filter(b => partijNaamVan(b) === naam);
+    const fs = facturenVanPartij(naam, bk, o);
+    const open = fs.filter(f => isOpenstaand(f));
+    return { fs, open, bedragOpen: open.reduce((t, f) => t + (Number(f.bedrag) || 0), 0), nr: nummerVanPartij(fs, bk, o) };
+  });
+
   lijst.innerHTML = gesorteerd.map(([naam, g], i) => `
     <div class="partij-rij">
-      <span class="partij-naam" title="${veilig(naam)}">${veilig(naam)}</span>
+      <span class="partij-naam" title="${veilig(naam)}">${perPartij[i].nr ? `<span class="muted" style="font-size:11px">${perPartij[i].nr}</span> ` : ''}${veilig(naam)}${perPartij[i].open.length ? ` <span class="badge badge-amber" title="Openstaande facturen">${perPartij[i].open.length} open · ${fmt(perPartij[i].bedragOpen)}</span>` : ''}</span>
       <span class="partij-aantal">${g.aantal}&times;</span>
       <span class="partij-bedrag ${teken}">${plus}${fmt(g.totaal)}</span>
       <button type="button" class="btn-details" data-rij="${i}">Details</button>
@@ -144,10 +184,23 @@ function openPartijVenster(naam, boekingen, o) {
       </td>
     </tr>`).join('');
 
+  const fs = facturenVanPartij(naam, boekingen, o).sort((a, b) => String(b.datum).localeCompare(String(a.datum)));
+  const nr = nummerVanPartij(fs, boekingen, o);
+  const openBedrag = fs.filter(f => isOpenstaand(f)).reduce((t, f) => t + (Number(f.bedrag) || 0), 0);
+  const STAT = { open: 'open', vervallen: 'te laat', betaald: 'betaald', oninbaar: 'oninbaar' };
+  const factuurHtml = fs.length ? `
+      <h4 style="margin:18px 0 6px">Facturen${openBedrag ? ` &middot; nog open ${fmt(openBedrag)}` : ' &middot; alles betaald'}</h4>
+      <table class="pm-tabel"><thead><tr><th>Factuur</th><th>Datum</th><th>Vervalt</th><th class="pm-bedrag">Bedrag</th><th>Status</th><th>Betaald met</th></tr></thead><tbody>
+      ${fs.map(f => {
+        const st = factuurStatus(f);
+        const bet = (f.txIds || []).map(id => boekingenVoorJaar('all').find(t => String(t.id) === String(id))).filter(Boolean).map(t => t.datum).join(', ');
+        return `<tr><td>${veilig(f.factuurnummer || f.id)}</td><td class="pm-datum">${veilig(f.datum)}</td><td class="pm-datum">${veilig(f.vervaldatum || '—')}</td><td class="pm-bedrag">${fmt(f.bedrag)}</td><td>${veilig(STAT[st] || st)}</td><td>${veilig(bet || '—')}</td></tr>`;
+      }).join('')}</tbody></table>` : '';
+
   const { laag } = toonVenster('pm-partij', `
     <header class="pm-kop">
       <div>
-        <h3>${veilig(naam)}</h3>
+        <h3>${nr ? nr + ' · ' : ''}${veilig(naam)}</h3>
         <p class="pm-sub">${opDatum.length} boeking${opDatum.length === 1 ? '' : 'en'} &middot; ${fmt(totaal)}</p>
       </div>
       <button type="button" class="pm-kruis" data-pm-sluit aria-label="Sluiten">&times;</button>
@@ -164,7 +217,7 @@ function openPartijVenster(naam, boekingen, o) {
           </tr>
         </thead>
         <tbody>${rijen}</tbody>
-      </table>
+      </table>${factuurHtml}
     </div>
     <footer class="pm-voet">
       <span class="pm-hint">Esc sluit dit venster</span>
