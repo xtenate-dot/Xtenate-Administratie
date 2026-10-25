@@ -11,16 +11,16 @@
 //    op display:none en gaan alleen open via .open. Een eigen regel voor
 //    .modal-overlay zou dat overschrijven en elk venster tegelijk tonen.
 
-import { state, saveTxData, saveHistTxData } from './storage.js?v=20261025b';
-import { fmt } from './helpers.js?v=20261025b';
+import { state, saveTxData, saveHistTxData } from './storage.js?v=20261025c';
+import { fmt } from './helpers.js?v=20261025c';
 import {
   saveToSupabase,
   deleteFromSupabase,
   addToPendingQueue
-} from './supabase-client-v2.js?v=20261025b';
-import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking, facturenVan, isOpenstaand, factuurStatus } from './facturen.js?v=20261025b';
-import { vindRelatie, relatieNummer } from './relaties.js?v=20261025b';
-import { txVanJaar, lopendJaar } from './jaren.js?v=20261025b';
+} from './supabase-client-v2.js?v=20261025c';
+import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking, facturenVan, isOpenstaand, factuurStatus, restBedrag, isDeelsBetaald } from './facturen.js?v=20261025c';
+import { vindRelatie, relatieNummer } from './relaties.js?v=20261025c';
+import { txVanJaar, lopendJaar } from './jaren.js?v=20261025c';
 
 export const veilig = s => String(s ?? '').replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -112,7 +112,7 @@ export function tekenPartijen(o) {
     const bk = boekingen.filter(b => partijNaamVan(b) === naam);
     const fs = facturenVanPartij(naam, bk, o);
     const open = fs.filter(f => isOpenstaand(f));
-    return { fs, open, bedragOpen: open.reduce((t, f) => t + (Number(f.bedrag) || 0), 0), nr: nummerVanPartij(fs, bk, o) };
+    return { fs, open, bedragOpen: open.reduce((t, f) => t + restBedrag(f), 0), nr: nummerVanPartij(fs, bk, o) };
   });
 
   lijst.innerHTML = gesorteerd.map(([naam, g], i) => `
@@ -186,7 +186,7 @@ function openPartijVenster(naam, boekingen, o) {
 
   const fs = facturenVanPartij(naam, boekingen, o).sort((a, b) => String(b.datum).localeCompare(String(a.datum)));
   const nr = nummerVanPartij(fs, boekingen, o);
-  const openBedrag = fs.filter(f => isOpenstaand(f)).reduce((t, f) => t + (Number(f.bedrag) || 0), 0);
+  const openBedrag = fs.filter(f => isOpenstaand(f)).reduce((t, f) => t + restBedrag(f), 0);
   const STAT = { open: 'open', vervallen: 'te laat', betaald: 'betaald', oninbaar: 'oninbaar' };
   const factuurHtml = fs.length ? `
       <h4 style="margin:18px 0 6px">Facturen${openBedrag ? ` &middot; nog open ${fmt(openBedrag)}` : ' &middot; alles betaald'}</h4>
@@ -194,7 +194,7 @@ function openPartijVenster(naam, boekingen, o) {
       ${fs.map(f => {
         const st = factuurStatus(f);
         const bet = (f.txIds || []).map(id => boekingenVoorJaar('all').find(t => String(t.id) === String(id))).filter(Boolean).map(t => t.datum).join(', ');
-        return `<tr><td>${veilig(f.factuurnummer || f.id)}</td><td class="pm-datum">${veilig(f.datum)}</td><td class="pm-datum">${veilig(f.vervaldatum || '—')}</td><td class="pm-bedrag">${fmt(f.bedrag)}</td><td>${veilig(STAT[st] || st)}</td><td>${veilig(bet || '—')}</td></tr>`;
+        return `<tr><td>${veilig(f.factuurnummer || f.id)}</td><td class="pm-datum">${veilig(f.datum)}</td><td class="pm-datum">${veilig(f.vervaldatum || '—')}</td><td class="pm-bedrag">${fmt(f.bedrag)}</td><td>${veilig(isDeelsBetaald(f) ? 'deels betaald, nog ' + fmt(restBedrag(f)) : (STAT[st] || st))}</td><td>${veilig(bet || '—')}</td></tr>`;
       }).join('')}</tbody></table>` : '';
 
   const { laag } = toonVenster('pm-partij', `

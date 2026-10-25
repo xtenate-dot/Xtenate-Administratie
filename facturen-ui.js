@@ -10,18 +10,18 @@
 import {
   vandaagISO, plusDagen, dagenTussen, standaardTermijn,
   voegFactuurToe, vindFactuur, werkFactuurBij, verwijderFactuur,
-  factuurStatus, dagenTeLaat, vervaltBinnenkort,
+  factuurStatus, dagenTeLaat, vervaltBinnenkort, restBedrag, betaaldBedrag, isDeelsBetaald, toegewezenBedrag,
   facturenVan, openstaandSaldo, factuurnummerInGebruik,
   vindBoeking, koppelBetaling, ontkoppelBetaling,
   ouderdomsanalyse, OUDERDOM_VOLGORDE
-} from './facturen.js?v=20261025b';
-import { esc, fmt, ddmm, bedragUit, leegVlak, isInkomst, isUitgave, weergaveNaam } from './helpers.js?v=20261025b';
-import { downloadModelPdf } from './pdf.js?v=20261025b';
-import { state, grootboekNamen, grootboekOptgroepen, BEDRIJFSGEGEVENS } from './storage.js?v=20261025b';
-import { zoekBoekingen } from './search.js?v=20261025b';
-import { vindRelatie, zoekRelaties, maakRelatie, hernoemRelatie, voegRelatiesSamen, herlaadRelaties, bewaarRelatieAdres, relatieNummer, zorgRelatienummer } from './relaties.js?v=20261025b';
-import { bijlagenVan, voegBonnetjeToe, bonnetjesBeschikbaar } from './bonnetjes.js?v=20261025b';
-import { kiesFactuurUpload, resetFactuurUpload, wachtendFactuurBestand, toonBestaandeBijlage, kiesMeerdereFacturen, overslaanFactuur, leegRij, rij, zetRijUi, volgendeInRij } from './factuurupload.js?v=20261025b';
+} from './facturen.js?v=20261025c';
+import { esc, fmt, ddmm, bedragUit, leegVlak, isInkomst, isUitgave, weergaveNaam } from './helpers.js?v=20261025c';
+import { downloadModelPdf } from './pdf.js?v=20261025c';
+import { state, grootboekNamen, grootboekOptgroepen, BEDRIJFSGEGEVENS } from './storage.js?v=20261025c';
+import { zoekBoekingen } from './search.js?v=20261025c';
+import { vindRelatie, zoekRelaties, maakRelatie, hernoemRelatie, voegRelatiesSamen, herlaadRelaties, bewaarRelatieAdres, relatieNummer, zorgRelatienummer } from './relaties.js?v=20261025c';
+import { bijlagenVan, voegBonnetjeToe, bonnetjesBeschikbaar } from './bonnetjes.js?v=20261025c';
+import { kiesFactuurUpload, resetFactuurUpload, wachtendFactuurBestand, toonBestaandeBijlage, kiesMeerdereFacturen, overslaanFactuur, leegRij, rij, zetRijUi, volgendeInRij } from './factuurupload.js?v=20261025c';
 export { kiesFactuurUpload, kiesMeerdereFacturen, overslaanFactuur };
 
 const el = id => document.getElementById(id);
@@ -70,6 +70,11 @@ function tekenTabs() {
 // komt volledig uit facturen.js; hier wordt alleen tekst en kleur gekozen.
 
 export function statusWeergave(f, peildatum = vandaagISO()) {
+  const sw = statusWeergaveBasis(f, peildatum);
+  return isDeelsBetaald(f) ? { ...sw, tekst: `Deels betaald · ${fmt(restBedrag(f))} open${sw.klasse === 'badge-red' ? ' · ' + sw.tekst.toLowerCase() : ''}` } : sw;
+}
+
+function statusWeergaveBasis(f, peildatum) {
   const status = factuurStatus(f, peildatum);
   if (status === 'betaald') return { tekst: 'Betaald', klasse: 'badge-green' };
   if (status === 'oninbaar') return { tekst: 'Oninbaar', klasse: 'badge-gray' };
@@ -142,7 +147,7 @@ export function renderFacturen() {
         <td class="td-trunc">${(() => { const nr = relatieNummer(vindRelatie(f.relatieId), f.soort); return nr ? `<span class="muted" style="font-size:11px">${nr}</span> ` : ''; })()}${esc(f.relatie || '(geen relatie)')}${f.omschrijving
           ? ` <span style="color:var(--text-muted);font-size:10px">· ${esc(f.omschrijving)}</span>` : ''}</td>
         <td class="muted" style="font-size:12px">${esc(f.factuurnummer || '—')}</td>
-        <td style="text-align:right" class="${teken}">${fmt(f.bedrag)}</td>
+        <td style="text-align:right" class="${teken}">${isDeelsBetaald(f) ? `${fmt(restBedrag(f))}<div class="muted" style="font-size:10.5px">van ${fmt(f.bedrag)}</div>` : fmt(f.bedrag)}</td>
         <td><span class="badge ${sw.klasse}">${esc(sw.tekst)}</span></td>
         <td style="white-space:nowrap">${bijlagenVan('F-' + f.id).map(m => `<a href="#" onclick="openBonnetje('${esc(m.bid)}');return false" title="${esc(m.naam)}">📎</a>`).join(' ')} <button type="button" class="btn-details" data-bijlage="${esc(f.id)}">+ bijlage</button></td>
         <td style="text-align:right;padding-right:16px;white-space:nowrap">
@@ -548,9 +553,9 @@ let koppelFactuurId = null;
 
 /** Eén boekingsregel, met de knop-tekst en eventuele bedrag-waarschuwing
  *  als los, herbruikbaar bouwblok voor zowel "gekoppeld" als "resultaten". */
-function boekingRij(t, factuur, actieLabel) {
+function boekingRij(t, factuur, actieLabel, toegewezen = null) {
   const positief = isInkomst(t) || t.type === 'prive_storting';
-  const verschil = Math.abs(Number(t.bedrag) - Number(factuur.bedrag)) > 0.005;
+  const verschil = toegewezen == null && Math.abs(Number(t.bedrag) - restBedrag(factuur)) > 0.005;
   const naam = grootboekNamen()[t.gb] || '';
   return `
     <div class="ctrl-item">
@@ -558,7 +563,8 @@ function boekingRij(t, factuur, actieLabel) {
         <span class="ctrl-item-label">${esc(weergaveNaam(t)) || '(geen naam)'}</span>
         <span class="ctrl-item-sub">${ddmm(t.datum)} · ${esc(t.gb)} ${esc(naam)}</span>
       </span>
-      ${verschil ? `<span class="badge badge-amber" style="margin-right:8px">wijkt af van ${fmt(factuur.bedrag)}</span>` : ''}
+      ${verschil ? `<span class="badge badge-amber" style="margin-right:8px">${Number(t.bedrag) < restBedrag(factuur) ? 'deelbetaling van' : 'meer dan'} ${fmt(restBedrag(factuur))}</span>` : ''}
+      ${toegewezen != null && Math.abs(toegewezen - Number(t.bedrag)) > 0.005 ? `<span class="badge badge-blue" style="margin-right:8px">${fmt(toegewezen)} hiervan bij deze factuur</span>` : ''}
       <span class="${positief ? 'pos' : 'neg'}" style="padding-right:12px">${positief ? '+' : '–'}${fmt(t.bedrag)}</span>
       <button type="button" class="btn-details" data-tx="${esc(t.id)}">${esc(actieLabel)}</button>
     </div>`;
@@ -573,7 +579,7 @@ function renderGekoppeld(f) {
   doel.innerHTML = f.txIds.map(txId => {
     const t = vindBoeking(txId);
     if (!t) return `<div class="ctrl-item"><span class="neg">Boeking ${esc(txId)} niet gevonden (mogelijk verwijderd).</span></div>`;
-    return boekingRij(t, f, 'Loskoppelen');
+    return boekingRij(t, f, 'Loskoppelen', toegewezenBedrag(f, txId));
   }).join('');
   doel.querySelectorAll('[data-tx]').forEach(k =>
     k.addEventListener('click', () => ontkoppelBoekingVanFactuur(k.dataset.tx)));
@@ -584,7 +590,8 @@ export function openKoppelModal(id) {
   if (!f) return;
   koppelFactuurId = f.id;
   el('fact-koppel-context').textContent =
-    `${f.relatie || '(geen relatie)'} · ${fmt(f.bedrag)} · ${f.soort === 'debiteur' ? 'te ontvangen' : 'te betalen'}`;
+    `${f.relatie || '(geen relatie)'} · ${fmt(f.bedrag)} · ${f.soort === 'debiteur' ? 'te ontvangen' : 'te betalen'}` +
+    (f.txIds.length ? ` · betaald ${fmt(betaaldBedrag(f))} · nog open ${fmt(restBedrag(f))}` : '');
   renderGekoppeld(f);
   el('fact-koppel-zoek').value = '';
   el('fact-koppel-resultaten').innerHTML = '';
@@ -632,6 +639,7 @@ function koppelBoekingAanFactuur(txId) {
   const r = koppelBetaling(koppelFactuurId, txId);
   if (!r.ok) { alert('Koppelen mislukt: ' + r.reden); return; }
   renderGekoppeld(r.factuur);
+  openKoppelContext(r.factuur);
   el('fact-koppel-zoek').value = '';
   el('fact-koppel-resultaten').innerHTML = '';
   renderFacturen();
@@ -641,7 +649,14 @@ function ontkoppelBoekingVanFactuur(txId) {
   const r = ontkoppelBetaling(koppelFactuurId, txId);
   if (!r.ok) { alert('Loskoppelen mislukt: ' + r.reden); return; }
   renderGekoppeld(r.factuur);
+  openKoppelContext(r.factuur);
   renderFacturen();
+}
+
+function openKoppelContext(f) {
+  el('fact-koppel-context').textContent =
+    `${f.relatie || '(geen relatie)'} · ${fmt(f.bedrag)} · ${f.soort === 'debiteur' ? 'te ontvangen' : 'te betalen'}` +
+    (f.txIds.length ? ` · betaald ${fmt(betaaldBedrag(f))} · nog open ${fmt(restBedrag(f))}` : '');
 }
 
 // ──────────────────────────────────────────────────────────────────── pdf

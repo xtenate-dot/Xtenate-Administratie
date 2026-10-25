@@ -1,22 +1,22 @@
 // dashboard.js — Home: het financiële dashboard.
 
-import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261025b';
+import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261025c';
 import {
   BEGINSALDO_2026, calcIB, ddmm, esc, fmt, fmtKort, isInkomst, isKostenBoeking, isOmzet, isUitgave,
   maandLabel, rekBadge, saldoDelta, typeBadge, weergaveNaam
-} from './helpers.js?v=20261025b';
-import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen, bankKoppelingDagenTotVerval } from './storage.js?v=20261025b';
-import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261025b';
-import { draaiControles } from './controle.js?v=20261025b';
-import { aangifteModel, ibOver } from './belasting.js?v=20261025b';
-import { splitsLoten } from './hnvilot.js?v=20261025b';
-import { dagenSindsCloudBackup } from './cloudbackup.js?v=20261025b';
-import { factuurSamenvatting } from './facturen.js?v=20261025b';
-import { korStatus } from './kor.js?v=20261025b';
-import { maakSorteerbaar } from './tables.js?v=20261025b';
-import { hertekenHuidigePagina } from './ui.js?v=20261025b';
-import { txVanJaar, lopendJaar, isTxJaar, banksaldoTot } from './jaren.js?v=20261025b';
-import { tarievenVoor } from './tarieven.js?v=20261025b';
+} from './helpers.js?v=20261025c';
+import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen, bankKoppelingDagenTotVerval } from './storage.js?v=20261025c';
+import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261025c';
+import { draaiControles } from './controle.js?v=20261025c';
+import { aangifteModel, ibOver } from './belasting.js?v=20261025c';
+import { splitsLoten } from './hnvilot.js?v=20261025c';
+import { dagenSindsCloudBackup } from './cloudbackup.js?v=20261025c';
+import { factuurSamenvatting } from './facturen.js?v=20261025c';
+import { korStatus } from './kor.js?v=20261025c';
+import { maakSorteerbaar } from './tables.js?v=20261025c';
+import { hertekenHuidigePagina } from './ui.js?v=20261025c';
+import { txVanJaar, lopendJaar, isTxJaar, banksaldoTot } from './jaren.js?v=20261025c';
+import { tarievenVoor } from './tarieven.js?v=20261025c';
 
 
 export function wisselJaar() {

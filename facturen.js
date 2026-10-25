@@ -7,7 +7,7 @@
 //
 // Deze module bevat geen interface. De schermen komen in stap 3 en 4.
 
-import { FACTUUR_INSTELLINGEN, saveFacturen, state } from './storage.js?v=20261025b';
+import { FACTUUR_INSTELLINGEN, saveFacturen, state } from './storage.js?v=20261025c';
 
 export const SOORTEN = ['debiteur', 'crediteur'];
 
@@ -72,6 +72,8 @@ export function maakFactuur(gegevens = {}) {
     omschrijving: (gegevens.omschrijving || '').trim(),
     status: STATUSSEN.includes(gegevens.status) ? gegevens.status : 'open',
     txIds: Array.isArray(gegevens.txIds) ? [...gegevens.txIds] : [],
+    // Deelbetalingen: hoeveel van elke gekoppelde betaling bij déze factuur hoort ({ txId: bedrag }).
+    toegewezen: gegevens.toegewezen && typeof gegevens.toegewezen === 'object' ? { ...gegevens.toegewezen } : {},
     gb: gegevens.gb || '',
     // Optioneel: de regels van een in de factuurmaker opgestelde factuur.
     ...(Array.isArray(gegevens.regels) ? { regels: gegevens.regels } : {}),
@@ -122,8 +124,37 @@ export function factuurStatus(f, peildatum = vandaagISO()) {
   return 'open';
 }
 
+const r2 = n => Math.round(n * 100) / 100;
+const KLEIN = 0.01;   // verschil van een cent of minder telt als volledig betaald
+
+/** Hoeveel van deze betaling hoort bij deze factuur? Oudere koppelingen (zonder toewijzing) tellen de hele betaling. */
+export function toegewezenBedrag(f, txId) {
+  const v = f && f.toegewezen ? f.toegewezen[String(txId)] : undefined;
+  if (v != null) return Number(v) || 0;
+  const t = vindBoeking(txId);
+  return t ? Number(t.bedrag) || 0 : 0;
+}
+
+export function betaaldBedrag(f) {
+  return r2(((f && f.txIds) || []).reduce((som, id) => som + toegewezenBedrag(f, id), 0));
+}
+
+/** Wat er nog te betalen of te ontvangen is. */
+export function restBedrag(f) {
+  if (!f) return 0;
+  if (!(f.txIds || []).length) return f.status === 'betaald' ? 0 : r2(Number(f.bedrag) || 0);
+  return Math.max(0, r2((Number(f.bedrag) || 0) - betaaldBedrag(f)));
+}
+
 export function isBetaald(f) {
-  return !!(f && (f.status === 'betaald' || (Array.isArray(f.txIds) && f.txIds.length > 0)));
+  if (!f) return false;
+  if (Array.isArray(f.txIds) && f.txIds.length > 0) return restBedrag(f) <= KLEIN;
+  return f.status === 'betaald';
+}
+
+/** Er is al iets betaald, maar nog niet alles. */
+export function isDeelsBetaald(f) {
+  return !!(f && Array.isArray(f.txIds) && f.txIds.length > 0 && !isBetaald(f) && betaaldBedrag(f) > 0 && f.status !== 'oninbaar');
 }
 
 /** Telt mee in het openstaande saldo? Oninbaar en betaald niet. */
@@ -159,7 +190,7 @@ export function facturenVan(soort, { jaar = null, status = null, peildatum = van
 export function openstaandSaldo(soort, peildatum = vandaagISO()) {
   return state.FACTUREN
     .filter(f => f.soort === soort && isOpenstaand(f, peildatum))
-    .reduce((som, f) => som + (Number(f.bedrag) || 0), 0);
+    .reduce((som, f) => som + restBedrag(f), 0);
 }
 
 /** Ouderdomsgroep op basis van dagen te laat. */
@@ -181,7 +212,7 @@ export function ouderdomsanalyse(soort, peildatum = vandaagISO()) {
     if (f.soort !== soort || !isOpenstaand(f, peildatum)) continue;
     const g = ouderdomsgroep(f, peildatum);
     uit[g].aantal++;
-    uit[g].bedrag += Number(f.bedrag) || 0;
+    uit[g].bedrag += restBedrag(f);
   }
   return uit;
 }
@@ -197,17 +228,28 @@ export function vindBoeking(txId) {
     || null;
 }
 
-export function koppelBetaling(factuurId, txId) {
+export function koppelBetaling(factuurId, txId, bedrag = null) {
   const f = vindFactuur(factuurId);
   if (!f) return { ok: false, reden: 'factuur niet gevonden' };
-  if (!vindBoeking(txId)) return { ok: false, reden: 'boeking niet gevonden' };
+  const t = vindBoeking(txId);
+  if (!t) return { ok: false, reden: 'boeking niet gevonden' };
   if (f.txIds.some(id => String(id) === String(txId))) {
     return { ok: false, reden: 'al gekoppeld' };
   }
+  // Een betaling kan over meerdere facturen verdeeld zijn: wat andere facturen al hebben afgenomen, is niet meer beschikbaar.
+  const elders = state.FACTUREN.filter(x => x.id !== f.id && (x.txIds || []).some(id => String(id) === String(txId)))
+    .reduce((som, x) => som + toegewezenBedrag(x, txId), 0);
+  const beschikbaar = r2((Number(t.bedrag) || 0) - elders);
+  if (beschikbaar <= 0.005) return { ok: false, reden: 'deze betaling is al volledig aan andere facturen toegewezen' };
+  const rest = restBedrag(f);
+  let w = bedrag != null ? Number(bedrag) : (rest > 0.005 ? rest : beschikbaar);
+  w = r2(Math.min(w, beschikbaar));
+  if (!(w > 0)) return { ok: false, reden: 'ongeldig bedrag' };
   f.txIds.push(txId);
-  f.status = 'betaald';
+  f.toegewezen = { ...(f.toegewezen || {}), [String(txId)]: w };
+  f.status = restBedrag(f) <= KLEIN ? 'betaald' : 'open';
   saveFacturen();
-  return { ok: true, factuur: f };
+  return { ok: true, factuur: f, toegewezen: w, volledig: f.status === 'betaald' };
 }
 
 export function ontkoppelBetaling(factuurId, txId) {
@@ -216,7 +258,8 @@ export function ontkoppelBetaling(factuurId, txId) {
   const voor = f.txIds.length;
   f.txIds = f.txIds.filter(id => String(id) !== String(txId));
   if (f.txIds.length === voor) return { ok: false, reden: 'niet gekoppeld' };
-  if (f.txIds.length === 0 && f.status === 'betaald') f.status = 'open';
+  if (f.toegewezen) { const n = { ...f.toegewezen }; delete n[String(txId)]; f.toegewezen = n; }
+  if (f.status === 'betaald') f.status = f.txIds.length === 0 || restBedrag(f) > KLEIN ? 'open' : 'betaald';
   saveFacturen();
   return { ok: true, factuur: f };
 }

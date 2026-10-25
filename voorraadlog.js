@@ -17,7 +17,7 @@
 // (Excel), 'bulk' (meerdere artikelen tegelijk). Later kan daar 'bank' bij,
 // als een verkoop vanuit een boeking de voorraad aanpast.
 
-import { load, save, state } from './storage.js?v=20261025b';
+import { load, save, state } from './storage.js?v=20261025c';
 
 export const REDENEN = [
   'Verkoop', 'Inkoop', 'Retour', 'Schade', 'Eigen gebruik', 'Correctie', 'Overig'

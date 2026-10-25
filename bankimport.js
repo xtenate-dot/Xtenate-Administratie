@@ -5,14 +5,14 @@
 // niet nog eens voorgesteld. Grootboek en soort worden afgeleid uit eerdere
 // boekingen met dezelfde naam; wat onbekend is kies je zelf.
 
-import { state, saveTxData, jaarIsVergrendeld } from './storage.js?v=20261025b';
-import { isTxJaar, jaarVan, EERSTE_TX_JAAR, vandaagIso } from './jaren.js?v=20261025b';
-import { esc, fmt } from './helpers.js?v=20261025b';
-import { addToPendingQueue } from './supabase-client-v2.js?v=20261025b';
-import { maakHerstelpunt } from './herstelpunt.js?v=20261025b';
-import { facturenVan, isOpenstaand, koppelBetaling, vindFactuur } from './facturen.js?v=20261025b';
-import { vindRelatie, relatieNummer } from './relaties.js?v=20261025b';
-import { telInbox, haalInboxOp, zetInboxStatus } from './bankinbox.js?v=20261025b';
+import { state, saveTxData, jaarIsVergrendeld } from './storage.js?v=20261025c';
+import { isTxJaar, jaarVan, EERSTE_TX_JAAR, vandaagIso } from './jaren.js?v=20261025c';
+import { esc, fmt } from './helpers.js?v=20261025c';
+import { addToPendingQueue } from './supabase-client-v2.js?v=20261025c';
+import { maakHerstelpunt } from './herstelpunt.js?v=20261025c';
+import { facturenVan, isOpenstaand, koppelBetaling, vindFactuur, restBedrag, isDeelsBetaald } from './facturen.js?v=20261025c';
+import { vindRelatie, relatieNummer } from './relaties.js?v=20261025c';
+import { telInbox, haalInboxOp, zetInboxStatus } from './bankinbox.js?v=20261025c';
 
 const REK = '1010';          // zo staat Revolut nu in je administratie
 const el = id => document.getElementById(id);
@@ -293,7 +293,7 @@ function factuurKandidaten(r) {
   const tekst = (r.naam + ' ' + r.omschr).toLowerCase();
   return facturenVan(soort).filter(f => isOpenstaand(f)).map(f => {
     let score = 0;
-    const bedragGelijk = Math.abs((Number(f.bedrag) || 0) - r.bedrag) < 0.005;
+    const bedragGelijk = Math.abs(restBedrag(f) - r.bedrag) < 0.005;
     if (bedragGelijk) score += 3;
     if (f.factuurnummer && tekst.includes(f.factuurnummer.toLowerCase())) score += 4;
     const naamWoorden = woordenVan(f.relatie);
@@ -321,7 +321,7 @@ function stelFacturenVoor() {
 const factuurLabel = f => {
   const rel = f.relatieId ? vindRelatie(f.relatieId) : null;
   const nr = rel ? relatieNummer(rel, f.soort) : null;
-  return `${nr ? nr + ' · ' : ''}${f.relatie || '(geen relatie)'}${f.factuurnummer ? ' · ' + f.factuurnummer : ''} · ${fmt(f.bedrag)}`;
+  return `${nr ? nr + ' · ' : ''}${f.relatie || '(geen relatie)'}${f.factuurnummer ? ' · ' + f.factuurnummer : ''} · ${isDeelsBetaald(f) ? `rest ${fmt(restBedrag(f))} van ${fmt(f.bedrag)}` : fmt(f.bedrag)}`;
 };
 
 /** Keuzelijst met open facturen voor één regel; het voorstel staat bovenaan. */
@@ -383,21 +383,21 @@ export function importeerRevolut() {
   if (!window.confirm(`${teDoen.length} boekingen toevoegen aan ${jarenTekst}?`)) return;
 
   maakHerstelpunt('vóór Revolut-import');
-  let gekoppeld = 0;
+  let gekoppeld = 0, deels = 0;
   for (const r of teDoen) {
     const tx = { id: state.nxtTx++, datum: r.datum, bedrag: r.bedrag, naam: r.naam, omschr: r.omschr, type: r.type, rek: r.rek, gb: r.gb, bron: 'handmatig' };
     const fac = r.factuurId ? vindFactuur(r.factuurId) : null;
     if (fac && fac.relatieId) tx.relatieId = fac.relatieId;
     state.TX.push(tx);
     addToPendingQueue(tx, 'create', false);
-    if (fac && koppelBetaling(fac.id, tx.id).ok) gekoppeld++;
+    if (fac) { const k = koppelBetaling(fac.id, tx.id); if (k.ok) { gekoppeld++; if (!k.volledig) deels++; } }
   }
   saveTxData();
   // Regels uit de inbox die nu geboekt zijn (of er al stonden) tellen niet meer mee.
   const klaar = voorstel.rijen.filter(r => inboxKaart.has(r.sleutel) && (r.staatAl || r.kies)).map(r => inboxKaart.get(r.sleutel));
   if (klaar.length) zetInboxStatus(klaar, 'omgezet').then(() => { inboxAantal = null; inboxGelezen = 0; ververseInbox(true); });
   inboxKaart = new Map();
-  melding = `✅ ${teDoen.length} boekingen toegevoegd.` + (gekoppeld ? ` ${gekoppeld} factu${gekoppeld === 1 ? 'ur' : 'ren'} als betaald gekoppeld.` : '');
+  melding = `✅ ${teDoen.length} boekingen toegevoegd.` + (gekoppeld ? ` ${gekoppeld} factu${gekoppeld === 1 ? 'ur' : 'ren'} gekoppeld${deels ? ` (waarvan ${deels} deels betaald)` : ''}.` : '');
   voorstel = null;
   renderBankimport();
   window.hertekenHuidigePagina?.();
