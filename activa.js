@@ -12,7 +12,7 @@
 // boekingen zoals facturen die via txIds hebben); de disclaimer op het
 // scherm zelf (activa-ui.js) waarschuwt hiervoor.
 
-import { state, saveActiva } from './storage.js?v=20261024y';
+import { state, saveActiva } from './storage.js?v=20261024z';
 
 export function vandaagISO() {
   return new Date().toISOString().split('T')[0];

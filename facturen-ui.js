@@ -14,13 +14,15 @@ import {
   facturenVan, openstaandSaldo, factuurnummerInGebruik,
   vindBoeking, koppelBetaling, ontkoppelBetaling,
   ouderdomsanalyse, OUDERDOM_VOLGORDE
-} from './facturen.js?v=20261024y';
-import { esc, fmt, ddmm, bedragUit, leegVlak, isInkomst, isUitgave, weergaveNaam } from './helpers.js?v=20261024y';
-import { downloadModelPdf } from './pdf.js?v=20261024y';
-import { state, grootboekNamen, grootboekOptgroepen, BEDRIJFSGEGEVENS } from './storage.js?v=20261024y';
-import { zoekBoekingen } from './search.js?v=20261024y';
-import { vindRelatie, zoekRelaties, maakRelatie, hernoemRelatie, voegRelatiesSamen, herlaadRelaties, bewaarRelatieAdres, relatieNummer, zorgRelatienummer } from './relaties.js?v=20261024y';
-import { bijlagenVan, voegBonnetjeToe, bonnetjesBeschikbaar } from './bonnetjes.js?v=20261024y';
+} from './facturen.js?v=20261024z';
+import { esc, fmt, ddmm, bedragUit, leegVlak, isInkomst, isUitgave, weergaveNaam } from './helpers.js?v=20261024z';
+import { downloadModelPdf } from './pdf.js?v=20261024z';
+import { state, grootboekNamen, grootboekOptgroepen, BEDRIJFSGEGEVENS } from './storage.js?v=20261024z';
+import { zoekBoekingen } from './search.js?v=20261024z';
+import { vindRelatie, zoekRelaties, maakRelatie, hernoemRelatie, voegRelatiesSamen, herlaadRelaties, bewaarRelatieAdres, relatieNummer, zorgRelatienummer } from './relaties.js?v=20261024z';
+import { bijlagenVan, voegBonnetjeToe, bonnetjesBeschikbaar } from './bonnetjes.js?v=20261024z';
+import { kiesFactuurUpload, resetFactuurUpload, wachtendFactuurBestand, toonBestaandeBijlage } from './factuurupload.js?v=20261024z';
+export { kiesFactuurUpload };
 
 const el = id => document.getElementById(id);
 
@@ -239,12 +241,15 @@ export function openFactuurModal(id = null) {
   }
 
   el('fact-delete-btn').style.display = f ? '' : 'none';
+  resetFactuurUpload();
+  if (f) toonBestaandeBijlage(f.id);
 
   document.getElementById('modal-factuur').classList.add('open');
   el('fact-d').focus();
 }
 
 export function sluitFactuurModal() {
+  resetFactuurUpload();
   document.getElementById('modal-factuur')?.classList.remove('open');
   state.editFactuurId = null;
 }
@@ -294,15 +299,21 @@ export function saveFactuur() {
     gb: el('fact-gb').value
   };
 
+  const bestand = wachtendFactuurBestand();
+  let factuurId = state.editFactuurId;
   if (state.editFactuurId != null) {
     if (el('fact-status-blok').style.display !== 'none') gegevens.status = el('fact-status').value;
     werkFactuurBij(state.editFactuurId, gegevens);
   } else {
-    voegFactuurToe(gegevens);
+    factuurId = voegFactuurToe(gegevens).id;
   }
 
   sluitFactuurModal();
   renderFacturen();
+  if (bestand) {
+    voegBonnetjeToe('F-' + factuurId, bestand).then(() => renderFacturen())
+      .catch(e => alert('De factuur is opgeslagen, maar het bestand niet: ' + (e.message || e)));
+  }
   // Een relatie krijgt bij de eerste factuur een debiteur- of crediteurnummer.
   if (relatieId) zorgRelatienummer(relatieId, actiefTab).then(nr => { if (nr) renderFacturen(); });
 }

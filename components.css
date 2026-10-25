@@ -1410,3 +1410,14 @@ body.nav-collapsed .nav-section-btn { pointer-events: none; }
 .voorraad-log-reden { color: var(--text-primary); }
 .voorraad-log-notitie { color: var(--text-secondary); }
 .voorraad-log-leeg { color: var(--text-secondary); padding: 6px 0; }
+
+/* Factuur uploaden: voorbeeld links, invulvelden rechts */
+.modal.fact-breed { width: min(1180px, 96vw); }
+.fact-split { display: block; }
+.modal.fact-breed .fact-split { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(320px, 1fr); gap: var(--spacing-4); align-items: start; }
+.fact-voorbeeld { display: none; position: sticky; top: 0; border: 1px solid var(--border-subtle, rgba(128,128,128,.3)); border-radius: var(--radius-md, 8px); overflow: hidden; background: rgba(128,128,128,.08); height: 72vh; }
+.modal.fact-breed .fact-voorbeeld { display: block; }
+.fact-voorbeeld iframe, .fact-voorbeeld img { width: 100%; height: 100%; border: 0; object-fit: contain; display: block; background: #fff; }
+.fact-upload-rij { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+.fact-hint { font-size: 12px; color: var(--text-secondary); margin: 4px 0 8px; }
+@media (max-width: 800px) { .modal.fact-breed .fact-split { grid-template-columns: 1fr; } .fact-voorbeeld { position: static; height: 45vh; } }

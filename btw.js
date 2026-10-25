@@ -10,9 +10,9 @@
 // (een privé-boeking die per ongeluk toch een btw_bedrag zou dragen) hier
 // zonder gevolg.
 
-import { isInkomst, isUitgave, fmt } from './helpers.js?v=20261024y';
-import { state, BTW_INSTELLINGEN } from './storage.js?v=20261024y';
-import { downloadModelPdf } from './pdf.js?v=20261024y';
+import { isInkomst, isUitgave, fmt } from './helpers.js?v=20261024z';
+import { state, BTW_INSTELLINGEN } from './storage.js?v=20261024z';
+import { downloadModelPdf } from './pdf.js?v=20261024z';
 
 const el = id => document.getElementById(id);
 

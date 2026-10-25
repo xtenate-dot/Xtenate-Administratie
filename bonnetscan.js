@@ -8,10 +8,10 @@
 //      passende naam, en tonen de beste voorstellen. Jij kiest er één: de foto wordt dan als bijlage bewaard.
 // Je kunt het bedrag en de datum altijd zelf corrigeren als de tekst niet goed is gelezen.
 
-import { state } from './storage.js?v=20261024y';
-import { esc, fmt, ddmm, isUitgave } from './helpers.js?v=20261024y';
-import { heeftBonnetje, voegBonnetjeToe, bonnetjesBeschikbaar } from './bonnetjes.js?v=20261024y';
-import { haalInboxOp } from './bankinbox.js?v=20261024y';
+import { state } from './storage.js?v=20261024z';
+import { esc, fmt, ddmm, isUitgave } from './helpers.js?v=20261024z';
+import { heeftBonnetje, voegBonnetjeToe, bonnetjesBeschikbaar } from './bonnetjes.js?v=20261024z';
+import { haalInboxOp } from './bankinbox.js?v=20261024z';
 
 const TESSERACT = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
 const MAANDEN = { jan: 1, feb: 2, mrt: 3, maa: 3, mar: 3, apr: 4, mei: 5, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, okt: 10, oct: 10, nov: 11, dec: 12 };
@@ -88,7 +88,7 @@ export function zoekBoekingen(boekingen, bedragen, datum, woorden, heeftAl = () 
 // ─── OCR in de browser ───────────────────────────────────────────────────────
 
 let tesseractBelofte = null;
-function laadTesseract() {
+export function laadTesseract() {
   if (window.Tesseract) return Promise.resolve(window.Tesseract);
   if (!tesseractBelofte) tesseractBelofte = new Promise((ok, fout) => {
     const s = document.createElement('script');
@@ -100,7 +100,7 @@ function laadTesseract() {
   return tesseractBelofte;
 }
 
-async function leesFoto(bestand, voortgang) {
+export async function leesFoto(bestand, voortgang) {
   const T = await laadTesseract();
   const res = await T.recognize(bestand, 'nld+eng', { logger: m => { if (m && m.status && typeof m.progress === 'number') voortgang(`${m.status} ${Math.round(m.progress * 100)}%`); } });
   return res?.data?.text || '';

@@ -8,9 +8,9 @@
 // De koppeling loopt via het boekingnummer. Een back-up als bestand staat in
 // Beheer: de fiscus wil de stukken zeven jaar zien.
 
-import { state } from './storage.js?v=20261024y';
-import { esc } from './helpers.js?v=20261024y';
-import { getClient, heeftClient } from './supabase.js?v=20261024y';
+import { state } from './storage.js?v=20261024z';
+import { esc } from './helpers.js?v=20261024z';
+import { getClient, heeftClient } from './supabase.js?v=20261024z';
 
 const DB_NAAM = 'xtenate_bonnetjes';
 const MAX_PDF = 8 * 1024 * 1024;
@@ -400,3 +400,11 @@ export const alleBonnetjes = () => [...perTx.values()].flat();
 
 /** De bijlagen (gegevens) bij een sleutel: een boeking-id, of "F-<factuurid>" voor een factuur. */
 export const bijlagenVan = sleutel => perTx.get(String(sleutel)) || [];
+
+/** Het bestand zelf bij een bijlage (lokaal, anders uit de cloud). */
+export async function bijlageBlob(bid) {
+  try {
+    const r = await vraag(db.transaction('blob').objectStore('blob').get(bid));
+    return r ? r.blob : await haalBlobUitCloud(bid);
+  } catch { return null; }
+}
