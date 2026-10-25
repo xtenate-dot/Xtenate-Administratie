@@ -98,3 +98,9 @@ Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
 - Gebruiker moet BOL_CLIENT_ID en BOL_CLIENT_SECRET als Supabase-secret zetten. Daarna echte test: kloppen veldnamen (unitPrice, commission = per regel of per stuk?) tegen een Bol-factuur.
 - Nog niet: dagelijks automatisch ophalen (zoals bank), voorraad automatisch afboeken (voorraadartikelen hebben geen EAN).
 - Bol: meerdere accounts (tot 4). Account 1 = BOL_CLIENT_ID/BOL_CLIENT_SECRET/BOL_NAAM, account 2 = ..._2, enz. Kolom account in bol_bestellingen; pagina heeft account-filter en ophaal-keuze.
+
+## Bol.com status (25-10)
+- Koppeling werkt voor 2 accounts (53 bestellingen sinds 25-07; Bol geeft ~90 dagen terug). Commissie ~18-20% van klantprijs; alle regels 1 stuk, dus per stuk/per regel nog niet te onderscheiden. Prijzen zijn incl. btw.
+- Nachtelijke ophaalronde: pg_cron `bol-nachtronde` (03:15 UTC, bol_nachtronde.sql) -> /bol-koppeling/dagelijks (laatste 7 dagen, getest: 7 orders).
+- Bankvergelijking telt alleen stortingen vanaf de eerste opgehaalde bestelling. Periodes: maand, kwartaal, jaar, alles.
+- Nog te doen: RETOUREN (aparte Bol-endpoint, nog niet gebouwd/getest); export uit partnerplatform voor oudere periodes; BOL_NAAM/BOL_NAAM_2 secrets zijn optioneel.
