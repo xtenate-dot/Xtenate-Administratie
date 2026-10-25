@@ -117,3 +117,12 @@ Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
 
 ## Pagina Bonnetjes (25-10)
 - bonnetjesoverzicht.js + nav-item "Bonnetjes": twee koppen, Inkoopfacturen en bonnetjes (bijlagen bij uitgaven) en Verkoopfacturen (bijlagen bij inkomsten), plus Overig; jaarfilter; "uitgaven nog zonder bijlage" uitklapbaar; scanner-knop. Indeling volgt het type boeking (geen aparte instelling).
+
+## Inkoop- en verkoopfacturen (25-10) — GEBOUWD en live getest (v20261025b)
+- Relatienummers: debiteuren vanaf 10000, crediteuren vanaf 20000 (SQL relatienummers.sql uitgevoerd); toegekend bij eerste factuur of met knop "Nummers toekennen".
+- Menu: Inkoopfacturen en Verkoopfacturen vervangen Bonnetjes (bonnetjesoverzicht.js staat nog in de repo, niet in het menu).
+- Bijlage per factuur (sleutel F-<factuurid>), factuur uploaden met voorbeeld links en velden rechts, automatisch lezen (pdf.js / Tesseract), meerdere tegelijk uploaden.
+- Bank verwerken: kolom Factuur met voorstel op bedrag/naam/nummer; bij Importeren wordt de factuur als betaald gekoppeld.
+- Klanten/Leveranciers: relatienummer, open facturen en factuuroverzicht per partij.
+- Nog te testen door gebruiker met echte facturen en een echte bankregel. Bekend: een factuur telt direct als geheel betaald (geen deelbetalingen).
+- Nog niet gedaan: weekoverzicht per e-mail (mailservice nodig), terugkerende boekingen, voorraad bijwerken uit Bol (EAN nodig), 24 vastgelopen HNVI-wachtrij-items opruimen (toestemming nodig).
