@@ -105,3 +105,8 @@ Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
 - Bankvergelijking telt alleen stortingen vanaf de eerste opgehaalde bestelling. Periodes: maand, kwartaal, jaar, alles.
 - RETOUREN gebouwd (25-10): tabel bol_retouren (bol_retouren.sql), opgehaald bij elke ophaalronde (ook nachtelijk). Terugbetaald = geaccepteerde stuks x verkoopprijs van de bijbehorende bestelling; teruggekregen commissie naar verhouding (AANNAME, nog niet met Bol-afrekening vergeleken). Retouren van bestellingen van vóór 25-07: bedrag onbekend. CANCELLED_BY_CUSTOMER/EXPIRED tellen niet als terugbetaling.
 - Nog te doen: export uit partnerplatform voor oudere periodes; BOL_NAAM/BOL_NAAM_2 secrets zijn optioneel.
+
+## Bonnetje scannen (25-10) — gebouwd, nog te testen door gebruiker op telefoon
+- bonnetscan.js: knop "📷 Bonnetje scannen" op de Bank-pagina. Foto -> OCR in de browser (Tesseract.js via jsdelivr, nld+eng) -> bedragen/datum/winkelnaam -> voorstellen uit uitgaven zonder bijlage (bedrag gelijk, datum -1..+10 dagen, naam) -> koppelen via voegBonnetjeToe() in bonnetjes.js. Bedrag en datum zijn handmatig te corrigeren; pdf's: bedrag typen. Staat de bankregel nog in de bank-inbox, dan zegt het venster dat.
+- Parser getest op voorbeeldtekst; echte foto/camera nog niet getest. Later: automatisch ook inbox-regels koppelen, meerdere bonnen achter elkaar.
+- Weekoverzicht per e-mail: adres xtenate@gmail.com (opgegeven 25-10), dag en inhoud nog te bepalen; "later".

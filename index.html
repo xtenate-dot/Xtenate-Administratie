@@ -21,10 +21,10 @@
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<link rel="stylesheet" href="theme.css?v=20261024q">
-<link rel="stylesheet" href="layout.css?v=20261024q">
-<link rel="stylesheet" href="components.css?v=20261024q">
-<link rel="stylesheet" href="responsive.css?v=20261024q">
+<link rel="stylesheet" href="theme.css?v=20261024r">
+<link rel="stylesheet" href="layout.css?v=20261024r">
+<link rel="stylesheet" href="components.css?v=20261024r">
+<link rel="stylesheet" href="responsive.css?v=20261024r">
 </head>
 <body>
 
@@ -382,7 +382,8 @@
       <div class="page-title">Bank</div>
       <div class="page-sub">Alle bankboekingen, gekoppeld aan het juiste grootboek.</div>
     </div>
-    <button class="btn btn-primary" onclick="openBankVerwerken()">Bank verwerken</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="openBonScan()" title="Foto van een bon: de app zoekt de bijbehorende boeking">📷 Bonnetje scannen</button>
+    <button class="btn btn-primary" onclick="openBankVerwerken()">Bank verwerken</button></div>
   </div>
   <input type="file" id="bankimport-bestand" accept=".csv,text/csv" style="display:none" onchange="leesRevolutBestand(event)">
   <details id="bank-verwerken" class="card" style="padding:var(--spacing-3) var(--spacing-4);margin-bottom:var(--spacing-3)">
@@ -1394,6 +1395,6 @@
 </div>
 </div>
 
-<script type="module" src="app.js?v=20261024q"></script>
+<script type="module" src="app.js?v=20261024r"></script>
 </body>
 </html>
