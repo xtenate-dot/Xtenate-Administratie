@@ -52,10 +52,10 @@ async function token(id: string, geheim: string): Promise<string | null> {
 
 /** GET met een paar nieuwe pogingen bij "te snel" (429) of een tijdelijke serverfout. */
 async function haal(url: string, tok: string): Promise<{ status: number; data: any }> {
-  for (let poging = 0; poging < 4; poging++) {
+  for (let poging = 0; poging < 6; poging++) {
     const r = await fetch(url, { headers: { Authorization: `Bearer ${tok}`, Accept: ACCEPT } });
     if (r.status === 429 || r.status >= 500) {
-      const wachttijd = Math.min(Number(r.headers.get("retry-after")) * 1000 || 1500 * (poging + 1), 8000);
+      const wachttijd = Math.min(Number(r.headers.get("retry-after")) * 1000 || 2000 * (poging + 1), 15000);
       await wacht(wachttijd);
       continue;
     }
@@ -134,12 +134,13 @@ async function afhandelen(req: Request): Promise<Response> {
     // 1. Welke bestellingen zijn er per dag gewijzigd? (nieuwe, verzonden, geannuleerde)
     const orderIds = new Map<string, string | null>();
     for (const dag of lijstDagen) {
+      if (onvolledig) break;
       if (Date.now() - start > TIJDBUDGET_MS) { onvolledig = true; break; }
       for (let pagina = 1; pagina <= 20; pagina++) {
         const q = new URLSearchParams({ "fulfilment-method": "ALL", status: "ALL", "latest-change-date": dag, page: String(pagina) });
         const r = await haal(`https://api.bol.com/retailer/orders?${q}`, tok);
         if (r.status === 401 || r.status === 403) return Response.json({ ok: false, fout: `Bol weigert de toegang voor "${acc.naam}". Controleer de sleutels.` }, { status: 502 });
-        if (!r.data) { if (r.status === 404) break; return Response.json({ ok: false, fout: `Ophalen bij Bol mislukt (status ${r.status}, dag ${dag}, pagina ${pagina}).` }, { status: 502 }); }
+        if (!r.data) { if (r.status === 404) break; if (r.status === 429) { onvolledig = true; break; } return Response.json({ ok: false, fout: `Ophalen bij Bol mislukt (status ${r.status}, dag ${dag}, pagina ${pagina}).` }, { status: 502 }); }
         const lijst = r.data.orders || [];
         for (const o of lijst) if (o?.orderId) orderIds.set(String(o.orderId), o.orderPlacedDateTime || null);
         if (lijst.length < 50) break;
