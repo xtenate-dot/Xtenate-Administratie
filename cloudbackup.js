@@ -5,10 +5,10 @@
 // download je er een als bestand. De back-ups zelf worden alleen door de database
 // gemaakt (functie maak_cloud_backup); de app kan ze lezen en verwijderen, niet vervalsen.
 
-import { getClient, heeftClient } from './supabase.js?v=20261024t';
-import { esc } from './helpers.js?v=20261024t';
-import { state } from './storage.js?v=20261024t';
-import { wachtrijStatus } from './supabase-client-v2.js?v=20261024t';
+import { getClient, heeftClient } from './supabase.js?v=20261024u';
+import { esc } from './helpers.js?v=20261024u';
+import { state } from './storage.js?v=20261024u';
+import { wachtrijStatus } from './supabase-client-v2.js?v=20261024u';
 
 const el = id => document.getElementById(id);
 const nl = iso => new Date(iso).toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' });
@@ -134,15 +134,16 @@ export async function vraagTerugzetten(id) {
   } catch { l.innerHTML = `<div class="pm-venster" style="max-width:560px"><div class="pm-inhoud" style="padding:20px"><p>Deze back-up kon niet worden opgehaald.</p><button class="btn" onclick="sluitTerugzetten()">Sluiten</button></div></div>`; return; }
   const nu = huidig(), a = b.aantallen || {};
   const rij = (naam, n, g) => `<tr><td>${naam}</td><td style="text-align:right">${n}</td><td style="text-align:right">${g ?? 0}</td></tr>`;
-  const open = wachtrijStatus().totaal;
+  const w = wachtrijStatus(), open = w.open;
   l.innerHTML = `<div class="pm-venster" style="max-width:560px" role="dialog" aria-label="Back-up terugzetten">
     <div class="pm-kop"><div><h3>Terugzetten naar ${esc(nl(b.gemaakt))}</h3><p class="pm-sub">${b.reden === 'nacht' ? 'Automatische' : 'Handmatige'} back-up</p></div><button class="pm-kruis" onclick="sluitTerugzetten()" aria-label="Sluiten">×</button></div>
     <div class="pm-inhoud" style="padding:16px 20px;font-size:13px">
       <table class="tbl-compact" style="width:100%;margin-bottom:12px"><thead><tr><th></th><th style="text-align:right">Nu</th><th style="text-align:right">Na terugzetten</th></tr></thead><tbody>
-        ${rij('Boekingen', nu.boekingen, a.boekingen)}${rij('HNVI-loten', nu.hnvi_loten, a.hnvi_loten)}${rij('Voorraadartikelen', nu.voorraadartikelen, a.voorraadartikelen)}${rij('Relaties', nu.relaties, a.relaties)}
-        <tr><td>Lijsten en instellingen</td><td style="text-align:right">—</td><td style="text-align:right">${a.app_data ?? 0}</td></tr></tbody></table>
+        ${rij('Boekingen', nu.boekingen, a.boekingen)}${rij('HNVI-loten', nu.hnvi_loten, a.hnvi_loten)}${rij('Relaties', nu.relaties, a.relaties)}
+        <tr><td>Lijsten en instellingen (o.a. voorraad, facturen)</td><td style="text-align:right">—</td><td style="text-align:right">${a.app_data ?? 0}</td></tr></tbody></table>
       <p>Alles wat je sinds ${esc(nl(b.gemaakt))} hebt toegevoegd of aangepast in boekingen, loten, voorraad, relaties, instellingen en facturen verdwijnt. Bonnetjes en bijlagen blijven staan.</p>
       <p>Eerst maakt de app een veiligheidskopie van de stand van nu (handmatige back-up), zodat je dit kunt terugdraaien. Gaat er iets mis, dan blijft alles zoals het was.</p>
+      ${w.vastgelopen ? `<p class="muted">Let op: ${w.vastgelopen} wijzigingen zijn eerder al niet gelukt op te slaan ("niet opgeslagen" bovenin). Die gaan bij het herladen verloren.</p>` : ''}
       ${open ? `<p style="color:var(--semantic-danger-bright)">Er zijn nog ${open} wijzigingen die niet zijn opgeslagen. Wacht tot alles is opgeslagen en probeer het opnieuw.</p>` : `
       <label style="display:block;margin-top:8px">Typ <b>TERUGZETTEN</b> om te bevestigen:
         <input type="text" id="terugzet-woord" autocomplete="off" style="display:block;margin-top:4px;width:200px" oninput="document.getElementById('terugzet-knop').disabled = this.value.trim().toUpperCase() !== 'TERUGZETTEN'"></label>`}
@@ -155,7 +156,7 @@ export async function vraagTerugzetten(id) {
 export async function voerTerugzettenUit(id) {
   const m = document.getElementById('terugzet-melding'), knop = document.getElementById('terugzet-knop');
   const zet = t => { if (m) m.textContent = t; };
-  if (wachtrijStatus().totaal) { zet('Er zijn nog niet-opgeslagen wijzigingen. Probeer het zo opnieuw.'); return; }
+  if (wachtrijStatus().open) { zet('Er zijn nog niet-opgeslagen wijzigingen. Probeer het zo opnieuw.'); return; }
   if (knop) knop.disabled = true;
   zet('Bezig met terugzetten…');
   try {

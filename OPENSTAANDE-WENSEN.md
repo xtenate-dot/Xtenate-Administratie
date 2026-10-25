@@ -110,3 +110,7 @@ Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
 - bonnetscan.js: knop "📷 Bonnetje scannen" op de Bank-pagina. Foto -> OCR in de browser (Tesseract.js via jsdelivr, nld+eng) -> bedragen/datum/winkelnaam -> voorstellen uit uitgaven zonder bijlage (bedrag gelijk, datum -1..+10 dagen, naam) -> koppelen via voegBonnetjeToe() in bonnetjes.js. Bedrag en datum zijn handmatig te corrigeren; pdf's: bedrag typen. Staat de bankregel nog in de bank-inbox, dan zegt het venster dat.
 - Parser getest op voorbeeldtekst; echte foto/camera nog niet getest. Later: automatisch ook inbox-regels koppelen, meerdere bonnen achter elkaar.
 - Weekoverzicht per e-mail: adres xtenate@gmail.com (opgegeven 25-10), dag en inhoud nog te bepalen; "later".
+
+## Cloud-back-up terugzetten (25-10) — gebouwd en getest (rollback-test)
+- SQL cloud_herstel.sql: functie herstel_cloud_backup(id): veiligheidskopie (handmatig), vervangt boekingen/loten/voorraadartikelen/relaties/app_data, controleert aantallen, alles-of-niets. Bonnetjes blijven staan. Knop "Terugzetten…" per back-up in Beheer, met typ-bevestiging en herladen.
+- Bevinding: 24 HNVI-wachtrij-items (van 22-10, ids als "299.6", "Prijs p/s", datum leeg) staan vast in de localStorage-wachtrij van de browser ("24 niet opgeslagen"); fout: invalid input syntax for type date "". Staan niet in state.HNVI_LOTS (28 loten = cloud). Waarschijnlijk rommelrijen uit een import; nog niet opgeruimd (wacht op akkoord gebruiker).

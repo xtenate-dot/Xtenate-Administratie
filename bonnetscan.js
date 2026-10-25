@@ -8,10 +8,10 @@
 //      passende naam, en tonen de beste voorstellen. Jij kiest er één: de foto wordt dan als bijlage bewaard.
 // Je kunt het bedrag en de datum altijd zelf corrigeren als de tekst niet goed is gelezen.
 
-import { state } from './storage.js?v=20261024t';
-import { esc, fmt, ddmm, isUitgave } from './helpers.js?v=20261024t';
-import { heeftBonnetje, voegBonnetjeToe, bonnetjesBeschikbaar } from './bonnetjes.js?v=20261024t';
-import { haalInboxOp } from './bankinbox.js?v=20261024t';
+import { state } from './storage.js?v=20261024u';
+import { esc, fmt, ddmm, isUitgave } from './helpers.js?v=20261024u';
+import { heeftBonnetje, voegBonnetjeToe, bonnetjesBeschikbaar } from './bonnetjes.js?v=20261024u';
+import { haalInboxOp } from './bankinbox.js?v=20261024u';
 
 const TESSERACT = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
 const MAANDEN = { jan: 1, feb: 2, mrt: 3, maa: 3, mar: 3, apr: 4, mei: 5, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, okt: 10, oct: 10, nov: 11, dec: 12 };
