@@ -1,7 +1,7 @@
 // theme.js — donkere modus, inklapbaar zijmenu, mobiel menu en sneltoetsen.
 
-import { destroyAll } from './charts.js?v=20261024n';
-import { hertekenHuidigePagina } from './ui.js?v=20261024n';
+import { destroyAll } from './charts.js?v=20261024o';
+import { hertekenHuidigePagina } from './ui.js?v=20261024o';
 
 const THEMA_KEY = 'xtenate_thema';
 const MENU_KEY = 'xtenate_menu_ingeklapt';

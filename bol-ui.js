@@ -2,13 +2,14 @@
 // verkocht per artikel, en een vergelijking met wat Bol op je bankrekening heeft gestort.
 // Alleen kijken: er wordt niets geboekt en de voorraad verandert niet.
 
-import { esc, fmt, ddmm } from './helpers.js?v=20261024n';
-import { lopendJaar } from './jaren.js?v=20261024n';
-import { leesBestellingen, haalBijBol, samenvatting, bolUitbetalingen, standaardPeriodes, leesBolAccounts } from './bol.js?v=20261024n';
+import { esc, fmt, ddmm } from './helpers.js?v=20261024o';
+import { lopendJaar } from './jaren.js?v=20261024o';
+import { leesBestellingen, leesRetouren, retourSamenvatting, haalBijBol, samenvatting, bolUitbetalingen, standaardPeriodes, leesBolAccounts } from './bol.js?v=20261024o';
 
 const el = id => document.getElementById(id);
 const MAAND = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
 let bestellingen = null;      // null = nog niet geladen
+let retouren = null;          // null = niet beschikbaar (tabel ontbreekt of nog niet geladen)
 let periode = 'maand';        // 'maand' (deze) | 'JJJJ-MM' | 'jaar:JJJJ' | 'alles'
 let ophaal = 'laatste31';
 let melding = '', bezig = false, laadFout = false;
@@ -39,7 +40,7 @@ export async function renderBol() {
   if (!doel) return;
   if (bestellingen === null && !laadFout) {
     doel.innerHTML = '<div class="card"><p class="muted">Laden…</p></div>';
-    try { bestellingen = await leesBestellingen(); }
+    try { bestellingen = await leesBestellingen(); retouren = await leesRetouren(); }
     catch { laadFout = true; }
     leesBolAccounts().then(a => { if (a && JSON.stringify(a) !== JSON.stringify(accounts)) { accounts = a; teken(); } });
   }
@@ -72,6 +73,10 @@ function teken() {
   const meer = accs.length > 1;
   const lijst = (bestellingen || []).filter(b => b.datum && b.datum >= van && b.datum <= tot && (accountFilter === 'alle' || String(b.account || '1') === accountFilter));
   const s = samenvatting(lijst);
+  // Retouren tellen mee op de datum waarop ze zijn aangemeld (dan gaat het geld terug naar de klant).
+  const retourLijst = (retouren || []).filter(r => r.datum && r.datum >= van && r.datum <= tot && (accountFilter === 'alle' || String(r.account || '1') === accountFilter));
+  const rs = retourSamenvatting(retourLijst, bestellingen);
+  const nettoNaRetour = r2(s.netto - rs.bedrag + rs.commissie);
   // Bol geeft maar ~3 maanden terug. Stortingen van vóór de eerste opgehaalde bestelling horen bij bestellingen
   // die we niet hebben; die tellen we dus niet mee in de vergelijking.
   const eersteBestelling = (bestellingen || []).reduce((m, b) => (b.datum && (!m || b.datum < m) ? b.datum : m), '');
@@ -111,15 +116,17 @@ function teken() {
     return;
   }
 
-  const verschil = r2(bank.totaal - s.netto);
+  const verschil = r2(bank.totaal - nettoNaRetour);
   const vergelijk = accountFilter !== 'alle' ? `<p class="muted" style="font-size:12px;margin-bottom:var(--spacing-4)">De vergelijking met de bank staat alleen bij "Alle accounts", omdat de stortingen op de bank niet per Bol-account te scheiden zijn.</p>` : `<div class="card" style="margin-bottom:var(--spacing-4)">
       <div class="section-titel" style="margin-bottom:6px">Vergelijking met je bank (${esc(label)})</div>
       ${bankBeperkt ? `<p class="muted" style="font-size:12px;margin:0 0 6px">Bol geeft bestellingen maar ongeveer 3 maanden terug. Daarom tellen alleen de stortingen vanaf ${esc(ddmm ? ddmm(bankVan) : bankVan)} mee; eerdere stortingen horen bij bestellingen die hier niet in staan.</p>` : ''}
       <table class="tbl-compact" style="max-width:520px"><tbody>
         <tr><td>Verkocht volgens Bol (netto na commissie)</td><td style="text-align:right">${fmt(s.netto)}</td></tr>
+        ${retouren ? `<tr><td>Retouren (${rs.stuks} ${rs.stuks === 1 ? 'stuk' : 'stuks'} terugbetaald, min teruggekregen commissie)</td><td style="text-align:right">${fmt(-(rs.bedrag - rs.commissie))}</td></tr>
+        <tr><td>Netto na retouren</td><td style="text-align:right">${fmt(nettoNaRetour)}</td></tr>` : ''}
         <tr><td>Door Bol gestort op de bank (${bank.aantal} ${bank.aantal === 1 ? 'storting' : 'stortingen'})</td><td style="text-align:right">${fmt(bank.totaal)}</td></tr>
         <tr><td><b>Verschil</b></td><td style="text-align:right"><b>${fmt(verschil)}</b></td></tr></tbody></table>
-      <p class="muted" style="font-size:12px;margin-top:6px">Een verschil is normaal: Bol betaalt uit na de levering, trekt ook verzendkosten en retouren af, en een storting kan in een andere maand vallen dan de verkoop. De eerste weken na het begin van de gegevens liggen de stortingen hoger, omdat ze nog bij oudere bestellingen horen. Over een langere periode horen de twee dicht bij elkaar te liggen.</p></div>`;
+      <p class="muted" style="font-size:12px;margin-top:6px">Een verschil is normaal: Bol betaalt uit na de levering, trekt ook verzendkosten af, en een storting kan in een andere maand vallen dan de verkoop. De eerste weken na het begin van de gegevens liggen de stortingen hoger, omdat ze nog bij oudere bestellingen horen. Over een langere periode horen de twee dicht bij elkaar te liggen.</p></div>`;
 
   const orders = lijst.map(b => {
     const regels = (b.items || []).filter(i => (i.aantal - (i.geannuleerd || 0)) > 0 || i.geannuleerd);
@@ -140,12 +147,20 @@ function teken() {
       <div class="kpi kpi--secondary"><div class="kpi-lbl">Stuks verkocht</div><div class="kpi-val">${s.stuks}</div></div>
       <div class="kpi kpi--secondary"><div class="kpi-lbl">Omzet (klantprijs)</div><div class="kpi-val">${fmt(s.omzet)}</div></div>
       <div class="kpi kpi--secondary"><div class="kpi-lbl">Commissie van Bol</div><div class="kpi-val">${fmt(s.commissie)}</div><div class="kpi-sub">netto ${fmt(s.netto)}</div></div>
+      ${retouren ? `<div class="kpi kpi--secondary"><div class="kpi-lbl">Retouren</div><div class="kpi-val">${rs.stuks}</div><div class="kpi-sub">${fmt(rs.bedrag)} terugbetaald${rs.inBehandeling ? ` · ${rs.inBehandeling} nog in behandeling` : ''}</div></div>` : ''}
     </div>
+    ${retouren === null ? `<p class="muted" style="font-size:12px;margin-bottom:var(--spacing-4)">Retouren staan hier nog niet in: de tabel <code>bol_retouren</code> bestaat nog niet in Supabase.</p>` : ''}
     ${vergelijk}
     <div class="section-head"><div class="section-titel">Verkocht per artikel</div></div>
     <div class="card card-flush" style="margin-bottom:var(--spacing-4)"><div class="table-wrap"><table class="tbl-compact">
       <thead><tr><th>Artikel</th><th style="text-align:right">Stuks</th><th style="text-align:right">Omzet</th><th style="text-align:right">Commissie</th></tr></thead>
       <tbody>${artikelen || '<tr><td colspan="4" class="muted">Geen verkopen in deze periode.</td></tr>'}</tbody></table></div></div>
+    ${retouren && retourLijst.length ? `<div class="section-head"><div class="section-titel">Retouren (${retourLijst.length})</div></div>
+    <div class="card card-flush" style="margin-bottom:var(--spacing-4)"><div class="table-wrap"><table class="tbl-compact">
+      <thead><tr><th>Datum</th><th>Bestelnr</th><th>Artikel</th><th style="text-align:right">Stuks</th><th>Uitkomst</th><th style="text-align:right">Terugbetaald</th></tr></thead>
+      <tbody>${rs.rijen.map(r => `<tr><td>${esc(ddmm(r.datum))}</td><td>${esc(r.order_id)}${meer ? `<div class="muted" style="font-size:11px">${esc(accountNaam(r.account || '1'))}</div>` : ''}</td>
+        <td>${esc(r.titel || r.ean)}${r.reden ? `<div class="muted" style="font-size:11px">${esc(r.reden)}</div>` : ''}</td><td style="text-align:right">${r.aantal}</td>
+        <td>${r.afgehandeld ? (r.geaccepteerd ? 'Geaccepteerd' : r.afgewezen ? 'Afgewezen' : 'Afgehandeld') : 'In behandeling'}</td><td style="text-align:right">${fmt(r.terug)}</td></tr>`).join('')}</tbody></table></div></div>` : ''}
     <div class="section-head"><div class="section-titel">Bestellingen (${lijst.length})</div></div>
     <div class="card card-flush"><div class="table-wrap"><table class="tbl-compact">
       <thead><tr><th>Datum</th><th>Bestelnr</th><th>Artikelen</th><th style="text-align:right">Bedrag</th><th style="text-align:right">Commissie</th></tr></thead>
@@ -167,6 +182,7 @@ export async function haalBolBestellingenOp() {
     const [van, tot] = standaardPeriodes()[ophaal];
     const uit = await haalBijBol(van, tot, t => { melding = t; teken(); }, ophaalAccount);
     bestellingen = await leesBestellingen();
+    retouren = await leesRetouren();
     leesBolAccounts().then(a => { if (a) { accounts = a; teken(); } });
     melding = `✅ Klaar: ${uit.opgeslagen} bestellingen bijgewerkt (${van} t/m ${tot}).` + (uit.onvolledig ? '\nNiet alles paste in één keer; klik nog eens op Ophalen om de rest binnen te halen.' : '');
   } catch (e) {

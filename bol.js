@@ -2,9 +2,9 @@
 // tabel bol_bestellingen en uitrekenen (stuks, omzet, commissie). Alleen lezen en tonen:
 // dit raakt je boekingen en je voorraad niet.
 
-import { getClient } from './supabase.js?v=20261024n';
-import { state } from './storage.js?v=20261024n';
-import { vandaagIso } from './jaren.js?v=20261024n';
+import { getClient } from './supabase.js?v=20261024o';
+import { state } from './storage.js?v=20261024o';
+import { vandaagIso } from './jaren.js?v=20261024o';
 
 const dag = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
 const r2 = n => Math.round(n * 100) / 100;
@@ -21,6 +21,47 @@ export async function leesBestellingen() {
     if (!data || data.length < 1000) break;
   }
   return alle;
+}
+
+/** Alle opgeslagen retouren. Geeft null als de tabel nog niet bestaat (dan werkt de pagina gewoon zonder retouren). */
+export async function leesRetouren() {
+  try {
+    const sb = await getClient();
+    const alle = [];
+    for (let van = 0; van < 20000; van += 1000) {
+      const { data, error } = await sb.from('bol_retouren')
+        .select('account, rma_id, order_id, ean, aantal, geaccepteerd, afgewezen, datum, reden, afgehandeld, resultaten')
+        .order('datum', { ascending: false }).range(van, van + 999);
+      if (error) return null;
+      alle.push(...(data || []));
+      if (!data || data.length < 1000) break;
+    }
+    return alle;
+  } catch { return null; }
+}
+
+/**
+ * Rekent retouren door met de prijs en commissie van de bijbehorende bestelling (alle bestellingen, ook buiten de gekozen periode).
+ * Terugbetaald = geaccepteerde stuks × verkoopprijs. Commissie die Bol terugboekt: naar verhouding (aanname, controleer met je afrekening).
+ * Retouren van een bestelling die niet in de opgeslagen bestellingen staat, tellen mee in het aantal maar niet in het bedrag.
+ */
+export function retourSamenvatting(retouren, alleBestellingen) {
+  const regel = new Map();
+  for (const b of alleBestellingen || []) for (const i of b.items || []) regel.set(`${b.account || '1'}|${b.order_id}|${i.ean}`, i);
+  let stuks = 0, bedrag = 0, commissie = 0, inBehandeling = 0, afgewezen = 0, onbekend = 0;
+  const rijen = [];
+  for (const r of retouren || []) {
+    const i = regel.get(`${r.account || '1'}|${r.order_id}|${r.ean}`);
+    const n = Number(r.geaccepteerd) || 0;
+    const per = i ? (Number(i.prijs) || 0) : 0;
+    const cper = i ? (Number(i.commissie) || 0) / Math.max(1, Number(i.aantal) || 1) : 0;
+    stuks += n; bedrag += n * per; commissie += n * cper;
+    if (n && !i) onbekend += n;
+    if (!r.afgehandeld) inBehandeling += Number(r.aantal) || 0;
+    afgewezen += Number(r.afgewezen) || 0;
+    rijen.push({ ...r, titel: i?.titel || '', terug: r2(n * per) });
+  }
+  return { aantal: (retouren || []).length, stuks, bedrag: r2(bedrag), commissie: r2(commissie), inBehandeling, afgewezen, onbekend, rijen };
 }
 
 /**

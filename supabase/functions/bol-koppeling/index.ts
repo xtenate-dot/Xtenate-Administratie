@@ -123,13 +123,48 @@ async function afhandelenRetourProbe(acc: ReturnType<typeof accounts>[number]): 
   return Response.json({ ok: true, ...uit }, { status: 200 });
 }
 
+/** Alle retouren van een account (afgehandeld en nog niet afgehandeld), één rij per retourregel (rma). */
+async function haalRetouren(tok: string): Promise<{ rijen: any[]; fout: string }> {
+  const rijen: any[] = [];
+  for (const handled of ["true", "false"]) {
+    for (let pagina = 1; pagina <= 10; pagina++) {
+      const r = await haal(`https://api.bol.com/retailer/returns?handled=${handled}&page=${pagina}`, tok);
+      if (!r.data) { if (r.status === 404) break; return { rijen, fout: `status ${r.status}` }; }
+      const lijst = r.data.returns || [];
+      for (const ret of lijst) {
+        for (const it of ret.returnItems || []) {
+          const res = (it.processingResults || []) as any[];
+          const som = (f: (x: any) => boolean) => res.filter(f).reduce((n, x) => n + getal(x.quantity), 0);
+          rijen.push({
+            rma_id: String(it.rmaId ?? ""),
+            return_id: String(ret.returnId ?? ""),
+            order_id: String(it.orderId ?? ""),
+            ean: String(it.ean ?? ""),
+            aantal: getal(it.expectedQuantity),
+            geaccepteerd: som((x) => x.processingResult === "ACCEPTED"),
+            afgewezen: som((x) => x.processingResult === "REJECTED"),
+            geregistreerd: ret.registrationDateTime ? String(ret.registrationDateTime) : null,
+            datum: ret.registrationDateTime ? String(ret.registrationDateTime).slice(0, 10) : null,
+            reden: String(it.returnReason?.mainReason ?? "").slice(0, 120),
+            afgehandeld: !!it.handled,
+            resultaten: res.map((x) => ({ aantal: getal(x.quantity), uitkomst: String(x.processingResult ?? ""), afhandeling: String(x.handlingResult ?? "") })),
+            methode: String(ret.fulfilmentMethod ?? ""),
+          });
+        }
+      }
+      if (!lijst.length) break;
+    }
+  }
+  return { rijen, fout: "" };
+}
+
 type Db = ReturnType<typeof createClient>;
 /** Haalt de bestellingen van de gekozen accounts op en bewaart ze voor één gebruiker. */
 async function verwerk(gekozen: ReturnType<typeof accounts>, van: string, tot: string, supabase: Db, userId: string): Promise<Response> {
   const lijstDagen = dagen(van, tot);
   const start = Date.now();
   let gevonden = 0, opgeslagen = 0, onvolledig = false;
-  const perAccount: { nummer: string; naam: string; gevonden: number; opgeslagen: number }[] = [];
+  const perAccount: { nummer: string; naam: string; gevonden: number; opgeslagen: number; retouren: number; retourFout: string }[] = [];
   for (const acc of gekozen) {
     const tok = await token(acc.id, acc.geheim);
     if (!tok) return Response.json({ ok: false, fout: `Inloggen bij Bol is mislukt voor "${acc.naam}". Controleer de sleutels in Supabase. ${laatsteTokenFout}` }, { status: 502 });
@@ -179,7 +214,19 @@ async function verwerk(gekozen: ReturnType<typeof accounts>, van: string, tot: s
       if (error) return Response.json({ ok: false, fout: "Opslaan van de bestellingen is mislukt." }, { status: 500 });
     }
     gevonden += ids.length; opgeslagen += rijen.length;
-    perAccount.push({ nummer: acc.nummer, naam: acc.naam, gevonden: ids.length, opgeslagen: rijen.length });
+    // 4. Retouren (een fout hier mag het ophalen van bestellingen niet breken, bijvoorbeeld als de tabel nog ontbreekt).
+    let retouren = 0, retourFout = "";
+    if (Date.now() - start < TIJDBUDGET_MS + 60_000) {
+      const ret = await haalRetouren(tok);
+      retourFout = ret.fout;
+      const rr = ret.rijen.filter((x) => x.rma_id).map((x) => ({ user_id: userId, account: acc.nummer, ...x, opgehaald_op: new Date().toISOString() }));
+      for (let i = 0; i < rr.length; i += 100) {
+        const { error } = await supabase.from("bol_retouren").upsert(rr.slice(i, i + 100), { onConflict: "user_id,account,rma_id" });
+        if (error) { retourFout = "opslaan"; break; }
+      }
+      if (!retourFout) retouren = rr.length;
+    }
+    perAccount.push({ nummer: acc.nummer, naam: acc.naam, gevonden: ids.length, opgeslagen: rijen.length, retouren, retourFout });
   }
   return Response.json({ ok: true, van, tot, gevonden, opgeslagen, onvolledig, perAccount }, { status: 200 });
 }
