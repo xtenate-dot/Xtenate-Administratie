@@ -11,15 +11,15 @@
 //    op display:none en gaan alleen open via .open. Een eigen regel voor
 //    .modal-overlay zou dat overschrijven en elk venster tegelijk tonen.
 
-import { state, saveTxData, saveHistTxData } from './storage.js?v=20261024w';
-import { fmt } from './helpers.js?v=20261024w';
+import { state, saveTxData, saveHistTxData } from './storage.js?v=20261024x';
+import { fmt } from './helpers.js?v=20261024x';
 import {
   saveToSupabase,
   deleteFromSupabase,
   addToPendingQueue
-} from './supabase-client-v2.js?v=20261024w';
-import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking } from './facturen.js?v=20261024w';
-import { txVanJaar, lopendJaar } from './jaren.js?v=20261024w';
+} from './supabase-client-v2.js?v=20261024x';
+import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking } from './facturen.js?v=20261024x';
+import { txVanJaar, lopendJaar } from './jaren.js?v=20261024x';
 
 export const veilig = s => String(s ?? '').replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

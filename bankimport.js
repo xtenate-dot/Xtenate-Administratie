@@ -5,12 +5,14 @@
 // niet nog eens voorgesteld. Grootboek en soort worden afgeleid uit eerdere
 // boekingen met dezelfde naam; wat onbekend is kies je zelf.
 
-import { state, saveTxData, jaarIsVergrendeld } from './storage.js?v=20261024w';
-import { isTxJaar, jaarVan, EERSTE_TX_JAAR, vandaagIso } from './jaren.js?v=20261024w';
-import { esc, fmt } from './helpers.js?v=20261024w';
-import { addToPendingQueue } from './supabase-client-v2.js?v=20261024w';
-import { maakHerstelpunt } from './herstelpunt.js?v=20261024w';
-import { telInbox, haalInboxOp, zetInboxStatus } from './bankinbox.js?v=20261024w';
+import { state, saveTxData, jaarIsVergrendeld } from './storage.js?v=20261024x';
+import { isTxJaar, jaarVan, EERSTE_TX_JAAR, vandaagIso } from './jaren.js?v=20261024x';
+import { esc, fmt } from './helpers.js?v=20261024x';
+import { addToPendingQueue } from './supabase-client-v2.js?v=20261024x';
+import { maakHerstelpunt } from './herstelpunt.js?v=20261024x';
+import { facturenVan, isOpenstaand, koppelBetaling, vindFactuur } from './facturen.js?v=20261024x';
+import { vindRelatie, relatieNummer } from './relaties.js?v=20261024x';
+import { telInbox, haalInboxOp, zetInboxStatus } from './bankinbox.js?v=20261024x';
 
 const REK = '1010';          // zo staat Revolut nu in je administratie
 const el = id => document.getElementById(id);
@@ -275,6 +277,65 @@ export async function leesRevolutBestand(event) {
   renderBankimport();
 }
 
+
+// ------------------------------------------------- facturen koppelen aan bankregels
+
+/** Welke soort factuur hoort bij deze regel? Ontvangst → verkoopfactuur, betaling → inkoopfactuur. */
+const factuurSoortVan = r => r.type === 'inkomst' ? 'debiteur' : r.type === 'uitgave' ? 'crediteur' : null;
+
+const woordenVan = t => new Set(String(t || '').toLowerCase().split(/[^a-z0-9à-ÿ]+/).filter(w => w.length >= 3));
+
+/** Open facturen die bij deze regel passen, met een score: bedrag gelijk, factuurnummer of naam in de omschrijving. */
+function factuurKandidaten(r) {
+  const soort = factuurSoortVan(r);
+  if (!soort) return [];
+  const bron = woordenVan(r.naam + ' ' + r.omschr);
+  const tekst = (r.naam + ' ' + r.omschr).toLowerCase();
+  return facturenVan(soort).filter(f => isOpenstaand(f)).map(f => {
+    let score = 0;
+    const bedragGelijk = Math.abs((Number(f.bedrag) || 0) - r.bedrag) < 0.005;
+    if (bedragGelijk) score += 3;
+    if (f.factuurnummer && tekst.includes(f.factuurnummer.toLowerCase())) score += 4;
+    const naamWoorden = woordenVan(f.relatie);
+    if ([...naamWoorden].some(w => bron.has(w))) score += 2;
+    return { f, score, bedragGelijk };
+  }).sort((a, b) => b.score - a.score || (a.f.vervaldatum || '').localeCompare(b.f.vervaldatum || ''));
+}
+
+/** Zet een voorstel voor elke regel zonder keuze: alleen als precies één factuur duidelijk past (bedrag + naam of nummer). */
+function stelFacturenVoor() {
+  if (!voorstel) return;
+  const gebruikt = new Set(voorstel.rijen.filter(r => r.factuurId).map(r => r.factuurId));
+  for (const r of voorstel.rijen) {
+    if (r.staatAl || r.factuurId !== undefined) continue;
+    r.factuurId = '';
+    const k = factuurKandidaten(r).filter(x => !gebruikt.has(x.f.id));
+    const sterk = k.filter(x => x.score >= 5 || (x.bedragGelijk && x.score >= 3 && k.filter(y => y.bedragGelijk).length === 1));
+    if (sterk.length === 1 || (sterk.length > 1 && sterk[0].score > sterk[1].score)) {
+      r.factuurId = sterk[0].f.id; r.factuurVoorstel = true; gebruikt.add(sterk[0].f.id);
+      if (!r.gb && sterk[0].f.gb) r.gb = sterk[0].f.gb;
+    }
+  }
+}
+
+const factuurLabel = f => {
+  const rel = f.relatieId ? vindRelatie(f.relatieId) : null;
+  const nr = rel ? relatieNummer(rel, f.soort) : null;
+  return `${nr ? nr + ' · ' : ''}${f.relatie || '(geen relatie)'}${f.factuurnummer ? ' · ' + f.factuurnummer : ''} · ${fmt(f.bedrag)}`;
+};
+
+/** Keuzelijst met open facturen voor één regel; het voorstel staat bovenaan. */
+function factuurKeuze(r, i) {
+  const soort = factuurSoortVan(r);
+  if (!soort) return '<span class="muted">—</span>';
+  const k = factuurKandidaten(r);
+  if (!k.length && !r.factuurId) return '<span class="muted" style="font-size:12px">geen open facturen</span>';
+  return `<select onchange="zetBankimportKeuze(${i},'factuur',this.value)" style="font-size:12px;max-width:230px">
+      <option value="">— geen factuur —</option>
+      ${k.map(x => `<option value="${esc(x.f.id)}"${x.f.id === r.factuurId ? ' selected' : ''}>${x.bedragGelijk ? '✓ ' : ''}${esc(factuurLabel(x.f))}</option>`).join('')}
+    </select>${r.factuurVoorstel && r.factuurId ? '<div class="muted" style="font-size:11px">voorstel op bedrag en naam</div>' : ''}`;
+}
+
 export function zetBankimportKeuze(i, veld, waarde) {
   const r = voorstel && voorstel.rijen[i];
   if (!r) return;
@@ -285,7 +346,12 @@ export function zetBankimportKeuze(i, veld, waarde) {
     else if (waarde === '601') r.type = 'prive_opname';
     else if (r.type === 'prive_storting' || r.type === 'prive_opname') r.type = r.type === 'prive_storting' ? 'inkomst' : 'uitgave';
   }
-  if (veld === 'type') r.type = waarde;
+  if (veld === 'type') { r.type = waarde; r.factuurId = undefined; r.factuurVoorstel = false; }
+  if (veld === 'factuur') {
+    r.factuurId = waarde; r.factuurVoorstel = false;
+    const f = waarde && vindFactuur(waarde);
+    if (f && !r.gb && f.gb) r.gb = f.gb;
+  }
   renderBankimport();
 }
 
@@ -317,17 +383,21 @@ export function importeerRevolut() {
   if (!window.confirm(`${teDoen.length} boekingen toevoegen aan ${jarenTekst}?`)) return;
 
   maakHerstelpunt('vóór Revolut-import');
+  let gekoppeld = 0;
   for (const r of teDoen) {
     const tx = { id: state.nxtTx++, datum: r.datum, bedrag: r.bedrag, naam: r.naam, omschr: r.omschr, type: r.type, rek: r.rek, gb: r.gb, bron: 'handmatig' };
+    const fac = r.factuurId ? vindFactuur(r.factuurId) : null;
+    if (fac && fac.relatieId) tx.relatieId = fac.relatieId;
     state.TX.push(tx);
     addToPendingQueue(tx, 'create', false);
+    if (fac && koppelBetaling(fac.id, tx.id).ok) gekoppeld++;
   }
   saveTxData();
   // Regels uit de inbox die nu geboekt zijn (of er al stonden) tellen niet meer mee.
   const klaar = voorstel.rijen.filter(r => inboxKaart.has(r.sleutel) && (r.staatAl || r.kies)).map(r => inboxKaart.get(r.sleutel));
   if (klaar.length) zetInboxStatus(klaar, 'omgezet').then(() => { inboxAantal = null; inboxGelezen = 0; ververseInbox(true); });
   inboxKaart = new Map();
-  melding = `✅ ${teDoen.length} boekingen toegevoegd.`;
+  melding = `✅ ${teDoen.length} boekingen toegevoegd.` + (gekoppeld ? ` ${gekoppeld} factu${gekoppeld === 1 ? 'ur' : 'ren'} als betaald gekoppeld.` : '');
   voorstel = null;
   renderBankimport();
   window.hertekenHuidigePagina?.();
@@ -353,6 +423,7 @@ export function renderBankimport() {
       Boekingen die er al staan worden herkend en overgeslagen.</p></div>`;
     return;
   }
+  stelFacturenVoor();
   const gb = state.GROOTBOEK || [];
   const optGb = sel => `<option value="">— kies —</option>` + gb.map(g => `<option value="${esc(g.nummer)}"${String(g.nummer) === String(sel) ? ' selected' : ''}>${esc(g.nummer)} ${esc(g.naam)}</option>`).join('');
   const optType = sel => SOORTEN.map(([w, l]) => `<option value="${w}"${w === sel ? ' selected' : ''}>${l}</option>`).join('');
@@ -361,13 +432,14 @@ export function renderBankimport() {
   const kies = nieuw.filter(r => r.kies);
   const rijen = voorstel.rijen.map((r, i) => r.staatAl
     ? `<tr style="opacity:.55"><td></td><td>${esc(r.datum.slice(8, 10) + '-' + r.datum.slice(5, 7))}</td><td>${esc(r.naam)}</td>
-        <td style="text-align:right">${fmt(r.bedrag)}</td><td colspan="2" class="muted">staat al in de administratie</td><td></td></tr>`
+        <td style="text-align:right">${fmt(r.bedrag)}</td><td colspan="3" class="muted">staat al in de administratie</td><td></td></tr>`
     : `<tr><td><input type="checkbox" ${r.kies ? 'checked' : ''} onchange="zetBankimportKeuze(${i},'kies',this.checked)"></td>
         <td>${esc(r.datum.slice(8, 10) + '-' + r.datum.slice(5, 7))}</td>
         <td>${esc(r.naam)}<div class="muted" style="font-size:11px">${esc(r.herkomst)}</div></td>
         <td style="text-align:right">${fmt(r.bedrag)}</td>
         <td><select onchange="zetBankimportKeuze(${i},'gb',this.value)" style="font-size:12px;max-width:190px"${!r.gb ? ' class="input-fout"' : ''}>${optGb(r.gb)}</select></td>
         <td><select onchange="zetBankimportKeuze(${i},'type',this.value)" style="font-size:12px">${optType(r.type)}</select></td>
+        <td>${factuurKeuze(r, i)}</td>
         <td><button class="btn btn-sm btn-ghost" title="Deze regel uit het voorstel halen" onclick="verwijderBankimportRegel(${i})">Verwijder</button></td></tr>`).join('');
 
   const wacht = inBehandeling.length
@@ -394,7 +466,7 @@ export function renderBankimport() {
       <div class="kpi kpi--secondary"><div class="kpi-lbl">Nog zonder rekening</div><div class="kpi-val">${kies.filter(r => !r.gb).length}</div></div>
     </div>
     <div class="card card-flush"><div class="table-wrap"><table class="tbl-compact">
-      <thead><tr><th></th><th>Datum</th><th>Naam</th><th style="text-align:right">Bedrag</th><th>Grootboek</th><th>Soort</th><th></th></tr></thead>
+      <thead><tr><th></th><th>Datum</th><th>Naam</th><th style="text-align:right">Bedrag</th><th>Grootboek</th><th>Soort</th><th>Factuur</th><th></th></tr></thead>
       <tbody>${rijen}</tbody></table></div></div>
     <div style="margin:var(--spacing-4) 0"><button class="btn btn-primary" onclick="importeerRevolut()">Importeer ${kies.length} geselecteerde boekingen</button></div>
     ${overg}${ontbreekt}`;

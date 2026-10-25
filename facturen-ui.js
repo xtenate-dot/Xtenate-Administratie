@@ -14,13 +14,13 @@ import {
   facturenVan, openstaandSaldo, factuurnummerInGebruik,
   vindBoeking, koppelBetaling, ontkoppelBetaling,
   ouderdomsanalyse, OUDERDOM_VOLGORDE
-} from './facturen.js?v=20261024w';
-import { esc, fmt, ddmm, bedragUit, leegVlak, isInkomst, isUitgave, weergaveNaam } from './helpers.js?v=20261024w';
-import { downloadModelPdf } from './pdf.js?v=20261024w';
-import { state, grootboekNamen, grootboekOptgroepen, BEDRIJFSGEGEVENS } from './storage.js?v=20261024w';
-import { zoekBoekingen } from './search.js?v=20261024w';
-import { vindRelatie, zoekRelaties, maakRelatie, hernoemRelatie, voegRelatiesSamen, herlaadRelaties, bewaarRelatieAdres, relatieNummer, zorgRelatienummer } from './relaties.js?v=20261024w';
-import { bijlagenVan, voegBonnetjeToe, bonnetjesBeschikbaar } from './bonnetjes.js?v=20261024w';
+} from './facturen.js?v=20261024x';
+import { esc, fmt, ddmm, bedragUit, leegVlak, isInkomst, isUitgave, weergaveNaam } from './helpers.js?v=20261024x';
+import { downloadModelPdf } from './pdf.js?v=20261024x';
+import { state, grootboekNamen, grootboekOptgroepen, BEDRIJFSGEGEVENS } from './storage.js?v=20261024x';
+import { zoekBoekingen } from './search.js?v=20261024x';
+import { vindRelatie, zoekRelaties, maakRelatie, hernoemRelatie, voegRelatiesSamen, herlaadRelaties, bewaarRelatieAdres, relatieNummer, zorgRelatienummer } from './relaties.js?v=20261024x';
+import { bijlagenVan, voegBonnetjeToe, bonnetjesBeschikbaar } from './bonnetjes.js?v=20261024x';
 
 const el = id => document.getElementById(id);
 
