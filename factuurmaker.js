@@ -6,10 +6,10 @@
 // (zie facturen.js). De voorraad en de boekingen worden NIET aangepast: de
 // verkoop komt via de bank binnen, zoals altijd.
 
-import { state, BEDRIJFSGEGEVENS, bewaarFactuurmakerInstellingen } from './storage.js?v=20261025d';
-import { esc, fmt } from './helpers.js?v=20261025d';
-import { modelNaarPdf } from './pdf.js?v=20261025d';
-import { voegFactuurToe, werkFactuurBij, vindFactuur, plusDagen, vandaagISO, standaardTermijn, factuurnummerInGebruik } from './facturen.js?v=20261025d';
+import { state, BEDRIJFSGEGEVENS, bewaarFactuurmakerInstellingen } from './storage.js?v=20261025e';
+import { esc, fmt } from './helpers.js?v=20261025e';
+import { modelNaarPdf } from './pdf.js?v=20261025e';
+import { voegFactuurToe, werkFactuurBij, vindFactuur, plusDagen, vandaagISO, standaardTermijn, factuurnummerInGebruik } from './facturen.js?v=20261025e';
 
 const KEY = 'xtenate_factuurmaker';
 const el = id => document.getElementById(id);

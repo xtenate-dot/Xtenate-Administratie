@@ -4,7 +4,7 @@
 // De knop "Uitvoeren" verschijnt pas nadat de reservekopie is gedownload én het
 // vinkje is gezet. Het slot zit ook in uitvoeren.js zelf, niet alleen hier.
 
-import { stapBackup, stapPreview, stapUitvoeren, stapControle } from './uitvoeren.js?v=20261025d';
+import { stapBackup, stapPreview, stapUitvoeren, stapControle } from './uitvoeren.js?v=20261025e';
 
 const el = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>

@@ -2,9 +2,10 @@
 // verkocht per artikel, en een vergelijking met wat Bol op je bankrekening heeft gestort.
 // Alleen kijken: er wordt niets geboekt en de voorraad verandert niet.
 
-import { esc, fmt, ddmm } from './helpers.js?v=20261025d';
-import { lopendJaar } from './jaren.js?v=20261025d';
-import { leesBestellingen, leesRetouren, retourSamenvatting, haalBijBol, samenvatting, bolUitbetalingen, standaardPeriodes, leesBolAccounts } from './bol.js?v=20261025d';
+import { esc, fmt, ddmm } from './helpers.js?v=20261025e';
+import { bolArtikelenHtml } from './bolartikelen.js?v=20261025e';
+import { lopendJaar } from './jaren.js?v=20261025e';
+import { leesBestellingen, leesRetouren, retourSamenvatting, haalBijBol, samenvatting, bolUitbetalingen, standaardPeriodes, leesBolAccounts } from './bol.js?v=20261025e';
 
 const el = id => document.getElementById(id);
 const MAAND = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
@@ -157,6 +158,7 @@ function teken() {
     <div class="card card-flush" style="margin-bottom:var(--spacing-4)"><div class="table-wrap"><table class="tbl-compact">
       <thead><tr><th>Artikel</th><th style="text-align:right">Stuks</th><th style="text-align:right">Omzet</th><th style="text-align:right">Commissie</th></tr></thead>
       <tbody>${artikelen || '<tr><td colspan="4" class="muted">Geen verkopen in deze periode.</td></tr>'}</tbody></table></div></div>
+    ${bolArtikelenHtml(bestellingen)}
     ${retouren && retourLijst.length ? `<div class="section-head"><div class="section-titel">Retouren (${retourLijst.length})</div></div>
     <div class="card card-flush" style="margin-bottom:var(--spacing-4)"><div class="table-wrap"><table class="tbl-compact">
       <thead><tr><th>Datum</th><th>Bestelnr</th><th>Artikel</th><th style="text-align:right">Stuks</th><th>Uitkomst</th><th style="text-align:right">Terugbetaald</th></tr></thead>
