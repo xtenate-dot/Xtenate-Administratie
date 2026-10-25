@@ -2,9 +2,9 @@
 // verkocht per artikel, en een vergelijking met wat Bol op je bankrekening heeft gestort.
 // Alleen kijken: er wordt niets geboekt en de voorraad verandert niet.
 
-import { esc, fmt, ddmm } from './helpers.js?v=20261024p';
-import { lopendJaar } from './jaren.js?v=20261024p';
-import { leesBestellingen, leesRetouren, retourSamenvatting, haalBijBol, samenvatting, bolUitbetalingen, standaardPeriodes, leesBolAccounts } from './bol.js?v=20261024p';
+import { esc, fmt, ddmm } from './helpers.js?v=20261024q';
+import { lopendJaar } from './jaren.js?v=20261024q';
+import { leesBestellingen, leesRetouren, retourSamenvatting, haalBijBol, samenvatting, bolUitbetalingen, standaardPeriodes, leesBolAccounts } from './bol.js?v=20261024q';
 
 const el = id => document.getElementById(id);
 const MAAND = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
@@ -76,13 +76,15 @@ function teken() {
   // Retouren tellen mee op de datum waarop ze zijn aangemeld (dan gaat het geld terug naar de klant).
   const retourLijst = (retouren || []).filter(r => r.datum && r.datum >= van && r.datum <= tot && (accountFilter === 'alle' || String(r.account || '1') === accountFilter));
   const rs = retourSamenvatting(retourLijst, bestellingen);
-  const nettoNaRetour = r2(s.netto - rs.bedrag + rs.commissie);
   // Bol geeft maar ~3 maanden terug. Stortingen van vóór de eerste opgehaalde bestelling horen bij bestellingen
   // die we niet hebben; die tellen we dus niet mee in de vergelijking.
   const eersteBestelling = (bestellingen || []).reduce((m, b) => (b.datum && (!m || b.datum < m) ? b.datum : m), '');
   const bankVan = eersteBestelling && eersteBestelling > van ? eersteBestelling : van;
   const bankBeperkt = bankVan > van;
   const bank = bolUitbetalingen(bankVan, tot);
+  // Voor de vergelijking tellen alleen retouren vanaf dezelfde startdatum (eerdere horen bij bestellingen die we niet hebben).
+  const rsV = retourSamenvatting(retourLijst.filter(r => r.datum >= bankVan), bestellingen);
+  const nettoNaRetour = r2(s.netto - rsV.bedrag + rsV.commissie);
   const maanden = maandenInData();
   const jaren = [...new Set(maanden.map(m => m.slice(0, 4)))];
   const kwartalen = [...new Set(maanden.map(m => `kw:${m.slice(0, 4)}-${Math.ceil(Number(m.slice(5)) / 3)}`))];
@@ -122,7 +124,7 @@ function teken() {
       ${bankBeperkt ? `<p class="muted" style="font-size:12px;margin:0 0 6px">Bol geeft bestellingen maar ongeveer 3 maanden terug. Daarom tellen alleen de stortingen vanaf ${esc(ddmm ? ddmm(bankVan) : bankVan)} mee; eerdere stortingen horen bij bestellingen die hier niet in staan.</p>` : ''}
       <table class="tbl-compact" style="max-width:520px"><tbody>
         <tr><td>Verkocht volgens Bol (netto na commissie)</td><td style="text-align:right">${fmt(s.netto)}</td></tr>
-        ${retouren ? `<tr><td>Retouren (${rs.stuks} ${rs.stuks === 1 ? 'stuk' : 'stuks'} terugbetaald, min teruggekregen commissie)</td><td style="text-align:right">${fmt(-(rs.bedrag - rs.commissie))}</td></tr>
+        ${retouren ? `<tr><td>Retouren (${rsV.stuks} ${rsV.stuks === 1 ? 'stuk' : 'stuks'} terugbetaald, min teruggekregen commissie)</td><td style="text-align:right">${fmt(-(rsV.bedrag - rsV.commissie))}</td></tr>
         <tr><td>Netto na retouren</td><td style="text-align:right">${fmt(nettoNaRetour)}</td></tr>` : ''}
         <tr><td>Door Bol gestort op de bank (${bank.aantal} ${bank.aantal === 1 ? 'storting' : 'stortingen'})</td><td style="text-align:right">${fmt(bank.totaal)}</td></tr>
         <tr><td><b>Verschil</b></td><td style="text-align:right"><b>${fmt(verschil)}</b></td></tr></tbody></table>
