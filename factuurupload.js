@@ -2,10 +2,10 @@
 // Foto's worden met OCR gelezen, pdf's met pdf.js (en bij een gescande pdf ook met OCR). Daarmee worden
 // de velden alvast ingevuld; jij controleert en drukt op Opslaan. Niets verlaat de browser.
 
-import { state } from './storage.js?v=20261025a';
-import { leesBon, leesFoto, laadTesseract } from './bonnetscan.js?v=20261025a';
-import { bijlagenVan, bijlageBlob } from './bonnetjes.js?v=20261025a';
-import { esc, fmt } from './helpers.js?v=20261025a';
+import { state } from './storage.js?v=20261025b';
+import { leesBon, leesFoto, laadTesseract } from './bonnetscan.js?v=20261025b';
+import { bijlagenVan, bijlageBlob } from './bonnetjes.js?v=20261025b';
+import { esc, fmt } from './helpers.js?v=20261025b';
 
 const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
 const PDFWORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -32,7 +32,7 @@ function toonBlob(blob, naam, type) {
   blobUrl = URL.createObjectURL(blob);
   const pdf = type === 'application/pdf' || /\.pdf$/i.test(naam);
   el('fact-voorbeeld').innerHTML = pdf
-    ? `<iframe src="${blobUrl}" title="Factuur"></iframe>`
+    ? `<iframe src="${blobUrl}#navpanes=0&zoom=page-width" title="Factuur"></iframe>`
     : `<img src="${blobUrl}" alt="Factuur">`;
   el('fact-modal-box').classList.add('fact-breed');
 }
@@ -113,7 +113,17 @@ async function leesTekst(f, voortgang) {
 
 // ─── Velden invullen ─────────────────────────────────────────────────────────
 
-const datumsIn = regel => leesBon(regel).datums;
+const MND = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, mei: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, okt: 10, nov: 11, dec: 12 };
+/** Engelse notatie: "September 07, 2026" of "Sep 7 2026". */
+function engelseDatums(t) {
+  const uit = [];
+  for (const m of String(t).matchAll(/(?<![a-z])([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(\d{4})(?!\d)/g)) {
+    const mnd = MND[m[1].toLowerCase()], d = Number(m[2]);
+    if (mnd && d >= 1 && d <= 31) uit.push(`${m[3]}-${String(mnd).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
+  }
+  return uit;
+}
+const datumsIn = regel => [...new Set([...leesBon(regel).datums, ...engelseDatums(regel)])];
 
 /** Zuivere uitleesfunctie: geeft voorgestelde waarden uit de ruwe factuurtekst. */
 export function leesFactuur(tekst, relaties = []) {
@@ -124,9 +134,9 @@ export function leesFactuur(tekst, relaties = []) {
   if (lb.bedragen[0] && lb.bedragen[0].prio >= 3) uit.bedrag = lb.bedragen[0].bedrag;
   for (const r of regels) {
     if (!uit.vervaldatum && /(vervaldatum|uiterlijk|due date|betalen voor|te voldoen voor)/i.test(r)) uit.vervaldatum = datumsIn(r)[0] || '';
-    if (!uit.datum && /(factuurdatum|invoice date|datum factuur|^datum\b)/i.test(r)) uit.datum = datumsIn(r)[0] || '';
+    if (!uit.datum && /(factuurdatum|invoice date|date of issue|datum factuur|^datum\b)/i.test(r) && !/(vervaldatum|due date)/i.test(r)) uit.datum = datumsIn(r)[0] || '';
   }
-  if (!uit.datum) uit.datum = lb.datums.find(d => d !== uit.vervaldatum) || '';
+  if (!uit.datum) uit.datum = [...new Set([...lb.datums, ...engelseDatums(tekst)])].sort().find(d => d !== uit.vervaldatum) || '';
   const m = String(tekst).match(/(?:factuur\s*(?:nummer|nr\.?|no\.?)|factuurnr\.?|invoice\s*(?:number|no\.?|nr\.?|#)|ordernummer)\s*[:#]?\s*([A-Za-z0-9][A-Za-z0-9\-\/._]{2,24})/i);
   if (m && /\d/.test(m[1])) uit.nummer = m[1].replace(/[._-]+$/, '');
   const laag = String(tekst).toLowerCase();
