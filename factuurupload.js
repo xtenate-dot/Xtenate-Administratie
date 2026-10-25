@@ -2,10 +2,10 @@
 // Foto's worden met OCR gelezen, pdf's met pdf.js (en bij een gescande pdf ook met OCR). Daarmee worden
 // de velden alvast ingevuld; jij controleert en drukt op Opslaan. Niets verlaat de browser.
 
-import { state } from './storage.js?v=20261024z';
-import { leesBon, leesFoto, laadTesseract } from './bonnetscan.js?v=20261024z';
-import { bijlagenVan, bijlageBlob } from './bonnetjes.js?v=20261024z';
-import { esc, fmt } from './helpers.js?v=20261024z';
+import { state } from './storage.js?v=20261025a';
+import { leesBon, leesFoto, laadTesseract } from './bonnetscan.js?v=20261025a';
+import { bijlagenVan, bijlageBlob } from './bonnetjes.js?v=20261025a';
+import { esc, fmt } from './helpers.js?v=20261025a';
 
 const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
 const PDFWORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -164,4 +164,55 @@ function vulIn(tekst) {
   const h = el('fact-lees-hint');
   h.querySelectorAll('[data-fb]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); zet('fact-bedrag', a.dataset.fb.replace('.', ',')); }));
   h.querySelectorAll('[data-fr]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); zet('fact-relatie', a.dataset.fr); el('fact-relatie').dispatchEvent(new Event('input')); }));
+}
+
+// ─── Meerdere facturen achter elkaar ─────────────────────────────────────────
+// Je kiest in één keer meerdere bestanden; ze komen één voor één in het venster (voorbeeld + velden),
+// jij controleert en kiest "Opslaan en volgende" of "Overslaan".
+
+export const rij = { bestanden: [], i: 0, start: false };
+export function leegRij() { rij.bestanden = []; rij.i = 0; }
+
+export function zetRijUi() {
+  const n = rij.bestanden.length;
+  const titel = el('fact-modal-title');
+  if (n && titel) titel.textContent = `Factuur ${rij.i + 1} van ${n}`;
+  const opslaan = el('fact-save-btn');
+  if (opslaan) opslaan.textContent = n && rij.i < n - 1 ? 'Opslaan en volgende' : 'Opslaan';
+  const skip = el('fact-skip-btn');
+  if (skip) skip.style.display = n ? '' : 'none';
+}
+
+export function kiesMeerdereFacturen() {
+  const i = document.createElement('input');
+  i.type = 'file'; i.multiple = true; i.accept = 'image/*,application/pdf';
+  i.onchange = () => {
+    const lijst = [...i.files];
+    if (!lijst.length) return;
+    rij.bestanden = lijst; rij.i = 0;
+    toonVolgende();
+  };
+  i.click();
+}
+
+function toonVolgende() {
+  const f = rij.bestanden[rij.i];
+  if (!f) { leegRij(); return; }
+  rij.start = true;
+  window.openFactuurModal();
+  zetRijUi();
+  zetBestand(f);
+}
+
+/** Na opslaan of overslaan: de volgende uit de rij openen. */
+export function volgendeInRij() {
+  if (!rij.bestanden.length) return;
+  rij.i++;
+  if (rij.i >= rij.bestanden.length) { const n = rij.bestanden.length; leegRij(); alert(`Klaar: alle ${n} bestanden zijn doorgenomen.`); return; }
+  setTimeout(toonVolgende, 150);
+}
+
+export function overslaanFactuur() {
+  window.sluitFactuurModal(true);
+  volgendeInRij();
 }

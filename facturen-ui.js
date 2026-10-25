@@ -14,15 +14,15 @@ import {
   facturenVan, openstaandSaldo, factuurnummerInGebruik,
   vindBoeking, koppelBetaling, ontkoppelBetaling,
   ouderdomsanalyse, OUDERDOM_VOLGORDE
-} from './facturen.js?v=20261024z';
-import { esc, fmt, ddmm, bedragUit, leegVlak, isInkomst, isUitgave, weergaveNaam } from './helpers.js?v=20261024z';
-import { downloadModelPdf } from './pdf.js?v=20261024z';
-import { state, grootboekNamen, grootboekOptgroepen, BEDRIJFSGEGEVENS } from './storage.js?v=20261024z';
-import { zoekBoekingen } from './search.js?v=20261024z';
-import { vindRelatie, zoekRelaties, maakRelatie, hernoemRelatie, voegRelatiesSamen, herlaadRelaties, bewaarRelatieAdres, relatieNummer, zorgRelatienummer } from './relaties.js?v=20261024z';
-import { bijlagenVan, voegBonnetjeToe, bonnetjesBeschikbaar } from './bonnetjes.js?v=20261024z';
-import { kiesFactuurUpload, resetFactuurUpload, wachtendFactuurBestand, toonBestaandeBijlage } from './factuurupload.js?v=20261024z';
-export { kiesFactuurUpload };
+} from './facturen.js?v=20261025a';
+import { esc, fmt, ddmm, bedragUit, leegVlak, isInkomst, isUitgave, weergaveNaam } from './helpers.js?v=20261025a';
+import { downloadModelPdf } from './pdf.js?v=20261025a';
+import { state, grootboekNamen, grootboekOptgroepen, BEDRIJFSGEGEVENS } from './storage.js?v=20261025a';
+import { zoekBoekingen } from './search.js?v=20261025a';
+import { vindRelatie, zoekRelaties, maakRelatie, hernoemRelatie, voegRelatiesSamen, herlaadRelaties, bewaarRelatieAdres, relatieNummer, zorgRelatienummer } from './relaties.js?v=20261025a';
+import { bijlagenVan, voegBonnetjeToe, bonnetjesBeschikbaar } from './bonnetjes.js?v=20261025a';
+import { kiesFactuurUpload, resetFactuurUpload, wachtendFactuurBestand, toonBestaandeBijlage, kiesMeerdereFacturen, overslaanFactuur, leegRij, rij, zetRijUi, volgendeInRij } from './factuurupload.js?v=20261025a';
+export { kiesFactuurUpload, kiesMeerdereFacturen, overslaanFactuur };
 
 const el = id => document.getElementById(id);
 
@@ -113,6 +113,7 @@ export function renderFacturen() {
       <button class="btn btn-ghost btn-sm" onclick="kenRelatienummersToe()" title="Geeft elke relatie met een factuur hier een ${isDeb ? 'debiteurnummer (vanaf 10000)' : 'crediteurnummer (vanaf 20000)'}">Nummers toekennen</button>
       <button class="btn btn-ghost btn-sm" onclick="openRelatiesBeheerModal()">Relaties beheren</button>
       <button class="btn btn-ghost btn-sm" onclick="openIbanClusterScherm()">Boekingen koppelen aan relaties</button>
+      <button class="btn" onclick="kiesMeerdereFacturen()" title="Kies meerdere foto's of pdf's; je loopt ze één voor één langs">📎 Meerdere uploaden</button>
       <button class="btn btn-primary" onclick="openFactuurModal()">${isDeb ? 'Nieuwe verkoopfactuur' : 'Nieuwe inkoopfactuur'}</button>
     </div>
     <div class="table-wrap" style="margin-bottom:var(--spacing-4)"><table class="tbl-compact">
@@ -243,12 +244,16 @@ export function openFactuurModal(id = null) {
   el('fact-delete-btn').style.display = f ? '' : 'none';
   resetFactuurUpload();
   if (f) toonBestaandeBijlage(f.id);
+  if (!rij.start) leegRij();
+  rij.start = false;
+  zetRijUi();
 
   document.getElementById('modal-factuur').classList.add('open');
   el('fact-d').focus();
 }
 
-export function sluitFactuurModal() {
+export function sluitFactuurModal(behoudRij) {
+  if (behoudRij !== true) leegRij();
   resetFactuurUpload();
   document.getElementById('modal-factuur')?.classList.remove('open');
   state.editFactuurId = null;
@@ -308,8 +313,9 @@ export function saveFactuur() {
     factuurId = voegFactuurToe(gegevens).id;
   }
 
-  sluitFactuurModal();
+  sluitFactuurModal(true);
   renderFacturen();
+  volgendeInRij();
   if (bestand) {
     voegBonnetjeToe('F-' + factuurId, bestand).then(() => renderFacturen())
       .catch(e => alert('De factuur is opgeslagen, maar het bestand niet: ' + (e.message || e)));

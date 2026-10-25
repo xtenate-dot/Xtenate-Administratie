@@ -21,10 +21,10 @@
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<link rel="stylesheet" href="theme.css?v=20261024z">
-<link rel="stylesheet" href="layout.css?v=20261024z">
-<link rel="stylesheet" href="components.css?v=20261024z">
-<link rel="stylesheet" href="responsive.css?v=20261024z">
+<link rel="stylesheet" href="theme.css?v=20261025a">
+<link rel="stylesheet" href="layout.css?v=20261025a">
+<link rel="stylesheet" href="components.css?v=20261025a">
+<link rel="stylesheet" href="responsive.css?v=20261025a">
 </head>
 <body>
 
@@ -1169,7 +1169,8 @@
   <div class="modal-actions">
     <button class="btn" onclick="sluitFactuurModal()">Annuleren</button>
     <button class="btn btn-danger" id="fact-delete-btn" onclick="verwijderFactuurUitModal()" style="display:none">Verwijderen</button>
-    <button class="btn btn-primary" onclick="saveFactuur()">Opslaan</button>
+    <button class="btn" id="fact-skip-btn" onclick="overslaanFactuur()" style="display:none" title="Deze factuur niet opslaan en naar de volgende">Overslaan</button>
+    <button class="btn btn-primary" id="fact-save-btn" onclick="saveFactuur()">Opslaan</button>
   </div>
   </div>
   </div>
@@ -1434,6 +1435,6 @@
 </div>
 </div>
 
-<script type="module" src="app.js?v=20261024z"></script>
+<script type="module" src="app.js?v=20261025a"></script>
 </body>
 </html>
