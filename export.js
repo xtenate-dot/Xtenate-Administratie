@@ -6,11 +6,11 @@
 // importfunctie leest; de overige kolommen zijn ingevuld met gegevens die het
 // bestand voor jou leesbaar maken maar bij het inlezen worden overgeslagen.
 
-import { isInkomst, maandLabel } from './helpers.js?v=20261024u';
-import { HOME_TOTALS, MAAND_SALDOS, groepNaam, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261024u';
-import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261024u';
-import { btwRelevant } from './btw.js?v=20261024u';
-import { txVanJaar, lopendJaar, berekendMaandSaldo } from './jaren.js?v=20261024u';
+import { isInkomst, maandLabel } from './helpers.js?v=20261024v';
+import { HOME_TOTALS, MAAND_SALDOS, groepNaam, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261024v';
+import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261024v';
+import { btwRelevant } from './btw.js?v=20261024v';
+import { txVanJaar, lopendJaar, berekendMaandSaldo } from './jaren.js?v=20261024v';
 
 const CREDITKAART = '1030';
 

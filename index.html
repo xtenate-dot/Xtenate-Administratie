@@ -21,10 +21,10 @@
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<link rel="stylesheet" href="theme.css?v=20261024u">
-<link rel="stylesheet" href="layout.css?v=20261024u">
-<link rel="stylesheet" href="components.css?v=20261024u">
-<link rel="stylesheet" href="responsive.css?v=20261024u">
+<link rel="stylesheet" href="theme.css?v=20261024v">
+<link rel="stylesheet" href="layout.css?v=20261024v">
+<link rel="stylesheet" href="components.css?v=20261024v">
+<link rel="stylesheet" href="responsive.css?v=20261024v">
 </head>
 <body>
 
@@ -177,6 +177,10 @@
   <div class="nav-item" data-page="km" onclick="nav('km',this)" title="Kilometers">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/><path d="M5 17H3v-4l2-5h9l4 4h1a2 2 0 012 2v3h-2"/><path d="M9 8V5h4"/></svg>
     <span class="nav-label">Kilometers</span>
+  </div>
+  <div class="nav-item" data-page="bonnetjes" onclick="nav('bonnetjes',this)" title="Bonnetjes">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.5l-8.5 8.5a5.5 5.5 0 01-7.8-7.8l9-9a3.7 3.7 0 015.2 5.2l-9 9a1.8 1.8 0 01-2.6-2.6l8.3-8.3"/></svg>
+    <span class="nav-label">Bonnetjes</span>
   </div>
   <div class="nav-item" data-page="bol" onclick="nav('bol',this)" title="Bol.com">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6L5 3H2"/><circle cx="9" cy="20" r="1.3"/><circle cx="17" cy="20" r="1.3"/></svg>
@@ -601,6 +605,17 @@
     <button class="btn" onclick="downloadBtwPdf()">Download als pdf</button>
   </div>
   <div id="btw-inhoud"></div>
+</div>
+
+<!-- BONNETJES -->
+<div id="p-bonnetjes" class="page">
+  <div class="page-head">
+    <div>
+      <div class="page-title">Bonnetjes</div>
+      <div class="page-sub">Alle bonnetjes en facturen op één plek: inkoop (bij uitgaven) en verkoop (bij inkomsten).</div>
+    </div>
+  </div>
+  <div id="bonnetjes-inhoud"></div>
 </div>
 
 <!-- BOL.COM -->
@@ -1395,6 +1410,6 @@
 </div>
 </div>
 
-<script type="module" src="app.js?v=20261024u"></script>
+<script type="module" src="app.js?v=20261024v"></script>
 </body>
 </html>

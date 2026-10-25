@@ -114,3 +114,6 @@ Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
 ## Cloud-back-up terugzetten (25-10) — gebouwd en getest (rollback-test)
 - SQL cloud_herstel.sql: functie herstel_cloud_backup(id): veiligheidskopie (handmatig), vervangt boekingen/loten/voorraadartikelen/relaties/app_data, controleert aantallen, alles-of-niets. Bonnetjes blijven staan. Knop "Terugzetten…" per back-up in Beheer, met typ-bevestiging en herladen.
 - Bevinding: 24 HNVI-wachtrij-items (van 22-10, ids als "299.6", "Prijs p/s", datum leeg) staan vast in de localStorage-wachtrij van de browser ("24 niet opgeslagen"); fout: invalid input syntax for type date "". Staan niet in state.HNVI_LOTS (28 loten = cloud). Waarschijnlijk rommelrijen uit een import; nog niet opgeruimd (wacht op akkoord gebruiker).
+
+## Pagina Bonnetjes (25-10)
+- bonnetjesoverzicht.js + nav-item "Bonnetjes": twee koppen, Inkoopfacturen en bonnetjes (bijlagen bij uitgaven) en Verkoopfacturen (bijlagen bij inkomsten), plus Overig; jaarfilter; "uitgaven nog zonder bijlage" uitklapbaar; scanner-knop. Indeling volgt het type boeking (geen aparte instelling).
