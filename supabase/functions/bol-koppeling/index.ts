@@ -2,6 +2,7 @@
 // in de tabel bol_bestellingen van de ingelogde gebruiker.
 //
 //   POST /bol-koppeling   body: { van, tot, account?: "1" | "2" | "alle" }   (hooguit 31 dagen, hooguit ~91 dagen terug)
+//   POST /bol-koppeling/dagelijks   (door pg_cron, met geheim uit bank_cron_geheim: de laatste 7 dagen voor elke gebruiker met Bol-bestellingen)
 //   POST /bol-koppeling   body: { actie: "info" }   -> welke Bol-accounts zijn ingesteld (nummer + naam)
 //   Account 1: BOL_CLIENT_ID, BOL_CLIENT_SECRET, BOL_NAAM (naam is optioneel). Account 2: BOL_CLIENT_ID_2, BOL_CLIENT_SECRET_2, BOL_NAAM_2. Tot 4 accounts.
 //
@@ -97,33 +98,10 @@ function accounts(): { nummer: string; naam: string; id: string; geheim: string 
   return uit;
 }
 
-async function afhandelen(req: Request): Promise<Response> {
-  const auth = req.headers.get("Authorization") || "";
-  const url = Deno.env.get("SUPABASE_URL"), anon = Deno.env.get("SUPABASE_ANON_KEY");
-  if (!url || !anon) return Response.json({ ok: false, fout: "Configuratie ontbreekt." }, { status: 500 });
-  const supabase = createClient(url, anon, { global: { headers: { Authorization: auth } }, auth: { persistSession: false } });
-  const { data: gebruiker } = await supabase.auth.getUser();
-  if (!gebruiker?.user) return Response.json({ ok: false, fout: "Niet ingelogd." }, { status: 401 });
-
-  const alle = accounts();
-  if (!alle.length) return Response.json({ ok: false, fout: "De Bol-sleutels staan nog niet in Supabase (secrets BOL_CLIENT_ID en BOL_CLIENT_SECRET).", geenSleutels: true }, { status: 412 });
-
-  let body: { actie?: string; van?: string; tot?: string; account?: string } = {};
-  try { body = await req.json(); } catch { /* standaard */ }
-  if (body.actie === "info") {
-    return Response.json({ ok: true, accounts: alle.map((a) => ({ nummer: a.nummer, naam: a.naam })) }, { status: 200 });
-  }
-
-  const gekozen = body.account && body.account !== "alle" ? alle.filter((a) => a.nummer === String(body.account)) : alle;
-  if (!gekozen.length) return Response.json({ ok: false, fout: "Dit Bol-account is niet ingesteld." }, { status: 400 });
-
-  const vandaag = new Date().toISOString().slice(0, 10);
-  const tot = datumOk(body.tot) ? body.tot! : vandaag;
-  const van = datumOk(body.van) ? body.van! : new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
-  if (van > tot) return Response.json({ ok: false, fout: "De begindatum ligt na de einddatum." }, { status: 400 });
+type Db = ReturnType<typeof createClient>;
+/** Haalt de bestellingen van de gekozen accounts op en bewaart ze voor één gebruiker. */
+async function verwerk(gekozen: ReturnType<typeof accounts>, van: string, tot: string, supabase: Db, userId: string): Promise<Response> {
   const lijstDagen = dagen(van, tot);
-  if (lijstDagen.length > MAX_DAGEN) return Response.json({ ok: false, fout: `Kies hooguit ${MAX_DAGEN} dagen tegelijk.` }, { status: 400 });
-
   const start = Date.now();
   let gevonden = 0, opgeslagen = 0, onvolledig = false;
   const perAccount: { nummer: string; naam: string; gevonden: number; opgeslagen: number }[] = [];
@@ -163,7 +141,7 @@ async function afhandelen(req: Request): Promise<Response> {
 
     // 3. Bewaren (alleen eigen rijen; bestaande bestellingen worden bijgewerkt, bijvoorbeeld na een annulering).
     const rijen = bestellingen.filter((b) => b.order_id).map((b) => ({
-      user_id: gebruiker.user!.id,
+      user_id: userId,
       account: acc.nummer,
       order_id: b.order_id,
       besteld: b.besteld,
@@ -181,10 +159,72 @@ async function afhandelen(req: Request): Promise<Response> {
   return Response.json({ ok: true, van, tot, gevonden, opgeslagen, onvolledig, perAccount }, { status: 200 });
 }
 
+async function afhandelen(req: Request): Promise<Response> {
+  const auth = req.headers.get("Authorization") || "";
+  const url = Deno.env.get("SUPABASE_URL"), anon = Deno.env.get("SUPABASE_ANON_KEY");
+  if (!url || !anon) return Response.json({ ok: false, fout: "Configuratie ontbreekt." }, { status: 500 });
+  const supabase = createClient(url, anon, { global: { headers: { Authorization: auth } }, auth: { persistSession: false } });
+  const { data: gebruiker } = await supabase.auth.getUser();
+  if (!gebruiker?.user) return Response.json({ ok: false, fout: "Niet ingelogd." }, { status: 401 });
+
+  const alle = accounts();
+  if (!alle.length) return Response.json({ ok: false, fout: "De Bol-sleutels staan nog niet in Supabase (secrets BOL_CLIENT_ID en BOL_CLIENT_SECRET).", geenSleutels: true }, { status: 412 });
+
+  let body: { actie?: string; van?: string; tot?: string; account?: string } = {};
+  try { body = await req.json(); } catch { /* standaard */ }
+  if (body.actie === "info") {
+    return Response.json({ ok: true, accounts: alle.map((a) => ({ nummer: a.nummer, naam: a.naam })) }, { status: 200 });
+  }
+
+  const gekozen = body.account && body.account !== "alle" ? alle.filter((a) => a.nummer === String(body.account)) : alle;
+  if (!gekozen.length) return Response.json({ ok: false, fout: "Dit Bol-account is niet ingesteld." }, { status: 400 });
+
+  const vandaag = new Date().toISOString().slice(0, 10);
+  const tot = datumOk(body.tot) ? body.tot! : vandaag;
+  const van = datumOk(body.van) ? body.van! : new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
+  if (van > tot) return Response.json({ ok: false, fout: "De begindatum ligt na de einddatum." }, { status: 400 });
+  const lijstDagen = dagen(van, tot);
+  if (lijstDagen.length > MAX_DAGEN) return Response.json({ ok: false, fout: `Kies hooguit ${MAX_DAGEN} dagen tegelijk.` }, { status: 400 });
+
+  return await verwerk(gekozen, van, tot, supabase, gebruiker.user.id);
+}
+
+// ─── Nachtelijke ronde (aangeroepen door pg_cron met het geheim uit bank_cron_geheim) ───
+async function gelijk(a: string, b: string): Promise<boolean> {
+  const h = async (x: string) => new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(x)));
+  const [x, y] = [await h(a), await h(b)];
+  let v = 0;
+  for (let i = 0; i < x.length; i++) v |= x[i] ^ y[i];
+  return v === 0;
+}
+
+async function afhandelenDagelijks(req: Request): Promise<Response> {
+  const gegeven = req.headers.get("x-cron-secret") || "";
+  const url = Deno.env.get("SUPABASE_URL"), sleutel = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!url || !sleutel || gegeven.length < 20) return Response.json({ ok: false, fout: "Niet toegestaan." }, { status: 401 });
+  const admin = createClient(url, sleutel, { auth: { persistSession: false } });
+  const { data: g } = await admin.from("bank_cron_geheim").select("geheim").eq("id", 1).maybeSingle();
+  if (!g?.geheim || !(await gelijk(String(g.geheim), gegeven))) return Response.json({ ok: false, fout: "Niet toegestaan." }, { status: 401 });
+  const alle = accounts();
+  if (!alle.length) return Response.json({ ok: true, gebruikers: 0, opgeslagen: 0 }, { status: 200 });
+  // Alleen gebruikers die de Bol-pagina al eens hebben gebruikt (er staan al bestellingen van hen).
+  const { data: rijen } = await admin.from("bol_bestellingen").select("user_id").limit(1000);
+  const gebruikers = [...new Set((rijen || []).map((r: { user_id: string }) => r.user_id))];
+  const tot = new Date().toISOString().slice(0, 10);
+  const van = new Date(Date.now() - 6 * 864e5).toISOString().slice(0, 10);
+  let opgeslagen = 0, mislukt = 0;
+  for (const uid of gebruikers) {
+    const r = await verwerk(alle, van, tot, admin, uid);
+    const d = await r.json().catch(() => null);
+    if (d?.ok) opgeslagen += Number(d.opgeslagen) || 0; else mislukt += 1;
+  }
+  return Response.json({ ok: true, gebruikers: gebruikers.length, opgeslagen, mislukt }, { status: 200 });
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
   try {
-    const r = await afhandelen(req);
+    const r = new URL(req.url).pathname.endsWith("/dagelijks") ? await afhandelenDagelijks(req) : await afhandelen(req);
     const h = new Headers(r.headers);
     for (const [k, v] of Object.entries(CORS)) h.set(k, v);
     return new Response(r.body, { status: r.status, headers: h });

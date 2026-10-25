@@ -1,15 +1,15 @@
 // hnvi.js — HNVI/Xtenate voorraadbeheer, inclusief AI-factuurimport.
 
-import { bedragUit, ddmm, esc, fmt, leegVlak } from './helpers.js?v=20261024m';
-import { maakSorteerbaar } from './tables.js?v=20261024m';
-import { openApiKeyModal } from './modals.js?v=20261024m';
-import { saveHnviData, state } from './storage.js?v=20261024m';
+import { bedragUit, ddmm, esc, fmt, leegVlak } from './helpers.js?v=20261024n';
+import { maakSorteerbaar } from './tables.js?v=20261024n';
+import { openApiKeyModal } from './modals.js?v=20261024n';
+import { saveHnviData, state } from './storage.js?v=20261024n';
 
 /** Globaal boekjaar vertaald naar het hnvi-filter: 'all' betekent hier ''. */
 const hnviJaar = () => (state.huidigJaar === 'all' ? '' : (state.huidigJaar || ''));
-import { splitsLoten, lotAantal, lotVerkochtStuks } from './hnvilot.js?v=20261024m';
-import { saveHnviToSupabase, deleteFromSupabase, addToPendingQueue } from './supabase-client-v2.js?v=20261024m';
-import { downloadModelPdf } from './pdf.js?v=20261024m';
+import { splitsLoten, lotAantal, lotVerkochtStuks } from './hnvilot.js?v=20261024n';
+import { saveHnviToSupabase, deleteFromSupabase, addToPendingQueue } from './supabase-client-v2.js?v=20261024n';
+import { downloadModelPdf } from './pdf.js?v=20261024n';
 
 /** De loten zoals ze nu op het scherm staan: status- en jaarfilter meegenomen. */
 function zichtbareLoten() {

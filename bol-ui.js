@@ -2,9 +2,9 @@
 // verkocht per artikel, en een vergelijking met wat Bol op je bankrekening heeft gestort.
 // Alleen kijken: er wordt niets geboekt en de voorraad verandert niet.
 
-import { esc, fmt, ddmm } from './helpers.js?v=20261024m';
-import { lopendJaar } from './jaren.js?v=20261024m';
-import { leesBestellingen, haalBijBol, samenvatting, bolUitbetalingen, standaardPeriodes, leesBolAccounts } from './bol.js?v=20261024m';
+import { esc, fmt, ddmm } from './helpers.js?v=20261024n';
+import { lopendJaar } from './jaren.js?v=20261024n';
+import { leesBestellingen, haalBijBol, samenvatting, bolUitbetalingen, standaardPeriodes, leesBolAccounts } from './bol.js?v=20261024n';
 
 const el = id => document.getElementById(id);
 const MAAND = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
@@ -20,6 +20,11 @@ function bereik() {
   const nu = new Date().toISOString().slice(0, 10);
   if (periode === 'alles') return ['0000-01-01', '9999-12-31', 'Alle bestellingen'];
   if (periode === 'maand') return maandBereik(nu.slice(0, 7));
+  if (/^kw:\d{4}-[1-4]$/.test(periode)) {
+    const j = periode.slice(3, 7), k = Number(periode.slice(8)), m1 = (k - 1) * 3 + 1, m3 = m1 + 2;
+    const l = new Date(Date.UTC(Number(j), m3, 0)).getUTCDate();
+    return [`${j}-${String(m1).padStart(2, '0')}-01`, `${j}-${String(m3).padStart(2, '0')}-${l}`, `${k}e kwartaal ${j}`];
+  }
   if (/^jaar:\d{4}$/.test(periode)) { const j = periode.slice(5); return [`${j}-01-01`, `${j}-12-31`, `Heel ${j}`]; }
   return maandBereik(periode);
 }
@@ -67,13 +72,20 @@ function teken() {
   const meer = accs.length > 1;
   const lijst = (bestellingen || []).filter(b => b.datum && b.datum >= van && b.datum <= tot && (accountFilter === 'alle' || String(b.account || '1') === accountFilter));
   const s = samenvatting(lijst);
-  const bank = bolUitbetalingen(van, tot);
+  // Bol geeft maar ~3 maanden terug. Stortingen van vóór de eerste opgehaalde bestelling horen bij bestellingen
+  // die we niet hebben; die tellen we dus niet mee in de vergelijking.
+  const eersteBestelling = (bestellingen || []).reduce((m, b) => (b.datum && (!m || b.datum < m) ? b.datum : m), '');
+  const bankVan = eersteBestelling && eersteBestelling > van ? eersteBestelling : van;
+  const bankBeperkt = bankVan > van;
+  const bank = bolUitbetalingen(bankVan, tot);
   const maanden = maandenInData();
   const jaren = [...new Set(maanden.map(m => m.slice(0, 4)))];
+  const kwartalen = [...new Set(maanden.map(m => `kw:${m.slice(0, 4)}-${Math.ceil(Number(m.slice(5)) / 3)}`))];
   const huidig = lopendJaar();
   const opties = [
     ['maand', 'Deze maand'],
     ...maanden.map(m => [m, `${MAAND[Number(m.slice(5)) - 1]} ${m.slice(0, 4)}`]),
+    ...kwartalen.map(k => [k, `${k.slice(8)}e kwartaal ${k.slice(3, 7)}`]),
     ...jaren.map(j => [`jaar:${j}`, `Heel ${j}`]),
     ['alles', 'Alles']
   ].filter(([w], i, a) => a.findIndex(x => x[0] === w) === i);
@@ -102,11 +114,12 @@ function teken() {
   const verschil = r2(bank.totaal - s.netto);
   const vergelijk = accountFilter !== 'alle' ? `<p class="muted" style="font-size:12px;margin-bottom:var(--spacing-4)">De vergelijking met de bank staat alleen bij "Alle accounts", omdat de stortingen op de bank niet per Bol-account te scheiden zijn.</p>` : `<div class="card" style="margin-bottom:var(--spacing-4)">
       <div class="section-titel" style="margin-bottom:6px">Vergelijking met je bank (${esc(label)})</div>
+      ${bankBeperkt ? `<p class="muted" style="font-size:12px;margin:0 0 6px">Bol geeft bestellingen maar ongeveer 3 maanden terug. Daarom tellen alleen de stortingen vanaf ${esc(ddmm ? ddmm(bankVan) : bankVan)} mee; eerdere stortingen horen bij bestellingen die hier niet in staan.</p>` : ''}
       <table class="tbl-compact" style="max-width:520px"><tbody>
         <tr><td>Verkocht volgens Bol (netto na commissie)</td><td style="text-align:right">${fmt(s.netto)}</td></tr>
         <tr><td>Door Bol gestort op de bank (${bank.aantal} ${bank.aantal === 1 ? 'storting' : 'stortingen'})</td><td style="text-align:right">${fmt(bank.totaal)}</td></tr>
         <tr><td><b>Verschil</b></td><td style="text-align:right"><b>${fmt(verschil)}</b></td></tr></tbody></table>
-      <p class="muted" style="font-size:12px;margin-top:6px">Een verschil is normaal: Bol betaalt uit na de levering, trekt ook verzendkosten en retouren af, en een storting kan in een andere maand vallen dan de verkoop. Over een heel jaar horen de twee dicht bij elkaar te liggen.</p></div>`;
+      <p class="muted" style="font-size:12px;margin-top:6px">Een verschil is normaal: Bol betaalt uit na de levering, trekt ook verzendkosten en retouren af, en een storting kan in een andere maand vallen dan de verkoop. De eerste weken na het begin van de gegevens liggen de stortingen hoger, omdat ze nog bij oudere bestellingen horen. Over een langere periode horen de twee dicht bij elkaar te liggen.</p></div>`;
 
   const orders = lijst.map(b => {
     const regels = (b.items || []).filter(i => (i.aantal - (i.geannuleerd || 0)) > 0 || i.geannuleerd);
