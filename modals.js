@@ -1,6 +1,6 @@
 // modals.js — beheer-acties: Excel-import, cloud sync, API-sleutel, data wissen.
 
-import { renderHome } from './dashboard.js?v=20261024s';
+import { renderHome } from './dashboard.js?v=20261024t';
 
 // De omzetrekeningen. Deze stond eerder binnen `reader.onload`, maar wordt ook
 // door `bevestigImport` gebruikt — een andere functie, dus een ander bereik.
@@ -10,10 +10,10 @@ const OMZET_GB = ['8000', '8010', '8020'];
 import {
   HIST_TX_DEFAULT, HOME_TOTALS, HOME_TOTALS_DEFAULT, MAAND_SALDOS, normaliseerVoorraad, save,
   saveCoversData, saveHnviData, pasHnviDatumsToe, pasHnviExtraToe, saveTxData, state, voegJaarcijfersToe, rekeningNamen
-} from './storage.js?v=20261024s';
-import { maakHerstelpunt } from './herstelpunt.js?v=20261024s';
-import { isTxJaar, jaarVan } from './jaren.js?v=20261024s';
-import { addToPendingQueue, deleteFromSupabase, previewWisJaren, vervangBoekingenInSupabase, wisJarenInSupabase } from './supabase-client-v2.js?v=20261024s';
+} from './storage.js?v=20261024t';
+import { maakHerstelpunt } from './herstelpunt.js?v=20261024t';
+import { isTxJaar, jaarVan } from './jaren.js?v=20261024t';
+import { addToPendingQueue, deleteFromSupabase, previewWisJaren, vervangBoekingenInSupabase, wisJarenInSupabase } from './supabase-client-v2.js?v=20261024t';
 
 // Leest het "Per Periode"-tabblad (indien aanwezig): een pivot-overzicht per grootboekrekening
 // met een kolom "Totaal" voor het hele boekjaar. Dit is de brontabel van de boekhouding zelf,

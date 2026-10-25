@@ -5,8 +5,10 @@
 // download je er een als bestand. De back-ups zelf worden alleen door de database
 // gemaakt (functie maak_cloud_backup); de app kan ze lezen en verwijderen, niet vervalsen.
 
-import { getClient, heeftClient } from './supabase.js?v=20261024s';
-import { esc } from './helpers.js?v=20261024s';
+import { getClient, heeftClient } from './supabase.js?v=20261024t';
+import { esc } from './helpers.js?v=20261024t';
+import { state } from './storage.js?v=20261024t';
+import { wachtrijStatus } from './supabase-client-v2.js?v=20261024t';
 
 const el = id => document.getElementById(id);
 const nl = iso => new Date(iso).toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' });
@@ -68,7 +70,8 @@ export async function renderCloudBackups() {
           <span style="min-width:110px">${esc(nl(b.gemaakt))}</span>
           <span class="muted" style="font-size:11px;min-width:70px">${b.reden === 'nacht' ? 'automatisch' : 'handmatig'}</span>
           <span class="muted" style="flex:1;font-size:12px">${esc(aantalTekst(b.aantallen))}</span>
-          <button class="btn btn-sm" onclick="downloadCloudBackup(${Number(b.id)})">Downloaden</button></div>`).join('')
+          <button class="btn btn-sm" onclick="downloadCloudBackup(${Number(b.id)})">Downloaden</button>
+          <button class="btn btn-sm" onclick="vraagTerugzetten(${Number(b.id)})">Terugzetten…</button></div>`).join('')
       : '<span class="muted" style="font-size:12px">Nog geen back-ups. De eerste komt vannacht, of klik op "Nu back-up maken".</span>';
   } catch {
     doel.innerHTML = '<span class="muted" style="font-size:12px">De lijst kon niet geladen worden.</span>';
@@ -102,4 +105,70 @@ export async function downloadCloudBackup(id) {
   } catch { window.alert('Downloaden is niet gelukt.'); }
 }
 
-Object.assign(window, { maakCloudBackupNu, downloadCloudBackup });
+// ─── Terugzetten ─────────────────────────────────────────────────────────────
+
+const huidig = () => ({
+  boekingen: (state.TX || []).length + (state.HIST_TX || []).length,
+  hnvi_loten: (state.HNVI_LOTS || []).length,
+  voorraadartikelen: (state.COVERS || []).length,
+  relaties: (state.RELATIES || []).length
+});
+
+function terugzetLaag() {
+  let l = document.getElementById('terugzet-laag');
+  if (!l) { l = document.createElement('div'); l.id = 'terugzet-laag'; l.className = 'pm-laag'; l.style.display = 'none'; document.body.appendChild(l); }
+  return l;
+}
+export function sluitTerugzetten() { const l = document.getElementById('terugzet-laag'); if (l) l.style.display = 'none'; }
+
+export async function vraagTerugzetten(id) {
+  const l = terugzetLaag();
+  l.style.display = 'flex';
+  l.innerHTML = `<div class="pm-venster" style="max-width:560px"><div class="pm-inhoud" style="padding:20px"><p class="muted">Back-up ophalen…</p></div></div>`;
+  let b;
+  try {
+    const sb = await getClient();
+    const { data, error } = await sb.from('cloud_backups').select('id, gemaakt, reden, aantallen').eq('id', id).maybeSingle();
+    if (error || !data) throw new Error('niet gevonden');
+    b = data;
+  } catch { l.innerHTML = `<div class="pm-venster" style="max-width:560px"><div class="pm-inhoud" style="padding:20px"><p>Deze back-up kon niet worden opgehaald.</p><button class="btn" onclick="sluitTerugzetten()">Sluiten</button></div></div>`; return; }
+  const nu = huidig(), a = b.aantallen || {};
+  const rij = (naam, n, g) => `<tr><td>${naam}</td><td style="text-align:right">${n}</td><td style="text-align:right">${g ?? 0}</td></tr>`;
+  const open = wachtrijStatus().totaal;
+  l.innerHTML = `<div class="pm-venster" style="max-width:560px" role="dialog" aria-label="Back-up terugzetten">
+    <div class="pm-kop"><div><h3>Terugzetten naar ${esc(nl(b.gemaakt))}</h3><p class="pm-sub">${b.reden === 'nacht' ? 'Automatische' : 'Handmatige'} back-up</p></div><button class="pm-kruis" onclick="sluitTerugzetten()" aria-label="Sluiten">×</button></div>
+    <div class="pm-inhoud" style="padding:16px 20px;font-size:13px">
+      <table class="tbl-compact" style="width:100%;margin-bottom:12px"><thead><tr><th></th><th style="text-align:right">Nu</th><th style="text-align:right">Na terugzetten</th></tr></thead><tbody>
+        ${rij('Boekingen', nu.boekingen, a.boekingen)}${rij('HNVI-loten', nu.hnvi_loten, a.hnvi_loten)}${rij('Voorraadartikelen', nu.voorraadartikelen, a.voorraadartikelen)}${rij('Relaties', nu.relaties, a.relaties)}
+        <tr><td>Lijsten en instellingen</td><td style="text-align:right">—</td><td style="text-align:right">${a.app_data ?? 0}</td></tr></tbody></table>
+      <p>Alles wat je sinds ${esc(nl(b.gemaakt))} hebt toegevoegd of aangepast in boekingen, loten, voorraad, relaties, instellingen en facturen verdwijnt. Bonnetjes en bijlagen blijven staan.</p>
+      <p>Eerst maakt de app een veiligheidskopie van de stand van nu (handmatige back-up), zodat je dit kunt terugdraaien. Gaat er iets mis, dan blijft alles zoals het was.</p>
+      ${open ? `<p style="color:var(--semantic-danger-bright)">Er zijn nog ${open} wijzigingen die niet zijn opgeslagen. Wacht tot alles is opgeslagen en probeer het opnieuw.</p>` : `
+      <label style="display:block;margin-top:8px">Typ <b>TERUGZETTEN</b> om te bevestigen:
+        <input type="text" id="terugzet-woord" autocomplete="off" style="display:block;margin-top:4px;width:200px" oninput="document.getElementById('terugzet-knop').disabled = this.value.trim().toUpperCase() !== 'TERUGZETTEN'"></label>`}
+      <p id="terugzet-melding" style="margin-top:8px"></p></div>
+    <div class="pm-voet"><span class="pm-hint">Sluit andere vensters en je telefoon-app zolang dit loopt.</span>
+      <div class="pm-knoppen"><button class="btn" onclick="sluitTerugzetten()">Annuleren</button>
+      <button class="btn btn-primary" id="terugzet-knop" onclick="voerTerugzettenUit(${Number(b.id)})" disabled>Terugzetten</button></div></div></div>`;
+}
+
+export async function voerTerugzettenUit(id) {
+  const m = document.getElementById('terugzet-melding'), knop = document.getElementById('terugzet-knop');
+  const zet = t => { if (m) m.textContent = t; };
+  if (wachtrijStatus().totaal) { zet('Er zijn nog niet-opgeslagen wijzigingen. Probeer het zo opnieuw.'); return; }
+  if (knop) knop.disabled = true;
+  zet('Bezig met terugzetten…');
+  try {
+    const sb = await getClient();
+    const { data, error } = await sb.rpc('herstel_cloud_backup', { p_id: id });
+    if (error) throw error;
+    try { localStorage.removeItem('xtenate_pending_queue_v2'); } catch { /* geen opslag beschikbaar */ }
+    zet(`✅ Teruggezet: ${data.boekingen} boekingen, ${data.voorraadartikelen} voorraadartikelen, ${data.relaties} relaties. De pagina wordt opnieuw geladen…`);
+    setTimeout(() => location.reload(), 1800);
+  } catch (e) {
+    zet(`❌ Terugzetten is niet gelukt; er is niets veranderd. (${String(e && e.message || e).slice(0, 140)})`);
+    if (knop) knop.disabled = false;
+  }
+}
+
+Object.assign(window, { maakCloudBackupNu, downloadCloudBackup, vraagTerugzetten, sluitTerugzetten, voerTerugzettenUit });
