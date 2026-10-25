@@ -98,6 +98,31 @@ function accounts(): { nummer: string; naam: string; id: string; geheim: string 
   return uit;
 }
 
+/** Alleen de vorm van een antwoord (veldnamen, getallen, vaste codes); vrije tekst en namen worden niet getoond. */
+function vorm(x: any, diepte = 0): any {
+  if (x === null || x === undefined) return x;
+  if (Array.isArray(x)) return x.length ? [vorm(x[0], diepte + 1), `(${x.length} stuks)`] : [];
+  if (typeof x === "object") return diepte > 5 ? "{…}" : Object.fromEntries(Object.entries(x).map(([k, v]) => [k, vorm(v, diepte + 1)]));
+  if (typeof x === "string") return /^[A-Z][A-Z_]+$/.test(x) || /^\d{4}-\d{2}-\d{2}T/.test(x) ? x : `tekst(${x.length})`;
+  return x;
+}
+
+async function afhandelenRetourProbe(acc: ReturnType<typeof accounts>[number]): Promise<Response> {
+  const tok = await token(acc.id, acc.geheim);
+  if (!tok) return Response.json({ ok: false, fout: `Inloggen bij Bol is mislukt voor "${acc.naam}". ${laatsteTokenFout}` }, { status: 502 });
+  const uit: Record<string, unknown> = {};
+  for (const handled of ["true", "false"]) {
+    const r = await haal(`https://api.bol.com/retailer/returns?handled=${handled}&page=1`, tok);
+    const lijst = r.data?.returns || [];
+    uit[`handled=${handled}`] = { status: r.status, aantal: lijst.length, sleutels: r.data ? Object.keys(r.data) : null, voorbeeld: lijst.length ? vorm(lijst[0]) : null };
+    if (lijst.length) {
+      const d = await haal(`https://api.bol.com/retailer/returns/${encodeURIComponent(String(lijst[0].returnId))}`, tok);
+      uit[`handled=${handled} detail`] = { status: d.status, voorbeeld: d.data ? vorm(d.data) : null };
+    }
+  }
+  return Response.json({ ok: true, ...uit }, { status: 200 });
+}
+
 type Db = ReturnType<typeof createClient>;
 /** Haalt de bestellingen van de gekozen accounts op en bewaart ze voor één gebruiker. */
 async function verwerk(gekozen: ReturnType<typeof accounts>, van: string, tot: string, supabase: Db, userId: string): Promise<Response> {
@@ -175,6 +200,8 @@ async function afhandelen(req: Request): Promise<Response> {
   if (body.actie === "info") {
     return Response.json({ ok: true, accounts: alle.map((a) => ({ nummer: a.nummer, naam: a.naam })) }, { status: 200 });
   }
+
+  if (body.actie === "retouren-probe") return await afhandelenRetourProbe(alle.find((a) => a.nummer === String(body.account || "1")) || alle[0]);
 
   const gekozen = body.account && body.account !== "alle" ? alle.filter((a) => a.nummer === String(body.account)) : alle;
   if (!gekozen.length) return Response.json({ ok: false, fout: "Dit Bol-account is niet ingesteld." }, { status: 400 });
