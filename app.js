@@ -18,6 +18,7 @@ import {
   openRelatiesBeheerModal, sluitRelatiesBeheerModal, voegNieuweRelatieToe, bewaarRelatiesBeheer,
   kenRelatienummersToe, kiesFactuurBijlage, kiesFactuurUpload, kiesMeerdereFacturen, overslaanFactuur
 } from './facturen-ui.js?v=20261025c';
+import { verbergTerugkerend, herstelTerugkerend, zetToonVerborgenTerugkerend } from './terugkerend.js?v=20261025c';
 import { openIbanClusterScherm } from './boekingen-relaties-ui.js?v=20261025c';
 import './uren-ui.js?v=20261025c';
 import { verwerkBankTerugkeer } from './bankkoppelen.js?v=20261025c';
@@ -93,6 +94,7 @@ window.hertekenBankNaBonnetje = () => hertekenHuidigePagina();
 initBonnetjes().then(() => hertekenHuidigePagina());
 
 Object.assign(window, {
+  verbergTerugkerend, herstelTerugkerend, zetToonVerborgenTerugkerend,
   legEindvoorraadVast,
   zoekGrootboekVertraagd, zoekVoorraadVertraagd,
   nav, gaNaar, wisselJaar, hertekenHuidigePagina, paginaUitHash,

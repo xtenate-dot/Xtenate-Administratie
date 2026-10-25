@@ -10,6 +10,7 @@ import { renderHome } from './dashboard.js?v=20261025c';
 import { renderPortaal } from './home.js?v=20261025c';
 import { renderGrootboek } from './grootboek.js?v=20261025c';
 import { renderHNVI } from './hnvi.js?v=20261025c';
+import { renderTerugkerend } from './terugkerend.js?v=20261025c';
 import { renderControle } from './controle.js?v=20261025c';
 import { renderCovers } from './voorraad.js?v=20261025c';
 import { renderFacturenPagina, renderInkoopfacturen, renderVerkoopfacturen } from './facturen-ui.js?v=20261025c';
@@ -47,6 +48,7 @@ const RENDERS = {
   bol: renderBol,
   inkoopfacturen: renderInkoopfacturen,
   verkoopfacturen: renderVerkoopfacturen,
+  terugkerend: renderTerugkerend,
   activa: renderActiva,
   beheer: renderBeheer
 };
@@ -73,6 +75,7 @@ const TITELS = {
   bol: 'Bol.com',
   inkoopfacturen: 'Inkoopfacturen',
   verkoopfacturen: 'Verkoopfacturen',
+  terugkerend: 'Terugkerend',
   activa: 'Activa',
   beheer: 'Beheer'
 };
