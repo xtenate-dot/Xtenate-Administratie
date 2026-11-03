@@ -8,11 +8,11 @@
 // nodig is. Alle gebruikte functies zijn alleen-lezend; deze module wijzigt
 // nooit data.
 
-import { draaiControles } from './controle.js?v=20261103e';
-import { factuurSamenvatting } from './facturen.js?v=20261103e';
-import { esc, fmt } from './helpers.js?v=20261103e';
-import { standaardMinVoorraad, state } from './storage.js?v=20261103e';
-import { telInbox } from './bankinbox.js?v=20261103e';
+import { draaiControles } from './controle.js?v=20261103f';
+import { factuurSamenvatting } from './facturen.js?v=20261103f';
+import { esc, fmt } from './helpers.js?v=20261103f';
+import { standaardMinVoorraad, state } from './storage.js?v=20261103f';
+import { telInbox } from './bankinbox.js?v=20261103f';
 
 const el = id => document.getElementById(id);
 
@@ -149,13 +149,11 @@ export function renderPortaal() {
     })
   ].join('');
 
-  const zonderKostprijs = (state.COVERS || []).filter(c => !(Number(c.inkoop) > 0)).length;
   const taak = (tekst, pagina) => `<li><button type="button" class="btn-details" onclick="gaNaar('${pagina}')">${esc(tekst)} \u2192</button></li>`;
   const taken = [];
   if (teLaat > 0) taken.push(taak(`${teLaat} factuur${teLaat === 1 ? '' : 'en'} te laat`, 'inkoopfacturen'));
   if (ctr && ctr.fout > 0) taken.push(taak(`${ctr.fout} fout${ctr.fout === 1 ? '' : 'en'} in de controle`, 'controle'));
   if (ctr && ctr.waarschuwing > 0) taken.push(taak(`${ctr.waarschuwing} aandachtspunt${ctr.waarschuwing === 1 ? '' : 'en'} in de controle`, 'controle'));
-  if (zonderKostprijs > 0) taken.push(taak(`${zonderKostprijs} artikel${zonderKostprijs === 1 ? '' : 'en'} zonder kostprijs`, 'voorraad'));
 
   doel.innerHTML = `
     <div class="home-welkom">
@@ -171,9 +169,10 @@ export function renderPortaal() {
 
   // De bank-inbox komt uit Supabase en wordt daarom pas daarna toegevoegd.
   telInbox().then(n => {
+    if (document.getElementById('home-todo-inbox')) return;
     const lijst = document.getElementById('home-todo-lijst');
     if (!lijst || !n) return;
-    lijst.insertAdjacentHTML('afterbegin', taak(`${n} nieuwe bankregel${n === 1 ? '' : 's'} in de inbox`, 'bank'));
+    lijst.insertAdjacentHTML('afterbegin', taak(`${n} nieuwe bankregel${n === 1 ? '' : 's'} in de inbox`, 'bank').replace('<li>', '<li id="home-todo-inbox">'));
     const leeg = document.getElementById('home-todo-leeg');
     if (leeg) leeg.style.display = 'none';
   });
