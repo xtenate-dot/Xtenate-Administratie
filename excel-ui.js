@@ -1,7 +1,7 @@
 // excel-ui.js — het venster rond de Excel-export.
 
-import { beschikbareJaren, exportSamenvatting, exporteerNaarExcel } from './export.js?v=20261025f';
-import { lopendJaar } from './jaren.js?v=20261025f';
+import { beschikbareJaren, exportSamenvatting, exporteerNaarExcel } from './export.js?v=20261103a';
+import { lopendJaar } from './jaren.js?v=20261103a';
 
 const el = id => document.getElementById(id);
 
