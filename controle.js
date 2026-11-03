@@ -8,14 +8,14 @@
 //   'gb:<nr>'  -> die grootboekrekening
 //   'pagina:<naam>' -> die pagina
 
-import { BEGINSALDO_2026, esc, fmt, isPriveBetaaldeKost, teltBij, weergaveNaam } from './helpers.js?v=20261103g';
-import { txVanJaar, isTxJaar, banksaldoTot, lopendJaar } from './jaren.js?v=20261103g';
-import { MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261103g';
-import { DREMPEL, vindDuplicaten } from './duplicaten.js?v=20261103g';
+import { BEGINSALDO_2026, esc, fmt, isPriveBetaaldeKost, teltBij, weergaveNaam } from './helpers.js?v=20261103h';
+import { txVanJaar, isTxJaar, banksaldoTot, lopendJaar } from './jaren.js?v=20261103h';
+import { MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261103h';
+import { DREMPEL, vindDuplicaten } from './duplicaten.js?v=20261103h';
 import {
   REDEN_LABEL, aantalVerborgen, herstelAlles, herstelControle, herstelMelding,
   isControleUit, isVerborgen, verbergMelding, verborgenOverzicht, zetControleUit
-} from './negeren.js?v=20261103g';
+} from './negeren.js?v=20261103h';
 
 const el = id => document.getElementById(id);
 const HOOFDREKENING = '1010';
@@ -285,12 +285,16 @@ function controlesVoorraad() {
     'Beginvoorraad + ingekocht − verkocht komt uit op de voorraad',
     n => `${enkelvoud(n, 'artikel', 'artikelen')} waarbij de voorraadtelling niet klopt`, 'waarschuwing',
     artikelen.map(c => {
-      const ink = Number(c.inkoop) || 0, vk = Number(c.verkoop) || 0, vrd = Number(c.voorraad) || 0;
+      // Alleen cijfers van het lopende jaar; een artikel zonder regel dit jaar (bijv. uit het assortiment) valt erbuiten.
+      const jr = c.jaren?.[lopendJaar()];
+      const ink = Number(jr ? jr.inkoop : c.inkoop) || 0, vk = Number(jr ? jr.verkocht : c.verkoop) || 0, ret = Number(jr?.retour) || 0;
+      const vrd = Number(c.voorraad) || 0;
+      if (c.jaren && !jr) return null;
       if (!(ink > 0 || vk > 0)) return null;
       const begin = c.jaren?.[vorigJaar]?.eind;
       if (begin != null) {
-        const verwacht = Number(begin) + ink - vk;
-        return verwacht === vrd ? null : { c, tekst: `${begin} begin + ${ink} ingekocht − ${vk} verkocht = ${verwacht}, maar voorraad staat op ${vrd}` };
+        const verwacht = Number(begin) + ink - vk + ret;
+        return verwacht === vrd ? null : { c, tekst: `${begin} begin + ${ink} ingekocht − ${vk} verkocht${ret ? ` + ${ret} retour` : ''} = ${verwacht}, maar voorraad staat op ${vrd}` };
       }
       const afgeleid = vrd - ink + vk;
       return afgeleid >= 0 ? null : { c, tekst: `${ink} ingekocht − ${vk} verkocht, voorraad ${vrd}: dan was de beginvoorraad ${afgeleid}, en dat kan niet` };
