@@ -11,7 +11,7 @@
  * Fase 3A Implementation
  */
 
-import { getClient, heeftClient, leesbareFout } from './supabase.js?v=20261103f';
+import { getClient, heeftClient, leesbareFout } from './supabase.js?v=20261103g';
 
 // ===== NOODREM =====
 export function syncIsAangezet() {
@@ -1086,7 +1086,7 @@ export async function syncAllesNaarSupabase(data, keuze, onVoortgang) {
     const records = [
       ...(data.HIST_TX || []).map(b => boekingRecord(b, true, userId)),
       ...(data.TX || []).map(b => boekingRecord(b, false, userId))
-    ].filter(r => r.datum && Number.isFinite(r.bedrag));
+    ].filter(r => r.datum && Number.isFinite(r.bedrag) && r.bedrag > 0);   // de database eist een bedrag > 0 (boekingen_bedrag_check): lege regels uit een import worden overgeslagen
     uitkomst.boekingen = await stuurInBlokken(sb, 'boekingen', records, userId, onVoortgang, 'Boekingen');
   }
 
@@ -1171,7 +1171,7 @@ export async function vervangBoekingenInSupabase(boekingen, { isHistoric = false
   //    uitgaan dat de vorige set nog intact is.
   const records = boekingen
     .map(b => boekingRecord(b, isHistoric, userId))
-    .filter(r => r.datum && Number.isFinite(r.bedrag));
+    .filter(r => r.datum && Number.isFinite(r.bedrag) && r.bedrag > 0);   // de database eist een bedrag > 0 (boekingen_bedrag_check): lege regels uit een import worden overgeslagen
 
   const BLOK = 100;
   let ok = 0;

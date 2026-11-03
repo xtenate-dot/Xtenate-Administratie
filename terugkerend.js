@@ -3,9 +3,9 @@
 // namen minstens 3 van de laatste 6 maanden voorkomen met een vergelijkbaar bedrag, en meldt wanneer er
 // deze maand nog niets van is binnengekomen.
 
-import { state } from './storage.js?v=20261103f';
-import { esc, fmt } from './helpers.js?v=20261103f';
-import { vandaagIso } from './jaren.js?v=20261103f';
+import { state } from './storage.js?v=20261103g';
+import { esc, fmt } from './helpers.js?v=20261103g';
+import { vandaagIso } from './jaren.js?v=20261103g';
 
 const SLEUTEL = 'xtenate_terugkerend_verborgen';
 const el = id => document.getElementById(id);

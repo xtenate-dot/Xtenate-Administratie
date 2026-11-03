@@ -5,14 +5,14 @@
 // niet nog eens voorgesteld. Grootboek en soort worden afgeleid uit eerdere
 // boekingen met dezelfde naam; wat onbekend is kies je zelf.
 
-import { state, saveTxData, jaarIsVergrendeld } from './storage.js?v=20261103f';
-import { isTxJaar, jaarVan, EERSTE_TX_JAAR, vandaagIso } from './jaren.js?v=20261103f';
-import { esc, fmt } from './helpers.js?v=20261103f';
-import { addToPendingQueue } from './supabase-client-v2.js?v=20261103f';
-import { maakHerstelpunt } from './herstelpunt.js?v=20261103f';
-import { facturenVan, isOpenstaand, koppelBetaling, vindFactuur, restBedrag, isDeelsBetaald } from './facturen.js?v=20261103f';
-import { vindRelatie, relatieNummer } from './relaties.js?v=20261103f';
-import { telInbox, haalInboxOp, zetInboxStatus } from './bankinbox.js?v=20261103f';
+import { state, saveTxData, jaarIsVergrendeld } from './storage.js?v=20261103g';
+import { isTxJaar, jaarVan, EERSTE_TX_JAAR, vandaagIso } from './jaren.js?v=20261103g';
+import { esc, fmt } from './helpers.js?v=20261103g';
+import { addToPendingQueue } from './supabase-client-v2.js?v=20261103g';
+import { maakHerstelpunt } from './herstelpunt.js?v=20261103g';
+import { facturenVan, isOpenstaand, koppelBetaling, vindFactuur, restBedrag, isDeelsBetaald } from './facturen.js?v=20261103g';
+import { vindRelatie, relatieNummer } from './relaties.js?v=20261103g';
+import { telInbox, haalInboxOp, zetInboxStatus } from './bankinbox.js?v=20261103g';
 
 const REK = '1010';          // zo staat Revolut nu in je administratie
 const el = id => document.getElementById(id);
