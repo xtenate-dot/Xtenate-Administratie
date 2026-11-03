@@ -6,10 +6,10 @@
 // bedrijfskosten (geen balansposten, geen HNVI- of voorraadinkoop).
 // HNVI-inkoop staat apart, omdat die pas bij verkoop een kostenpost is.
 
-import { state } from './storage.js?v=20261103a';
-import { esc, fmt, isInkomst, isOmzet, isUitgave, MND_KORT } from './helpers.js?v=20261103a';
-import { isKostenpost, inkoopOverzicht } from './belasting.js?v=20261103a';
-import { kmTarief } from './km.js?v=20261103a';
+import { state } from './storage.js?v=20261103b';
+import { esc, fmt, isInkomst, isOmzet, isUitgave, MND_KORT } from './helpers.js?v=20261103b';
+import { isKostenpost, inkoopOverzicht } from './belasting.js?v=20261103b';
+import { kmTarief } from './km.js?v=20261103b';
 
 const el = id => document.getElementById(id);
 let stand = 'maand';          // 'maand' | 'kwartaal' | 'jaar'
