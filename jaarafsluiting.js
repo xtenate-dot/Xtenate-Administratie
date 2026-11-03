@@ -2,16 +2,19 @@
 // controlelijst, de inkoop die wel en niet meetelt, het resultaat en de
 // aangifte. Alleen kijken; er wordt niets aangepast.
 
-import { state, saveCoversData } from './storage.js?v=20261103c';
-import { maakHerstelpunt } from './herstelpunt.js?v=20261103c';
-import { lopendJaar, txVanJaar, vandaagIso } from './jaren.js?v=20261103c';
-import { esc, fmt, MND_KORT, isUitgave } from './helpers.js?v=20261103c';
-import { aangifteModel, inkoopOverzicht, ibOver, hnviLotenVanJaar, hnviOmzetBuitenBank } from './belasting.js?v=20261103c';
-import { totaalUren, URENCRITERIUM } from './uren.js?v=20261103c';
+import { state, saveCoversData } from './storage.js?v=20261103d';
+import { maakHerstelpunt } from './herstelpunt.js?v=20261103d';
+import { lopendJaar, txVanJaar, vandaagIso } from './jaren.js?v=20261103d';
+import { esc, fmt, MND_KORT, isUitgave } from './helpers.js?v=20261103d';
+import { aangifteModel, inkoopOverzicht, ibOver, hnviLotenVanJaar, hnviOmzetBuitenBank } from './belasting.js?v=20261103d';
+import { totaalUren, URENCRITERIUM } from './uren.js?v=20261103d';
 const nlU = n => Number(n).toLocaleString('nl-NL', { maximumFractionDigits: 1 });
-import { heeftBonnetje } from './bonnetjes.js?v=20261103c';
-import { korStatus } from './kor.js?v=20261103c';
-import { draaiControles } from './controle.js?v=20261103c';
+import { heeftBonnetje } from './bonnetjes.js?v=20261103d';
+import { korStatus } from './kor.js?v=20261103d';
+import { draaiControles } from './controle.js?v=20261103d';
+import { banksaldoTot } from './jaren.js?v=20261103d';
+import { telInbox } from './bankinbox.js?v=20261103d';
+import { facturenVan, restBedrag } from './facturen.js?v=20261103d';
 
 const el = id => document.getElementById(id);
 const jr = x => String(x || '').slice(0, 4);
@@ -95,6 +98,37 @@ function checks(jaar, tx, inkoop) {
     }
   }
 
+  // 6. Facturen: nog open per jaareinde
+  const eind = jaar + '-12-31';
+  const alleFact = [...facturenVan('debiteur'), ...facturenVan('crediteur')].filter(f => String(f.datum) <= eind && f.status !== 'oninbaar');
+  const openF = alleFact.filter(f => restBedrag(f) > 0.01);
+  if (openF.length) {
+    const deb = openF.filter(f => f.soort === 'debiteur'), cred = openF.filter(f => f.soort === 'crediteur');
+    uit.push(regel('waarschuwing', `${openF.length} facturen nog niet (volledig) betaald`,
+      `Te ontvangen ${fmt(deb.reduce((a, f) => a + restBedrag(f), 0))} (${deb.length}) · te betalen ${fmt(cred.reduce((a, f) => a + restBedrag(f), 0))} (${cred.length}). Je werkt kasstelsel: pas als de betaling in de bank staat telt hij mee. Controleer of ze echt nog open staan of dat de koppeling met de bank nog ontbreekt.`, 'inkoopfacturen'));
+  } else if (alleFact.length) uit.push(regel('ok', 'Alle facturen zijn betaald of afgerond'));
+  const zonderFactBijlage = alleFact.filter(f => jr(f.datum) === jaar && !heeftBonnetje('F-' + f.id));
+  if (zonderFactBijlage.length) uit.push(regel('waarschuwing', `${zonderFactBijlage.length} facturen zonder bijgevoegd bestand`, 'Voeg het pdf- of beeldbestand bij de factuur toe; de Belastingdienst kan er bij een controle om vragen.', 'inkoopfacturen'));
+
+  // 7. Uitgaven zonder bonnetje of factuur (ook via een gekoppelde factuur met bijlage)
+  const metFactuurBijlage = new Set();
+  alleFact.filter(f => heeftBonnetje('F-' + f.id)).forEach(f => (f.txIds || []).forEach(id => metFactuurBijlage.add(String(id))));
+  const zonder = tx.filter(t => isUitgave(t) && !heeftBonnetje(t.id) && !metFactuurBijlage.has(String(t.id)))
+    .sort((a, b) => Math.abs(b.bedrag) - Math.abs(a.bedrag));
+  if (zonder.length) {
+    uit.push(regel('waarschuwing', `${zonder.length} uitgaven zonder bonnetje of factuur`,
+      'Grootste: <br>' + zonder.slice(0, 8).map(t => `${esc(t.datum)} ${esc(t.naam || '')} ${fmt(Math.abs(t.bedrag))}`).join('<br>'), 'bank'));
+  } else if (tx.some(isUitgave)) uit.push(regel('ok', 'Alle uitgaven hebben een bonnetje of factuur'));
+
+  // 8. Banksaldo op 31 december
+  try {
+    const saldo = banksaldoTot(jaar === lopendJaar() ? null : eind);
+    uit.push(regel('info', `Banksaldo ${jaar === lopendJaar() ? 'nu' : 'per 31-12-' + jaar}: ${fmt(saldo)}`, 'Vergelijk dit bedrag met het saldo op je bankafschrift. Wijkt het af, dan mist er een mutatie of staat er een dubbele.'));
+  } catch (e) { console.error(e); }
+
+  // 9. Bank-inbox, wordt na het tekenen aangevuld
+  uit.push('<div id="ja-inbox-regel"></div>');
+
   return uit;
 }
 
@@ -170,6 +204,13 @@ export function renderJaarafsluiting() {
         <button class="btn" onclick="kopieerAangifte()">Kopieer aangiftegegevens</button>
         <button class="btn" onclick="downloadPeriodeExcel()">Per periode als Excel</button>
       </div>`;
+    telInbox().then(n => {
+      const h = document.getElementById('ja-inbox-regel');
+      if (!h) return;
+      h.innerHTML = n == null ? regel('info', 'Bank-inbox kon niet worden gecontroleerd', 'Probeer de pagina opnieuw te openen.')
+        : n > 0 ? regel('waarschuwing', `${n} nieuwe bankregels in de inbox nog niet verwerkt`, 'Verwerk of negeer ze eerst, anders ontbreken ze in de cijfers.', 'bankinbox')
+        : regel('ok', 'Bank-inbox is leeg');
+    });
   } catch (e) {
     console.error('Jaarafsluiting mislukt:', e);
     doel.innerHTML = '<div class="card"><p>De jaarafsluiting kon niet worden berekend.</p></div>';
