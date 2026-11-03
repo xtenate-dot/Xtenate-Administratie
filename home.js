@@ -8,10 +8,11 @@
 // nodig is. Alle gebruikte functies zijn alleen-lezend; deze module wijzigt
 // nooit data.
 
-import { draaiControles } from './controle.js?v=20261103d';
-import { factuurSamenvatting } from './facturen.js?v=20261103d';
-import { esc, fmt } from './helpers.js?v=20261103d';
-import { standaardMinVoorraad, state } from './storage.js?v=20261103d';
+import { draaiControles } from './controle.js?v=20261103e';
+import { factuurSamenvatting } from './facturen.js?v=20261103e';
+import { esc, fmt } from './helpers.js?v=20261103e';
+import { standaardMinVoorraad, state } from './storage.js?v=20261103e';
+import { telInbox } from './bankinbox.js?v=20261103e';
 
 const el = id => document.getElementById(id);
 
@@ -103,60 +104,77 @@ export function renderPortaal() {
   const hn = hnviStand();
   const bk = boekingenStand();
 
+  const open = fac.debiteuren.aantal + fac.crediteuren.aantal;
+  const teLaat = fac.debiteuren.teLaat + fac.crediteuren.teLaat;
+  const ctrlTekst = ctr
+    ? (ctr.fout + ctr.waarschuwing === 0 ? 'Controle: alles in orde' : `Controle: ${ctr.fout} fout \u00b7 ${ctr.waarschuwing} aandachtspunt${ctr.waarschuwing === 1 ? '' : 'en'}`)
+    : 'Controle niet beschikbaar';
+
   const tegels = [
     tegel({
-      titel: 'Boekhouding', uitleg: 'Overzicht, bank, grootboek en boekingen', icoon: I.boekhouding,
+      titel: 'Bank en facturen', uitleg: 'Bank, inkoop- en verkoopfacturen, vaste posten', icoon: I.facturen,
+      pagina: 'bank',
+      nadruk: teLaat > 0 ? { soort: 'fout', tekst: `${teLaat} te laat` }
+        : (open > 0 ? { soort: 'info', tekst: `${open} open` } : null),
+      regels: open ? [`Te ontvangen ${fmt(fac.debiteuren.bedrag)}`, `Te betalen ${fmt(fac.crediteuren.bedrag)}`] : ['Niets openstaand']
+    }),
+    tegel({
+      titel: 'Relaties', uitleg: 'Klanten en leveranciers met hun facturen', icoon: I.boekhouding,
+      pagina: 'debiteuren',
+      regels: [`${fac.debiteuren.aantal} open bij klanten`, `${fac.crediteuren.aantal} open bij leveranciers`]
+    }),
+    tegel({
+      titel: 'Handel en voorraad', uitleg: 'Bol, voorraad, veiling en HNVI-loten', icoon: I.voorraad,
+      pagina: 'voorraad',
+      nadruk: vrd.op > 0 ? { soort: 'waarschuwing', tekst: `${vrd.op} op` }
+        : (vrd.bijna > 0 ? { soort: 'info', tekst: `${vrd.bijna} bijna op` } : null),
+      regels: [`${vrd.totaal} artikelen`, `${hn.voorraad} HNVI-loten in voorraad`]
+    }),
+    tegel({
+      titel: 'Overzichten', uitleg: 'Resultaat, perioden en grootboek', icoon: I.boekhouding,
       pagina: 'overzicht',
       regels: [`${bk.jaar} boekingen dit jaar`, `${bk.historisch} historisch`]
     }),
     tegel({
-      titel: 'Beheer', uitleg: 'Controle, import, export en onderhoud', icoon: I.beheer,
+      titel: 'Belasting en aangifte', uitleg: 'Inkomstenbelasting, jaarafsluiting, uren en kilometers', icoon: I.belasting,
+      pagina: 'jaarafsluiting',
+      regels: [`Boekjaar ${state.huidigJaar}`, 'Jaarafsluiting met controlelijst']
+    }),
+    tegel({
+      titel: 'Beheer', uitleg: 'Controle, import, back-up en onderhoud', icoon: I.beheer,
       pagina: 'beheer',
-      nadruk: ctr && ctr.fout > 0
-        ? { soort: 'fout', tekst: `${ctr.fout} te doen` }
-        : (ctr && ctr.waarschuwing > 0
-          ? { soort: 'waarschuwing', tekst: `${ctr.waarschuwing} let op` } : null),
-      regels: ctr
-        ? [ctr.fout + ctr.waarschuwing === 0 ? 'Controle: alles in orde' : `Controle: ${ctr.fout} fout \u00b7 ${ctr.waarschuwing} waarschuwing`]
-        : ['Gegevens, onderhoud en systeem']
-    }),
-    tegel({
-      titel: 'Facturen', uitleg: 'Debiteuren en crediteuren', icoon: I.facturen,
-      pagina: 'facturen',
-      nadruk: (fac.debiteuren.teLaat + fac.crediteuren.teLaat) > 0
-        ? { soort: 'fout', tekst: `${fac.debiteuren.teLaat + fac.crediteuren.teLaat} te laat` }
-        : (fac.crediteuren.binnenkort > 0
-          ? { soort: 'waarschuwing', tekst: `${fac.crediteuren.binnenkort} bijna` }
-          : ((fac.debiteuren.aantal + fac.crediteuren.aantal) > 0
-            ? { soort: 'info', tekst: `${fac.debiteuren.aantal + fac.crediteuren.aantal} open` } : null)),
-      regels: (fac.debiteuren.aantal + fac.crediteuren.aantal)
-        ? [`Te ontvangen ${fmt(fac.debiteuren.bedrag)}`, `Te betalen ${fmt(fac.crediteuren.bedrag)}`]
-        : ['Niets openstaand']
-    }),
-    tegel({
-      titel: 'Voorraad', uitleg: 'Artikelen, groepen en voorraadstanden', icoon: I.voorraad,
-      pagina: 'voorraad',
-      nadruk: vrd.op > 0
-        ? { soort: 'waarschuwing', tekst: `${vrd.op} op` }
-        : (vrd.bijna > 0 ? { soort: 'info', tekst: `${vrd.bijna} bijna op` } : null),
-      regels: [`${vrd.totaal} artikelen`, vrd.op || vrd.bijna ? `${vrd.op} op \u00b7 ${vrd.bijna} bijna op` : 'Voorraad op peil']
-    }),
-    tegel({
-      titel: 'Belasting', uitleg: 'Inkomstenbelasting en aftrekposten', icoon: I.belasting,
-      pagina: 'belasting',
-      regels: [`Boekjaar ${state.huidigJaar}`]
-    }),
-    tegel({
-      titel: 'HNVI / Xtenate', uitleg: 'Loten inkopen, verkopen en marge', icoon: I.hnvi,
-      pagina: 'hnvi',
-      regels: [`${hn.voorraad} in voorraad`, `${hn.totaal} loten totaal`]
+      nadruk: ctr && ctr.fout > 0 ? { soort: 'fout', tekst: `${ctr.fout} te doen` }
+        : (ctr && ctr.waarschuwing > 0 ? { soort: 'waarschuwing', tekst: `${ctr.waarschuwing} let op` } : null),
+      regels: [ctrlTekst]
     })
   ].join('');
+
+  const zonderKostprijs = (state.COVERS || []).filter(c => !(Number(c.inkoop) > 0)).length;
+  const taak = (tekst, pagina) => `<li><button type="button" class="btn-details" onclick="gaNaar('${pagina}')">${esc(tekst)} \u2192</button></li>`;
+  const taken = [];
+  if (teLaat > 0) taken.push(taak(`${teLaat} factuur${teLaat === 1 ? '' : 'en'} te laat`, 'inkoopfacturen'));
+  if (ctr && ctr.fout > 0) taken.push(taak(`${ctr.fout} fout${ctr.fout === 1 ? '' : 'en'} in de controle`, 'controle'));
+  if (ctr && ctr.waarschuwing > 0) taken.push(taak(`${ctr.waarschuwing} aandachtspunt${ctr.waarschuwing === 1 ? '' : 'en'} in de controle`, 'controle'));
+  if (zonderKostprijs > 0) taken.push(taak(`${zonderKostprijs} artikel${zonderKostprijs === 1 ? '' : 'en'} zonder kostprijs`, 'voorraad'));
 
   doel.innerHTML = `
     <div class="home-welkom">
       <h1 class="home-titel">Welkom bij Xtenate Administratie</h1>
       <p class="home-sub">Kies waar je heen wilt.</p>
     </div>
+    <div class="card" id="home-todo" style="margin-bottom:16px;padding:14px 18px">
+      <div style="font-weight:600;margin-bottom:6px">Nog te doen</div>
+      <ul id="home-todo-lijst" style="margin:0;padding-left:18px;line-height:1.9">${taken.join('')}</ul>
+      <div id="home-todo-leeg" class="muted" style="font-size:13px;display:${taken.length ? 'none' : 'block'}">Alles op orde.</div>
+    </div>
     <div class="home-tegels">${tegels}</div>`;
+
+  // De bank-inbox komt uit Supabase en wordt daarom pas daarna toegevoegd.
+  telInbox().then(n => {
+    const lijst = document.getElementById('home-todo-lijst');
+    if (!lijst || !n) return;
+    lijst.insertAdjacentHTML('afterbegin', taak(`${n} nieuwe bankregel${n === 1 ? '' : 's'} in de inbox`, 'bank'));
+    const leeg = document.getElementById('home-todo-leeg');
+    if (leeg) leeg.style.display = 'none';
+  });
 }

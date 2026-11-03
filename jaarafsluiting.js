@@ -2,19 +2,19 @@
 // controlelijst, de inkoop die wel en niet meetelt, het resultaat en de
 // aangifte. Alleen kijken; er wordt niets aangepast.
 
-import { state, saveCoversData } from './storage.js?v=20261103d';
-import { maakHerstelpunt } from './herstelpunt.js?v=20261103d';
-import { lopendJaar, txVanJaar, vandaagIso } from './jaren.js?v=20261103d';
-import { esc, fmt, MND_KORT, isUitgave } from './helpers.js?v=20261103d';
-import { aangifteModel, inkoopOverzicht, ibOver, hnviLotenVanJaar, hnviOmzetBuitenBank } from './belasting.js?v=20261103d';
-import { totaalUren, URENCRITERIUM } from './uren.js?v=20261103d';
+import { state, saveCoversData } from './storage.js?v=20261103e';
+import { maakHerstelpunt } from './herstelpunt.js?v=20261103e';
+import { lopendJaar, txVanJaar, vandaagIso } from './jaren.js?v=20261103e';
+import { esc, fmt, MND_KORT, isUitgave } from './helpers.js?v=20261103e';
+import { aangifteModel, inkoopOverzicht, ibOver, hnviLotenVanJaar, hnviOmzetBuitenBank } from './belasting.js?v=20261103e';
+import { totaalUren, URENCRITERIUM } from './uren.js?v=20261103e';
 const nlU = n => Number(n).toLocaleString('nl-NL', { maximumFractionDigits: 1 });
-import { heeftBonnetje } from './bonnetjes.js?v=20261103d';
-import { korStatus } from './kor.js?v=20261103d';
-import { draaiControles } from './controle.js?v=20261103d';
-import { banksaldoTot } from './jaren.js?v=20261103d';
-import { telInbox } from './bankinbox.js?v=20261103d';
-import { facturenVan, restBedrag } from './facturen.js?v=20261103d';
+import { heeftBonnetje } from './bonnetjes.js?v=20261103e';
+import { korStatus } from './kor.js?v=20261103e';
+import { draaiControles } from './controle.js?v=20261103e';
+import { banksaldoTot } from './jaren.js?v=20261103e';
+import { telInbox } from './bankinbox.js?v=20261103e';
+import { facturenVan, restBedrag } from './facturen.js?v=20261103e';
 
 const el = id => document.getElementById(id);
 const jr = x => String(x || '').slice(0, 4);
@@ -208,7 +208,7 @@ export function renderJaarafsluiting() {
       const h = document.getElementById('ja-inbox-regel');
       if (!h) return;
       h.innerHTML = n == null ? regel('info', 'Bank-inbox kon niet worden gecontroleerd', 'Probeer de pagina opnieuw te openen.')
-        : n > 0 ? regel('waarschuwing', `${n} nieuwe bankregels in de inbox nog niet verwerkt`, 'Verwerk of negeer ze eerst, anders ontbreken ze in de cijfers.', 'bankinbox')
+        : n > 0 ? regel('waarschuwing', `${n} nieuwe bankregels in de inbox nog niet verwerkt`, 'Verwerk of negeer ze eerst, anders ontbreken ze in de cijfers.', 'bank')
         : regel('ok', 'Bank-inbox is leeg');
     });
   } catch (e) {
