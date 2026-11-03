@@ -10,18 +10,18 @@
 import {
   vandaagISO, plusDagen, dagenTussen, standaardTermijn,
   voegFactuurToe, vindFactuur, werkFactuurBij, verwijderFactuur,
-  factuurStatus, dagenTeLaat, vervaltBinnenkort, restBedrag, betaaldBedrag, isDeelsBetaald, toegewezenBedrag,
+  factuurStatus, dagenTeLaat, vervaltBinnenkort, restBedrag, betaaldBedrag, isDeelsBetaald, toegewezenBedrag, rondFactuurAf, maakAfrondingOngedaan,
   facturenVan, openstaandSaldo, factuurnummerInGebruik,
   vindBoeking, koppelBetaling, ontkoppelBetaling,
   ouderdomsanalyse, OUDERDOM_VOLGORDE
-} from './facturen.js?v=20261103b';
-import { esc, fmt, ddmm, bedragUit, leegVlak, isInkomst, isUitgave, weergaveNaam } from './helpers.js?v=20261103b';
-import { downloadModelPdf } from './pdf.js?v=20261103b';
-import { state, grootboekNamen, grootboekOptgroepen, BEDRIJFSGEGEVENS } from './storage.js?v=20261103b';
-import { zoekBoekingen } from './search.js?v=20261103b';
-import { vindRelatie, zoekRelaties, maakRelatie, hernoemRelatie, voegRelatiesSamen, herlaadRelaties, bewaarRelatieAdres, relatieNummer, zorgRelatienummer } from './relaties.js?v=20261103b';
-import { bijlagenVan, voegBonnetjeToe, bonnetjesBeschikbaar } from './bonnetjes.js?v=20261103b';
-import { kiesFactuurUpload, resetFactuurUpload, wachtendFactuurBestand, toonBestaandeBijlage, kiesMeerdereFacturen, overslaanFactuur, leegRij, rij, zetRijUi, volgendeInRij } from './factuurupload.js?v=20261103b';
+} from './facturen.js?v=20261103c';
+import { esc, fmt, ddmm, bedragUit, leegVlak, isInkomst, isUitgave, weergaveNaam } from './helpers.js?v=20261103c';
+import { downloadModelPdf } from './pdf.js?v=20261103c';
+import { state, grootboekNamen, grootboekOptgroepen, BEDRIJFSGEGEVENS } from './storage.js?v=20261103c';
+import { zoekBoekingen } from './search.js?v=20261103c';
+import { vindRelatie, zoekRelaties, maakRelatie, hernoemRelatie, voegRelatiesSamen, herlaadRelaties, bewaarRelatieAdres, relatieNummer, zorgRelatienummer } from './relaties.js?v=20261103c';
+import { bijlagenVan, voegBonnetjeToe, bonnetjesBeschikbaar } from './bonnetjes.js?v=20261103c';
+import { kiesFactuurUpload, resetFactuurUpload, wachtendFactuurBestand, toonBestaandeBijlage, kiesMeerdereFacturen, overslaanFactuur, leegRij, rij, zetRijUi, volgendeInRij } from './factuurupload.js?v=20261103c';
 export { kiesFactuurUpload, kiesMeerdereFacturen, overslaanFactuur };
 
 const el = id => document.getElementById(id);
@@ -71,6 +71,7 @@ function tekenTabs() {
 
 export function statusWeergave(f, peildatum = vandaagISO()) {
   const sw = statusWeergaveBasis(f, peildatum);
+  if (sw.klasse === 'badge-green' && Number(f.afgeboekt) > 0) return { ...sw, tekst: `Betaald · verschil ${fmt(f.afgeboekt)}` };
   return isDeelsBetaald(f) ? { ...sw, tekst: `Deels betaald · ${fmt(restBedrag(f))} open${sw.klasse === 'badge-red' ? ' · ' + sw.tekst.toLowerCase() : ''}` } : sw;
 }
 
@@ -589,9 +590,7 @@ export function openKoppelModal(id) {
   const f = vindFactuur(id);
   if (!f) return;
   koppelFactuurId = f.id;
-  el('fact-koppel-context').textContent =
-    `${f.relatie || '(geen relatie)'} · ${fmt(f.bedrag)} · ${f.soort === 'debiteur' ? 'te ontvangen' : 'te betalen'}` +
-    (f.txIds.length ? ` · betaald ${fmt(betaaldBedrag(f))} · nog open ${fmt(restBedrag(f))}` : '');
+  openKoppelContext(f);
   renderGekoppeld(f);
   el('fact-koppel-zoek').value = '';
   el('fact-koppel-resultaten').innerHTML = '';
@@ -656,7 +655,31 @@ function ontkoppelBoekingVanFactuur(txId) {
 function openKoppelContext(f) {
   el('fact-koppel-context').textContent =
     `${f.relatie || '(geen relatie)'} · ${fmt(f.bedrag)} · ${f.soort === 'debiteur' ? 'te ontvangen' : 'te betalen'}` +
-    (f.txIds.length ? ` · betaald ${fmt(betaaldBedrag(f))} · nog open ${fmt(restBedrag(f))}` : '');
+    (f.txIds.length ? ` · betaald ${fmt(betaaldBedrag(f))}` + (Number(f.afgeboekt) > 0 ? ` · verschil afgerond ${fmt(f.afgeboekt)}` : '') + ` · nog open ${fmt(restBedrag(f))}` : '');
+  const rest = restBedrag(f);
+  const doel = el('fact-koppel-afronden');
+  if (!doel) return;
+  doel.innerHTML = f.txIds.length && rest > 0.01
+    ? `<button type="button" class="btn btn-sm" onclick="rondFactuurAfUi()" title="Voor een klein verschil, bijvoorbeeld bankkosten of afronding">Rest ${fmt(rest)} afronden als betalingsverschil</button>`
+    : Number(f.afgeboekt) > 0
+      ? `<span class="muted" style="font-size:12px">Betalingsverschil ${fmt(f.afgeboekt)} is afgerond.</span> <button type="button" class="btn-details" onclick="maakAfrondingOngedaanUi()">Ongedaan maken</button>`
+      : '';
+}
+
+export function rondFactuurAfUi() {
+  const f = vindFactuur(koppelFactuurId);
+  if (!f) return;
+  const rest = restBedrag(f);
+  if (rest > 5 && !confirm(`Het restbedrag is ${fmt(rest)}, meer dan een klein verschil. Toch afronden en de factuur als betaald beschouwen?`)) return;
+  const r = rondFactuurAf(f.id);
+  if (!r.ok) { alert('Afronden mislukt: ' + r.reden); return; }
+  renderGekoppeld(r.factuur); openKoppelContext(r.factuur); renderFacturen();
+}
+
+export function maakAfrondingOngedaanUi() {
+  const r = maakAfrondingOngedaan(koppelFactuurId);
+  if (!r.ok) { alert(r.reden); return; }
+  renderGekoppeld(r.factuur); openKoppelContext(r.factuur); renderFacturen();
 }
 
 // ──────────────────────────────────────────────────────────────────── pdf

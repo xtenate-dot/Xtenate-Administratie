@@ -5,14 +5,14 @@
 // niet nog eens voorgesteld. Grootboek en soort worden afgeleid uit eerdere
 // boekingen met dezelfde naam; wat onbekend is kies je zelf.
 
-import { state, saveTxData, jaarIsVergrendeld } from './storage.js?v=20261103b';
-import { isTxJaar, jaarVan, EERSTE_TX_JAAR, vandaagIso } from './jaren.js?v=20261103b';
-import { esc, fmt } from './helpers.js?v=20261103b';
-import { addToPendingQueue } from './supabase-client-v2.js?v=20261103b';
-import { maakHerstelpunt } from './herstelpunt.js?v=20261103b';
-import { facturenVan, isOpenstaand, koppelBetaling, vindFactuur, restBedrag, isDeelsBetaald } from './facturen.js?v=20261103b';
-import { vindRelatie, relatieNummer } from './relaties.js?v=20261103b';
-import { telInbox, haalInboxOp, zetInboxStatus } from './bankinbox.js?v=20261103b';
+import { state, saveTxData, jaarIsVergrendeld } from './storage.js?v=20261103c';
+import { isTxJaar, jaarVan, EERSTE_TX_JAAR, vandaagIso } from './jaren.js?v=20261103c';
+import { esc, fmt } from './helpers.js?v=20261103c';
+import { addToPendingQueue } from './supabase-client-v2.js?v=20261103c';
+import { maakHerstelpunt } from './herstelpunt.js?v=20261103c';
+import { facturenVan, isOpenstaand, koppelBetaling, vindFactuur, restBedrag, isDeelsBetaald } from './facturen.js?v=20261103c';
+import { vindRelatie, relatieNummer } from './relaties.js?v=20261103c';
+import { telInbox, haalInboxOp, zetInboxStatus } from './bankinbox.js?v=20261103c';
 
 const REK = '1010';          // zo staat Revolut nu in je administratie
 const el = id => document.getElementById(id);
@@ -383,21 +383,21 @@ export function importeerRevolut() {
   if (!window.confirm(`${teDoen.length} boekingen toevoegen aan ${jarenTekst}?`)) return;
 
   maakHerstelpunt('vóór Revolut-import');
-  let gekoppeld = 0, deels = 0;
+  let gekoppeld = 0, deels = 0, verschil = 0;
   for (const r of teDoen) {
     const tx = { id: state.nxtTx++, datum: r.datum, bedrag: r.bedrag, naam: r.naam, omschr: r.omschr, type: r.type, rek: r.rek, gb: r.gb, bron: 'handmatig' };
     const fac = r.factuurId ? vindFactuur(r.factuurId) : null;
     if (fac && fac.relatieId) tx.relatieId = fac.relatieId;
     state.TX.push(tx);
     addToPendingQueue(tx, 'create', false);
-    if (fac) { const k = koppelBetaling(fac.id, tx.id); if (k.ok) { gekoppeld++; if (!k.volledig) deels++; } }
+    if (fac) { const k = koppelBetaling(fac.id, tx.id, null, { autoAfronden: true }); if (k.ok) { gekoppeld++; if (!k.volledig) deels++; if (k.afgerond) verschil += k.afgerond; } }
   }
   saveTxData();
   // Regels uit de inbox die nu geboekt zijn (of er al stonden) tellen niet meer mee.
   const klaar = voorstel.rijen.filter(r => inboxKaart.has(r.sleutel) && (r.staatAl || r.kies)).map(r => inboxKaart.get(r.sleutel));
   if (klaar.length) zetInboxStatus(klaar, 'omgezet').then(() => { inboxAantal = null; inboxGelezen = 0; ververseInbox(true); });
   inboxKaart = new Map();
-  melding = `✅ ${teDoen.length} boekingen toegevoegd.` + (gekoppeld ? ` ${gekoppeld} factu${gekoppeld === 1 ? 'ur' : 'ren'} gekoppeld${deels ? ` (waarvan ${deels} deels betaald)` : ''}.` : '');
+  melding = `✅ ${teDoen.length} boekingen toegevoegd.` + (gekoppeld ? ` ${gekoppeld} factu${gekoppeld === 1 ? 'ur' : 'ren'} gekoppeld${deels ? ` (waarvan ${deels} deels betaald)` : ''}${verschil ? `; betalingsverschil ${fmt(verschil)} afgerond` : ''}.` : '');
   voorstel = null;
   renderBankimport();
   window.hertekenHuidigePagina?.();

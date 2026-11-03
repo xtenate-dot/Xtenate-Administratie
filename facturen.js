@@ -7,7 +7,7 @@
 //
 // Deze module bevat geen interface. De schermen komen in stap 3 en 4.
 
-import { FACTUUR_INSTELLINGEN, saveFacturen, state } from './storage.js?v=20261103b';
+import { FACTUUR_INSTELLINGEN, saveFacturen, state } from './storage.js?v=20261103c';
 
 export const SOORTEN = ['debiteur', 'crediteur'];
 
@@ -74,6 +74,8 @@ export function maakFactuur(gegevens = {}) {
     txIds: Array.isArray(gegevens.txIds) ? [...gegevens.txIds] : [],
     // Deelbetalingen: hoeveel van elke gekoppelde betaling bij déze factuur hoort ({ txId: bedrag }).
     toegewezen: gegevens.toegewezen && typeof gegevens.toegewezen === 'object' ? { ...gegevens.toegewezen } : {},
+    // Klein betalingsverschil dat is afgerond (bijv. bankkosten of een cent afronding): telt als betaald.
+    afgeboekt: Math.max(0, Number(gegevens.afgeboekt) || 0),
     gb: gegevens.gb || '',
     // Optioneel: de regels van een in de factuurmaker opgestelde factuur.
     ...(Array.isArray(gegevens.regels) ? { regels: gegevens.regels } : {}),
@@ -143,7 +145,7 @@ export function betaaldBedrag(f) {
 export function restBedrag(f) {
   if (!f) return 0;
   if (!(f.txIds || []).length) return f.status === 'betaald' ? 0 : r2(Number(f.bedrag) || 0);
-  return Math.max(0, r2((Number(f.bedrag) || 0) - betaaldBedrag(f)));
+  return Math.max(0, r2((Number(f.bedrag) || 0) - betaaldBedrag(f) - (Number(f.afgeboekt) || 0)));
 }
 
 export function isBetaald(f) {
@@ -228,7 +230,9 @@ export function vindBoeking(txId) {
     || null;
 }
 
-export function koppelBetaling(factuurId, txId, bedrag = null) {
+const AUTO_AFRONDEN = 1.00;   // een rest tot € 1 wordt bij het koppelen vanuit de bank vanzelf als betalingsverschil afgerond
+
+export function koppelBetaling(factuurId, txId, bedrag = null, { autoAfronden = false } = {}) {
   const f = vindFactuur(factuurId);
   if (!f) return { ok: false, reden: 'factuur niet gevonden' };
   const t = vindBoeking(txId);
@@ -247,9 +251,12 @@ export function koppelBetaling(factuurId, txId, bedrag = null) {
   if (!(w > 0)) return { ok: false, reden: 'ongeldig bedrag' };
   f.txIds.push(txId);
   f.toegewezen = { ...(f.toegewezen || {}), [String(txId)]: w };
+  let afgerond = 0;
+  const over = restBedrag(f);
+  if (autoAfronden && over > KLEIN && over <= AUTO_AFRONDEN) { f.afgeboekt = r2((Number(f.afgeboekt) || 0) + over); afgerond = over; }
   f.status = restBedrag(f) <= KLEIN ? 'betaald' : 'open';
   saveFacturen();
-  return { ok: true, factuur: f, toegewezen: w, volledig: f.status === 'betaald' };
+  return { ok: true, factuur: f, toegewezen: w, volledig: f.status === 'betaald', afgerond };
 }
 
 export function ontkoppelBetaling(factuurId, txId) {
@@ -259,7 +266,32 @@ export function ontkoppelBetaling(factuurId, txId) {
   f.txIds = f.txIds.filter(id => String(id) !== String(txId));
   if (f.txIds.length === voor) return { ok: false, reden: 'niet gekoppeld' };
   if (f.toegewezen) { const n = { ...f.toegewezen }; delete n[String(txId)]; f.toegewezen = n; }
+  f.afgeboekt = 0;   // bij een wijziging van de betalingen vervalt een eerder afgerond verschil
   if (f.status === 'betaald') f.status = f.txIds.length === 0 || restBedrag(f) > KLEIN ? 'open' : 'betaald';
+  saveFacturen();
+  return { ok: true, factuur: f };
+}
+
+/** Rond het restbedrag van een (deels betaalde) factuur af als betalingsverschil; de factuur telt dan als betaald. */
+export function rondFactuurAf(factuurId) {
+  const f = vindFactuur(factuurId);
+  if (!f) return { ok: false, reden: 'factuur niet gevonden' };
+  if (!(f.txIds || []).length) return { ok: false, reden: 'koppel eerst een betaling' };
+  const rest = restBedrag(f);
+  if (rest <= KLEIN) return { ok: false, reden: 'er is geen restbedrag' };
+  f.afgeboekt = r2((Number(f.afgeboekt) || 0) + rest);
+  f.status = 'betaald';
+  saveFacturen();
+  return { ok: true, factuur: f, bedrag: rest };
+}
+
+/** Maakt een afgerond betalingsverschil ongedaan: de rest staat weer open. */
+export function maakAfrondingOngedaan(factuurId) {
+  const f = vindFactuur(factuurId);
+  if (!f) return { ok: false, reden: 'factuur niet gevonden' };
+  if (!(Number(f.afgeboekt) > 0)) return { ok: false, reden: 'niets afgerond' };
+  f.afgeboekt = 0;
+  f.status = restBedrag(f) <= KLEIN ? 'betaald' : 'open';
   saveFacturen();
   return { ok: true, factuur: f };
 }
