@@ -8,11 +8,11 @@
 import {
   state, saveHistTxData, saveTxData, saveRekeningen, saveGrootboek, jaarIsVergrendeld,
   grootboekNamen, grootboekOptgroepen, rekeningenLijst
-} from './storage.js?v=20261105a';
-import { addToPendingQueue, syncPendingQueue, isSupabaseReady } from './supabase-client-v2.js?v=20261105a';
-import { esc, fmt, isInkomst, isUitgave, typeBadge } from './helpers.js?v=20261105a';
-import { lopendJaar, txVanJaar, banksaldoTot, vandaagIso } from './jaren.js?v=20261105a';
-import { telInbox } from './bankinbox.js?v=20261105a';
+} from './storage.js?v=20261105b';
+import { addToPendingQueue, syncPendingQueue, isSupabaseReady } from './supabase-client-v2.js?v=20261105b';
+import { esc, fmt, isInkomst, maandLabel } from './helpers.js?v=20261105b';
+import { lopendJaar, txVanJaar, banksaldoTot, vandaagIso } from './jaren.js?v=20261105b';
+import { telInbox } from './bankinbox.js?v=20261105b';
 
 const el = id => document.getElementById(id);
 export const VRAAGPOST_GB = '9999';
@@ -127,14 +127,34 @@ export function renderDagboeken(behoudFocus = false, behoudScroll = false) {
   const optGb = grootboekOptgroepen ? gbOpties() : '';
   const opties = rekeningenLijst().map(r => `<option value="${esc(r.nummer)}">${esc(r.naam)}</option>`).join('');
 
-  const tbody = rijen.slice(0, 600).map(t => `<tr>
+  const plus = t => isInkomst(t) || t.type === 'prive_storting';
+  const bedragHtml = t => `<span class="dg-bedrag ${plus(t) ? 'dg-plus' : 'dg-min'}">${plus(t) ? '+' : '−'}&thinsp;${fmt(t.bedrag)}</span>`;
+  const bij = rijen.filter(plus).reduce((a, t) => a + Number(t.bedrag), 0);
+  const af = rijen.filter(t => !plus(t)).reduce((a, t) => a + Number(t.bedrag), 0);
+  const kolommen = gekozen === 'vraagposten' ? 7 : 6;
+  let tbody = '', laatsteMaand = '';
+  const perMaand = new Map();
+  for (const t of rijen.slice(0, 600)) {
+    const m = String(t.datum).slice(0, 7), p = perMaand.get(m) || { bij: 0, af: 0 };
+    if (plus(t)) p.bij += Number(t.bedrag); else p.af += Number(t.bedrag);
+    perMaand.set(m, p);
+  }
+  for (const t of rijen.slice(0, 600)) {
+    const m = String(t.datum).slice(0, 7);
+    if (m !== laatsteMaand) {
+      laatsteMaand = m; const p = perMaand.get(m);
+      tbody += `<tr class="dg-maand"><td colspan="${kolommen}"><strong>${esc(maandLabel(m))}</strong>
+        <span class="dg-mtot"><span class="dg-plus">bij ${fmt(p.bij)}</span> <span class="dg-min">af ${fmt(p.af)}</span> <span>netto <strong>${fmt(p.bij - p.af)}</strong></span></span></td></tr>`;
+    }
+    tbody += `<tr>
     <td><input type="checkbox" ${aangevinkt.has(String(t.id)) ? 'checked' : ''} onchange="vinkDagboekRij('${esc(String(t.id))}',this.checked)" aria-label="Selecteer"></td>
-    <td>${esc(t.datum)}</td>
-    <td><div>${esc(t.naam || '—')}</div><div class="muted" style="font-size:11.5px;max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(t.omschr || '')}">${esc(t.omschr || '')}</div></td>
+    <td class="dg-datum">${esc(String(t.datum).slice(8, 10) + '-' + String(t.datum).slice(5, 7))}</td>
+    <td><div class="dg-naam">${esc(t.naam || '—')}</div><div class="dg-omschr" title="${esc(t.omschr || '')}">${esc(t.omschr || '')}</div></td>
     <td>${isVraagpost(t) ? `<span class="badge badge-amber">vraagpost</span> ` : ''}${esc(GB[t.gb] || t.gb || '—')} <span class="muted">${esc(t.gb || '')}</span></td>
     ${gekozen === 'vraagposten' ? `<td class="muted">${esc(dagboekVan(t.rek)?.naam || t.rek || '—')}</td>` : ''}
-    <td style="text-align:right">${typeBadge(t.type, t.bedrag)}</td>
-    <td style="text-align:right"><button type="button" class="btn-details" onclick="bewerkBoeking('${esc(String(t.id))}')">Bewerk</button></td></tr>`).join('');
+    <td class="dg-bedragcel">${bedragHtml(t)}</td>
+    <td style="text-align:right"><button type="button" class="btn-details" onclick="bewerkBoeking('${esc(String(t.id))}')">Bewerk</button></td></tr>`;
+  }
 
   const actief = document.activeElement?.id;
   doel.innerHTML = `
@@ -143,6 +163,18 @@ export function renderDagboeken(behoudFocus = false, behoudScroll = false) {
       .dagboek-chip{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 14px;border:1px solid var(--border-default);border-radius:var(--radius-md,8px);background:var(--bg-card);color:var(--text-primary);cursor:pointer;font:inherit;text-align:left}
       .dagboek-chip.actief{border-color:var(--accent,#6d4aff);box-shadow:0 0 0 1px var(--accent,#6d4aff)}
       .dagboek-chip .muted{font-size:11.5px}
+      .dg-bedrag{font-variant-numeric:tabular-nums;font-weight:600;font-size:14.5px;white-space:nowrap}
+      .dg-plus{color:var(--semantic-success-bright,#1f9d55)} .dg-min{color:var(--semantic-error-bright,#d64545)}
+      .dg-bedragcel{text-align:right;width:150px}
+      .dg-datum{width:64px;color:var(--text-secondary);font-variant-numeric:tabular-nums;white-space:nowrap}
+      .dg-naam{font-weight:500} .dg-omschr{font-size:11.5px;color:var(--text-secondary);max-width:360px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      .dg-maand td{background:var(--bg-elevated,rgba(127,127,127,.10));padding:8px 12px;font-size:13px}
+      .dg-mtot{float:right;display:inline-flex;gap:16px;font-variant-numeric:tabular-nums}
+      .dg-samenvatting{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+      .dg-samenvatting>div{padding:10px 16px;border:1px solid var(--border-default);border-radius:var(--radius-md,8px);background:var(--bg-card);min-width:150px}
+      .dg-samenvatting .lbl{font-size:11.5px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.03em}
+      .dg-samenvatting .val{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
+      #dagboeken-inhoud .tbl-compact td{padding-top:9px;padding-bottom:9px}
       .dagboek-bulk{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:10px 14px;margin-bottom:10px;border:1px solid var(--accent,#6d4aff);border-radius:var(--radius-md,8px);background:var(--bg-card)}
     </style>
     <div class="dagboek-chips">${chips}<button type="button" class="dagboek-chip" onclick="openNieuwDagboek()"><strong>+ Nieuw dagboek</strong><span class="muted">eigen dagboek maken</span></button></div>
@@ -154,6 +186,11 @@ export function renderDagboeken(behoudFocus = false, behoudScroll = false) {
       <span class="muted" style="font-size:13px">${rijen.length} boeking${rijen.length === 1 ? '' : 'en'}${rijen.length > 600 ? ' (eerste 600 getoond)' : ''}</span>
       <span style="flex:1"></span>
       <button type="button" class="btn btn-sm" onclick="openMemoriaalBoeking()">+ Memoriaalboeking</button>
+    </div>
+    <div class="dg-samenvatting">
+      <div><div class="lbl">Bij</div><div class="val dg-plus">${fmt(bij)}</div></div>
+      <div><div class="lbl">Af</div><div class="val dg-min">${fmt(af)}</div></div>
+      <div><div class="lbl">Netto</div><div class="val">${fmt(bij - af)}</div></div>
     </div>
     ${geselecteerd.length ? `<div class="dagboek-bulk"><strong>${geselecteerd.length} geselecteerd</strong><span class="muted">(${fmt(somSel)})</span>
       <select id="bulk-gb" aria-label="Grootboek">${gbOpties(true)}</select>

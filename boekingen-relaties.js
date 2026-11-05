@@ -19,10 +19,10 @@
 // aanlevert. Bevestigen herzoekt nooit live — dat zou ook boekingen kunnen
 // raken die niet in het cluster zaten dat de gebruiker heeft gezien.
 
-import { state, saveTxData, saveHistTxData, save, load } from './storage.js?v=20261105a';
-import { isIban } from './helpers.js?v=20261105a';
-import { relatieSleutel } from './facturen.js?v=20261105a';
-import { saveToSupabase, addToPendingQueue } from './supabase-client-v2.js?v=20261105a';
+import { state, saveTxData, saveHistTxData, save, load } from './storage.js?v=20261105b';
+import { isIban } from './helpers.js?v=20261105b';
+import { relatieSleutel } from './facturen.js?v=20261105b';
+import { saveToSupabase, addToPendingQueue } from './supabase-client-v2.js?v=20261105b';
 
 // ───────────────────────────────────────── afgewezen clusters (lokaal, per IBAN)
 // Puur een "vraag me hier niet nog eens naar"-voorkeur, geen boekingdata zelf
