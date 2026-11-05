@@ -2,19 +2,19 @@
 // controlelijst, de inkoop die wel en niet meetelt, het resultaat en de
 // aangifte. Alleen kijken; er wordt niets aangepast.
 
-import { state, saveCoversData } from './storage.js?v=20261103h';
-import { maakHerstelpunt } from './herstelpunt.js?v=20261103h';
-import { lopendJaar, txVanJaar, vandaagIso } from './jaren.js?v=20261103h';
-import { esc, fmt, MND_KORT, isUitgave } from './helpers.js?v=20261103h';
-import { aangifteModel, inkoopOverzicht, ibOver, hnviLotenVanJaar, hnviOmzetBuitenBank } from './belasting.js?v=20261103h';
-import { totaalUren, URENCRITERIUM } from './uren.js?v=20261103h';
+import { state, saveCoversData } from './storage.js?v=20261103i';
+import { maakHerstelpunt } from './herstelpunt.js?v=20261103i';
+import { lopendJaar, txVanJaar, vandaagIso } from './jaren.js?v=20261103i';
+import { esc, fmt, MND_KORT, isUitgave } from './helpers.js?v=20261103i';
+import { aangifteModel, inkoopOverzicht, ibOver, hnviLotenVanJaar, hnviOmzetBuitenBank } from './belasting.js?v=20261103i';
+import { totaalUren, URENCRITERIUM } from './uren.js?v=20261103i';
 const nlU = n => Number(n).toLocaleString('nl-NL', { maximumFractionDigits: 1 });
-import { heeftBonnetje } from './bonnetjes.js?v=20261103h';
-import { korStatus } from './kor.js?v=20261103h';
-import { draaiControles } from './controle.js?v=20261103h';
-import { banksaldoTot } from './jaren.js?v=20261103h';
-import { telInbox } from './bankinbox.js?v=20261103h';
-import { facturenVan, restBedrag } from './facturen.js?v=20261103h';
+import { heeftBonnetje } from './bonnetjes.js?v=20261103i';
+import { korStatus } from './kor.js?v=20261103i';
+import { draaiControles } from './controle.js?v=20261103i';
+import { banksaldoTot } from './jaren.js?v=20261103i';
+import { telInbox } from './bankinbox.js?v=20261103i';
+import { facturenVan, restBedrag } from './facturen.js?v=20261103i';
 
 const el = id => document.getElementById(id);
 const jr = x => String(x || '').slice(0, 4);

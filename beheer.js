@@ -5,15 +5,15 @@
 // ongewijzigd: elke tegel roept dezelfde globale functie aan als het
 // zijbalk-item, dus er verandert niets aan wat ze doen.
 
-import { herstelpuntenBlok } from './herstelpunt.js?v=20261103h';
-import { cloudBackupBlok } from './cloudbackup.js?v=20261103h';
-import { draaiControles } from './controle.js?v=20261103h';
-import { esc } from './helpers.js?v=20261103h';
-import { saveVoorraadInstellingen, standaardMinVoorraad, saveControleInstellingen, CONTROLE_INSTELLINGEN, saveBtwInstellingen, BTW_INSTELLINGEN, saveBedrijfsgegevens, BEDRIJFSGEGEVENS, saveKmInstellingen, KM_INSTELLINGEN, saveFactuurInstellingen, FACTUUR_INSTELLINGEN, appDataStatus, state, rekeningenLijst, bankKoppelingDagenTotVerval } from './storage.js?v=20261103h';
-import { werkBankKoppelingRekBijInSupabase } from './supabase-client-v2.js?v=20261103h';
-import { hertekenHuidigePagina } from './ui.js?v=20261103h';
-import { getPendingItems } from './supabase-client-v2.js?v=20261103h';
-import { syncNu } from './autosync.js?v=20261103h';
+import { herstelpuntenBlok } from './herstelpunt.js?v=20261103i';
+import { cloudBackupBlok } from './cloudbackup.js?v=20261103i';
+import { draaiControles } from './controle.js?v=20261103i';
+import { esc } from './helpers.js?v=20261103i';
+import { saveVoorraadInstellingen, standaardMinVoorraad, saveControleInstellingen, CONTROLE_INSTELLINGEN, saveBtwInstellingen, BTW_INSTELLINGEN, saveBedrijfsgegevens, BEDRIJFSGEGEVENS, saveKmInstellingen, KM_INSTELLINGEN, saveFactuurInstellingen, FACTUUR_INSTELLINGEN, appDataStatus, state, rekeningenLijst, bankKoppelingDagenTotVerval } from './storage.js?v=20261103i';
+import { werkBankKoppelingRekBijInSupabase } from './supabase-client-v2.js?v=20261103i';
+import { hertekenHuidigePagina } from './ui.js?v=20261103i';
+import { getPendingItems } from './supabase-client-v2.js?v=20261103i';
+import { syncNu } from './autosync.js?v=20261103i';
 
 const el = id => document.getElementById(id);
 
@@ -490,6 +490,7 @@ const APP_DATA_NAMEN = {
   grootboek: 'Grootboek',
   rekeningen: 'Rekeningen',
   facturen: 'Facturen',
+  artikelregels: 'Inkoop- en verkoopregels per artikel',
   factuur_instellingen: 'Factuurinstellingen',
   controle_instellingen: 'Controle-instellingen',
   btw_instellingen: 'BTW-instelling',

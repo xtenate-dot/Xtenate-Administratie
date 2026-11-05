@@ -22,9 +22,10 @@
 // (`voorraadEind` in belasting.js). Home en Excel horen daar niet van af te
 // wijken, anders staan er twee voorraadwaarden in dezelfde administratie.
 
-import { inkoopprijzenUitBank, prijsPerStuk } from './belasting.js?v=20261103h';
-import { PRIJS_COVER } from './helpers.js?v=20261103h';
-import { state } from './storage.js?v=20261103h';
+import { inkoopprijzenUitBank, prijsPerStuk } from './belasting.js?v=20261103i';
+import { PRIJS_COVER } from './helpers.js?v=20261103i';
+import { state } from './storage.js?v=20261103i';
+import { gemKostprijs } from './artikelregels.js?v=20261103i';
 
 /**
  * De uit de bank afgeleide prijzen. Loopt over alle boekingen, dus bereken je
@@ -45,6 +46,9 @@ export function bankPrijzenNu() {
  * Levert null op als geen van beide een bruikbaar bedrag geeft.
  */
 export function inkoopprijsVan(c, bankPrijzen, jaar) {
+  // Eigen inkoopregels (per partij) gaan voor: dat is de nauwkeurigste bron.
+  const uitRegels = gemKostprijs(c?.id, jaar ? jaar + '-12-31' : null);
+  if (uitRegels != null && uitRegels > 0) return uitRegels;
   const handmatig = Number(c?.inkoopprijs);
   if (Number.isFinite(handmatig) && handmatig > 0) return handmatig;
   if (!bankPrijzen) return null;

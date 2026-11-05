@@ -19,7 +19,7 @@ import {
   saveAppData,
   loadAppData,
   laatsteAppDataFout
-} from './supabase-client-v2.js?v=20261103h';
+} from './supabase-client-v2.js?v=20261103i';
 
 /**
  * Stuurt een los lijstje (groepen, facturen, tellers) naar de cloud zonder
@@ -105,6 +105,7 @@ function appDataWaarde(sleutel) {
   if (sleutel === 'grootboek') return state.GROOTBOEK;
   if (sleutel === 'rekeningen') return state.REKENINGEN;
   if (sleutel === 'facturen') return { lijst: state.FACTUREN, volgende: state.nxtFactuur };
+  if (sleutel === 'artikelregels') return state.ARTIKELREGELS;
   if (sleutel === 'factuur_instellingen') return FACTUUR_INSTELLINGEN;
   if (sleutel === 'controle_instellingen') return CONTROLE_INSTELLINGEN;
   if (sleutel === 'btw_instellingen') return BTW_INSTELLINGEN;
@@ -562,6 +563,21 @@ export function saveHnviData() {
 state.FACTUREN = load('xtenate_facturen', []);
 state.nxtFactuur = load('xtenate_nxt_factuur', 1);
 
+// Inkoop- en verkoopregels per artikel (voor kostprijs, opbrengst en winst). Naast de voorraad,
+// niet erin: de voorraadtelling zelf wordt hierdoor niet aangepast.
+state.ARTIKELREGELS = (() => {
+  const v = load('xtenate_artikelregels', null);
+  return {
+    inkopen: Array.isArray(v?.inkopen) ? v.inkopen : [],
+    verkopen: Array.isArray(v?.verkopen) ? v.verkopen : []
+  };
+})();
+
+export function saveArtikelRegels() {
+  save('xtenate_artikelregels', state.ARTIKELREGELS);
+  duwAppData('artikelregels', state.ARTIKELREGELS);
+}
+
 export const FACTUUR_INSTELLINGEN_STANDAARD = {
   betaaltermijnDebiteur: 30,
   betaaltermijnCrediteur: 14,
@@ -883,6 +899,13 @@ export async function loadDataHybrid() {
           state.FACTUREN = extra.facturen.lijst;
           if (Number(extra.facturen.volgende) > 0) state.nxtFactuur = Number(extra.facturen.volgende);
           console.log(`✅ Facturen uit Supabase: ${state.FACTUREN.length}`);
+        }
+        if (extra.artikelregels && (Array.isArray(extra.artikelregels.inkopen) || Array.isArray(extra.artikelregels.verkopen))) {
+          state.ARTIKELREGELS = {
+            inkopen: Array.isArray(extra.artikelregels.inkopen) ? extra.artikelregels.inkopen : [],
+            verkopen: Array.isArray(extra.artikelregels.verkopen) ? extra.artikelregels.verkopen : []
+          };
+          save('xtenate_artikelregels', state.ARTIKELREGELS);
         }
         if (extra.factuur_instellingen) {
           FACTUUR_INSTELLINGEN = { ...FACTUUR_INSTELLINGEN, ...extra.factuur_instellingen };

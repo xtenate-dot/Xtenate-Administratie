@@ -21,10 +21,10 @@
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<link rel="stylesheet" href="theme.css?v=20261103h">
-<link rel="stylesheet" href="layout.css?v=20261103h">
-<link rel="stylesheet" href="components.css?v=20261103h">
-<link rel="stylesheet" href="responsive.css?v=20261103h">
+<link rel="stylesheet" href="theme.css?v=20261103i">
+<link rel="stylesheet" href="layout.css?v=20261103i">
+<link rel="stylesheet" href="components.css?v=20261103i">
+<link rel="stylesheet" href="responsive.css?v=20261103i">
 </head>
 <body>
 
@@ -193,6 +193,10 @@
   <div class="nav-item" data-page="voorraad" onclick="nav('voorraad',this)" title="Voorraad">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
     <span class="nav-label">Voorraad</span>
+  </div>
+  <div class="nav-item" data-page="rendement" onclick="nav('rendement',this)" title="Inkoop en verkoop per artikel">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>
+    <span class="nav-label">Winst per artikel</span>
   </div>
   <div class="nav-item" data-page="veiling" onclick="nav('veiling',this)" title="Artikelvoorraad">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 4l6 6-3 3-6-6z"/><path d="M11 7L4 14l3 3 7-7"/><path d="M4 21h9"/></svg>
@@ -639,6 +643,15 @@
     <button class="btn" onclick="downloadBtwPdf()">Download als pdf</button>
   </div>
   <div id="btw-inhoud"></div>
+</div>
+
+<!-- RENDEMENT -->
+<div id="p-rendement" class="page">
+  <div class="page-head"><div>
+    <div class="page-title">Inkoop en verkoop per artikel</div>
+    <div class="page-sub">Wat een artikel heeft gekost, wat het heeft opgebracht (per kanaal) en wat je eraan verdiend hebt.</div>
+  </div></div>
+  <div id="rendement-inhoud"></div>
 </div>
 
 <!-- TERUGKEREND -->
@@ -1475,6 +1488,6 @@
 </div>
 </div>
 
-<script type="module" src="app.js?v=20261103h"></script>
+<script type="module" src="app.js?v=20261103i"></script>
 </body>
 </html>
