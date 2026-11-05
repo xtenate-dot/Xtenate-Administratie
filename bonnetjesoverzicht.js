@@ -2,9 +2,9 @@
 // inkoopfacturen/bonnetjes (bij uitgaven) en verkoopfacturen (bij inkomsten).
 // De indeling volgt het soort boeking waar de bijlage aan hangt; je hoeft niets apart in te stellen.
 
-import { state } from './storage.js?v=20261103i';
-import { esc, fmt, ddmm, isUitgave, isInkomst, weergaveNaam } from './helpers.js?v=20261103i';
-import { alleBonnetjes, heeftBonnetje, bonnetjesBeschikbaar } from './bonnetjes.js?v=20261103i';
+import { state } from './storage.js?v=20261105a';
+import { esc, fmt, ddmm, isUitgave, isInkomst, weergaveNaam } from './helpers.js?v=20261105a';
+import { alleBonnetjes, heeftBonnetje, bonnetjesBeschikbaar } from './bonnetjes.js?v=20261105a';
 
 const el = id => document.getElementById(id);
 let jaarKeuze = 'alle';       // 'alle' of 'JJJJ'

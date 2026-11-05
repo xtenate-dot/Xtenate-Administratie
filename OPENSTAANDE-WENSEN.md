@@ -127,7 +127,10 @@ Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
 - Nog te testen door gebruiker met echte facturen en een echte bankregel. Bekend: een factuur telt direct als geheel betaald (geen deelbetalingen).
 - Nog niet gedaan: weekoverzicht per e-mail (mailservice nodig), terugkerende boekingen, voorraad bijwerken uit Bol (EAN nodig), 24 vastgelopen HNVI-wachtrij-items opruimen (toestemming nodig).
 
-## Dagboeken (gevraagd 5-11, bouwen op 5 of 6 november)
+## Dagboeken (gebouwd 5-11, fase 1)
+Gebouwd: elke rekening is een dagboek (Bank = hoofdrekening, Memoriaal, eigen dagboeken), pagina Dagboeken met bulk-wijzigen van grootboek/dagboek, vraagposten (gb 9999 of onbekend grootboek) en memoriaalboekingen. Banksaldo telt alleen het dagboek Bank. Nog open: dagboek-specifieke nummering/boekstukken, memoriaal met debet en credit tegelijk, Excel-export per dagboek (memoriaal komt nu in het bank-blad).
+
+Oorspronkelijke wens:
 Wens van de gebruiker: een eigen blok "Dagboeken" waarin hij zelf dagboeken kan aanmaken.
 - Vanuit een dagboek boekingen kunnen wijzigen, iets op een tussenrekening/vraagpost zetten, makkelijker corrigeren en memoriaal boeken.
 - Er moet een vast dagboek **Bank** zijn waar alle bankmutaties binnenkomen (bank-inbox, Revolut-koppeling en import). Andere dagboeken (bijv. Memoriaal, Kas/Privé, Bol, Veiling) staan daar los van, maar alles komt in dezelfde boekingen-tabel.
