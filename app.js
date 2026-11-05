@@ -2,13 +2,13 @@
 // attributen in index.html blijven werken, regelt de globale interacties
 // (detailpaneel, zoeken, sneltoetsen) en start de app op.
 
-import { state } from './storage.js?v=20261105b';
-import { nav, gaNaar, hertekenHuidigePagina, paginaUitHash } from './ui.js?v=20261105b';
-import { initBonnetjes } from './bonnetjes.js?v=20261105b';
-import './bonnetscan.js?v=20261105b';
-import { startAutosync, syncNu } from './autosync.js?v=20261105b';
-import { wisselJaar, renderHome } from './dashboard.js?v=20261105b';
-import { renderBank, kiesBankMaand, toonAlleBankBoekingen, openTxModal, closeTx, saveTx, syncTxGrootboek, syncTxBtw, bewerkBoeking, deleteTx } from './bank.js?v=20261105b';
+import { state } from './storage.js?v=20261105c';
+import { nav, gaNaar, hertekenHuidigePagina, paginaUitHash } from './ui.js?v=20261105c';
+import { initBonnetjes } from './bonnetjes.js?v=20261105c';
+import './bonnetscan.js?v=20261105c';
+import { startAutosync, syncNu } from './autosync.js?v=20261105c';
+import { wisselJaar, renderHome } from './dashboard.js?v=20261105c';
+import { renderBank, kiesBankMaand, toonAlleBankBoekingen, openTxModal, closeTx, saveTx, syncTxGrootboek, syncTxBtw, bewerkBoeking, deleteTx } from './bank.js?v=20261105c';
 import {
   renderFacturen, kiesFactuurTab,
   openFactuurModal, sluitFactuurModal, syncFactuurVervaldatum, factVervaldatumHandmatig,
@@ -17,36 +17,36 @@ import {
   zoekFactuurRelatie, sluitFactuurRelatieSuggesties,
   openRelatiesBeheerModal, sluitRelatiesBeheerModal, voegNieuweRelatieToe, bewaarRelatiesBeheer,
   kenRelatienummersToe, kiesFactuurBijlage, kiesFactuurUpload, kiesMeerdereFacturen, overslaanFactuur, rondFactuurAfUi, maakAfrondingOngedaanUi
-} from './facturen-ui.js?v=20261105b';
-import { kiesDagboek, zetDagboekJaar, zetDagboekZoek, vinkDagboekRij, vinkDagboekAlles, bulkGrootboek, bulkDagboek, bulkVraagpost, openNieuwDagboek, bewaarNieuwDagboek, openMemoriaalBoeking, mmVoorbeeld, bewaarMemoriaal } from './dagboeken.js?v=20261105b';
-import { zetRendementJaar, zetRendementZoek, zetRendementFilter, openArtikelRegels, openRegelFormulier, zoekRegelBank, bewaarRegel, verwijderRegel, haalBolVerkopen, exporteerRendement } from './artikelregels.js?v=20261105b';
-import { verbergTerugkerend, herstelTerugkerend, zetToonVerborgenTerugkerend } from './terugkerend.js?v=20261105b';
-import { koppelBolEan, ontkoppelBolEan, verwerkBolVerkopen } from './bolartikelen.js?v=20261105b';
-import { openIbanClusterScherm } from './boekingen-relaties-ui.js?v=20261105b';
-import './uren-ui.js?v=20261105b';
-import { verwerkBankTerugkeer } from './bankkoppelen.js?v=20261105b';
-import { renderKm, openRitModal, sluitRitModal, saveRit, verwijderRitUi, verwijderRitUitModal } from './km-ui.js?v=20261105b';
-import { kiesRevolutBestand, leesRevolutBestand, zetBankimportKeuze, importeerRevolut, verwijderBankimportRegel } from './bankimport.js?v=20261105b';
-import { wisselVergrendeling, legEindvoorraadVast } from './jaarafsluiting.js?v=20261105b';
-import { zetHerstelpuntTerug } from './herstelpunt.js?v=20261105b';
-import { kiesPeriodeSoort, kiesPeriodeJaar, kiesPeriodeWeergave, downloadPeriodeExcel } from './periode.js?v=20261105b';
-import { kiesVeilingBestand, importeerVeiling } from './veiling-ui.js?v=20261105b';
-import { renderActiva, openActivumModal, sluitActivumModal, saveActivum, verwijderActivumUi, verwijderActivumUitModal } from './activa-ui.js?v=20261105b';
-import { renderBeheer, bewaarMinVoorraad, bewaarReferentiePriveSt2022, herprobeerSynchronisatie, bewaarBtwVanaf, bewaarBedrijfsgegevens, bewaarKmTarief, bewaarFactuurInstellingen, bewaarBankKoppelingRek } from './beheer.js?v=20261105b';
-import { renderPortaal } from './home.js?v=20261105b';
+} from './facturen-ui.js?v=20261105c';
+import { kiesDagboek, zetDagboekJaar, zetDagboekPeriode, zetDagboekVanTot, nieuweBoekingInDagboek, zetDagboekZoek, vinkDagboekRij, vinkDagboekAlles, bulkGrootboek, bulkDagboek, bulkVraagpost, openNieuwDagboek, bewaarNieuwDagboek, openMemoriaalBoeking, mmVoorbeeld, bewaarMemoriaal } from './dagboeken.js?v=20261105c';
+import { zetRendementJaar, zetRendementZoek, zetRendementFilter, openArtikelRegels, openRegelFormulier, zoekRegelBank, bewaarRegel, verwijderRegel, haalBolVerkopen, exporteerRendement } from './artikelregels.js?v=20261105c';
+import { verbergTerugkerend, herstelTerugkerend, zetToonVerborgenTerugkerend } from './terugkerend.js?v=20261105c';
+import { koppelBolEan, ontkoppelBolEan, verwerkBolVerkopen } from './bolartikelen.js?v=20261105c';
+import { openIbanClusterScherm } from './boekingen-relaties-ui.js?v=20261105c';
+import './uren-ui.js?v=20261105c';
+import { verwerkBankTerugkeer } from './bankkoppelen.js?v=20261105c';
+import { renderKm, openRitModal, sluitRitModal, saveRit, verwijderRitUi, verwijderRitUitModal } from './km-ui.js?v=20261105c';
+import { kiesRevolutBestand, leesRevolutBestand, zetBankimportKeuze, importeerRevolut, verwijderBankimportRegel } from './bankimport.js?v=20261105c';
+import { wisselVergrendeling, legEindvoorraadVast } from './jaarafsluiting.js?v=20261105c';
+import { zetHerstelpuntTerug } from './herstelpunt.js?v=20261105c';
+import { kiesPeriodeSoort, kiesPeriodeJaar, kiesPeriodeWeergave, downloadPeriodeExcel } from './periode.js?v=20261105c';
+import { kiesVeilingBestand, importeerVeiling } from './veiling-ui.js?v=20261105c';
+import { renderActiva, openActivumModal, sluitActivumModal, saveActivum, verwijderActivumUi, verwijderActivumUitModal } from './activa-ui.js?v=20261105c';
+import { renderBeheer, bewaarMinVoorraad, bewaarReferentiePriveSt2022, herprobeerSynchronisatie, bewaarBtwVanaf, bewaarBedrijfsgegevens, bewaarKmTarief, bewaarFactuurInstellingen, bewaarBankKoppelingRek } from './beheer.js?v=20261105c';
+import { renderPortaal } from './home.js?v=20261105c';
 import {
   renderGrootboek, wisFiltersGrootboek, openGrootboekRekening, sluitGrootboekRekening,
   openGrootboekBeheerModal, sluitGrootboekBeheerModal, voegGrootboekToe, verwijderGrootboek,
   voegRekeningToe, verwijderRekening, bewaarGrootboekBeheer
-} from './grootboek.js?v=20261105b';
-import { renderBelasting, openTarieven, openExtraKosten, openPercentages, openInkomenssoort, controlereBelasting, openControleDialog, kopieerAangifte, downloadAangifte, downloadAangiftePdf } from './belasting.js?v=20261105b';
-import { wisselBtwKwartaal, downloadBtwPdf } from './btw.js?v=20261105b';
-import { renderCrediteuren, wisselJaarCrediteuren } from './crediteuren.js?v=20261105b';
-import { renderDebiteuren, wisselJaarDebiteuren } from './debiteuren.js?v=20261105b';
+} from './grootboek.js?v=20261105c';
+import { renderBelasting, openTarieven, openExtraKosten, openPercentages, openInkomenssoort, controlereBelasting, openControleDialog, kopieerAangifte, downloadAangifte, downloadAangiftePdf } from './belasting.js?v=20261105c';
+import { wisselBtwKwartaal, downloadBtwPdf } from './btw.js?v=20261105c';
+import { renderCrediteuren, wisselJaarCrediteuren } from './crediteuren.js?v=20261105c';
+import { renderDebiteuren, wisselJaarDebiteuren } from './debiteuren.js?v=20261105c';
 import {
   renderControle, klapControleUit, toonAlleControleRegels, verbergControleMelding,
   zetControleUitVanaf, herstelControleMelding, herstelControleReeks, herstelAlleMeldingen
-} from './controle.js?v=20261105b';
+} from './controle.js?v=20261105c';
 import {
   renderCovers, openCoverModal, openCoverEdit, closeCoverModal, saveCover, kiesVoorraadTab,
   wisselVoorraadDetails, wisselDetailKolommen, filterVoorraadStatus,
@@ -56,36 +56,36 @@ import {
   draaiActieTerug, openGroepenModal, sluitGroepenModal, voegGroepToe, verwijderGroep, bewaarGroepen,
   kiesVoorraadJaar, legVoorraadVast, verwijderArtikel, verwijderVoorraadSelectie,
   openImportModalVoorraad, sluitImportModal, handleImportVoorraad, exporteerVoorraadPdf
-} from './voorraad.js?v=20261105b';
+} from './voorraad.js?v=20261105c';
 import {
   renderHNVI, berekenHNVIInkoop, openHNVIModal, openHNVISell, closeHNVIModal, saveHNVI,
   wisHNVIVerkoop, verwijderHNVIItem, toggleAllHNVI, updateHNVIDeleteBtn, verwijderGeselecteerdeHNVI,
   importHNVIFactuur, bevestigHNVIImport, exporteerHnviPdf
-} from './hnvi.js?v=20261105b';
+} from './hnvi.js?v=20261105c';
 import {
   importExcel, openWisModal, doWis, toonWisPreview, openSyncModal, saveSyncUrl, syncUpload, syncDownload,
   openApiKeyModal, saveApiKey, bevestigImport, annuleerImport
-} from './modals.js?v=20261105b';
-import { initUiVoorkeuren, wisselThema, wisselMenu, wisselMobielMenu, sluitMobielMenu } from './theme.js?v=20261105b';
-import { wisselNavGroep, initNavGroepen } from './navgroepen.js?v=20261105b';
-import { initZoek, focusZoek, sluitZoek } from './search.js?v=20261105b';
-import { openExportModal, sluitExportModal, toonExportSamenvatting, doeExport } from './excel-ui.js?v=20261105b';
-import { openZelftestModal, sluitZelftestModal, startZelftest } from './zelftest-ui.js?v=20261105b';
+} from './modals.js?v=20261105c';
+import { initUiVoorkeuren, wisselThema, wisselMenu, wisselMobielMenu, sluitMobielMenu } from './theme.js?v=20261105c';
+import { wisselNavGroep, initNavGroepen } from './navgroepen.js?v=20261105c';
+import { initZoek, focusZoek, sluitZoek } from './search.js?v=20261105c';
+import { openExportModal, sluitExportModal, toonExportSamenvatting, doeExport } from './excel-ui.js?v=20261105c';
+import { openZelftestModal, sluitZelftestModal, startZelftest } from './zelftest-ui.js?v=20261105c';
 import {
   openOpslagDiagnose, sluitOpslagDiagnose, voerOpslagDiagnoseUit, kopieerOpslagDiagnose,
   maakOpslagSnapshot, toonOverrides, toonNegeerlijst, downloadBackup, downloadNegeerBestanden
-} from './opslagdiagnose-ui.js?v=20261105b';
+} from './opslagdiagnose-ui.js?v=20261105c';
 import {
   openGegevenscontrole, sluitGegevenscontrole, herlaadGegevenscontrole,
   kiesGc, annuleerGc, bevestigGc, maakKeuzeOngedaan,
   exporteerGcMeldingen, controleerGcSchrijfacties
-} from './gegevenscontrole-ui.js?v=20261105b';
+} from './gegevenscontrole-ui.js?v=20261105c';
 import {
   openUitvoeren, sluitUitvoeren, doeStapBackup, zetBegrepen, doeStapUitvoeren
-} from './uitvoeren-ui.js?v=20261105b';
-import { vertraag } from './helpers.js?v=20261105b';
-import { toonBoeking, sluitDrawer, openBoeking } from './drawer.js?v=20261105b';
-import { start as startAuth, login, uitloggen, opnieuwVerbinden, toonRegistreren, toonInloggen, signUp } from './auth.js?v=20261105b';
+} from './uitvoeren-ui.js?v=20261105c';
+import { vertraag } from './helpers.js?v=20261105c';
+import { toonBoeking, sluitDrawer, openBoeking } from './drawer.js?v=20261105c';
+import { start as startAuth, login, uitloggen, opnieuwVerbinden, toonRegistreren, toonInloggen, signUp } from './auth.js?v=20261105c';
 
 // Zoeken tijdens typen wacht kort: anders wordt bij elke aanslag de hele
 // tabel opnieuw opgebouwd, wat bij honderden regels merkbaar hapert.
@@ -99,7 +99,7 @@ initBonnetjes().then(() => hertekenHuidigePagina());
 Object.assign(window, {
   koppelBolEan, ontkoppelBolEan, verwerkBolVerkopen,
   verbergTerugkerend, herstelTerugkerend, zetToonVerborgenTerugkerend,
-  kiesDagboek, zetDagboekJaar, zetDagboekZoek, vinkDagboekRij, vinkDagboekAlles, bulkGrootboek, bulkDagboek, bulkVraagpost, openNieuwDagboek, bewaarNieuwDagboek, openMemoriaalBoeking, mmVoorbeeld, bewaarMemoriaal,
+  kiesDagboek, zetDagboekJaar, zetDagboekPeriode, zetDagboekVanTot, nieuweBoekingInDagboek, zetDagboekZoek, vinkDagboekRij, vinkDagboekAlles, bulkGrootboek, bulkDagboek, bulkVraagpost, openNieuwDagboek, bewaarNieuwDagboek, openMemoriaalBoeking, mmVoorbeeld, bewaarMemoriaal,
   zetRendementJaar, zetRendementZoek, zetRendementFilter, openArtikelRegels, openRegelFormulier, zoekRegelBank, bewaarRegel, verwijderRegel, haalBolVerkopen, exporteerRendement,
   legEindvoorraadVast,
   zoekGrootboekVertraagd, zoekVoorraadVertraagd,

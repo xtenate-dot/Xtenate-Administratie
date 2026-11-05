@@ -8,11 +8,11 @@
 import {
   state, saveHistTxData, saveTxData, saveRekeningen, saveGrootboek, jaarIsVergrendeld,
   grootboekNamen, grootboekOptgroepen, rekeningenLijst
-} from './storage.js?v=20261105b';
-import { addToPendingQueue, syncPendingQueue, isSupabaseReady } from './supabase-client-v2.js?v=20261105b';
-import { esc, fmt, isInkomst, maandLabel } from './helpers.js?v=20261105b';
-import { lopendJaar, txVanJaar, banksaldoTot, vandaagIso } from './jaren.js?v=20261105b';
-import { telInbox } from './bankinbox.js?v=20261105b';
+} from './storage.js?v=20261105c';
+import { addToPendingQueue, syncPendingQueue, isSupabaseReady } from './supabase-client-v2.js?v=20261105c';
+import { esc, fmt, isInkomst, maandLabel } from './helpers.js?v=20261105c';
+import { lopendJaar, txVanJaar, banksaldoTot, vandaagIso } from './jaren.js?v=20261105c';
+import { telInbox } from './bankinbox.js?v=20261105c';
 
 const el = id => document.getElementById(id);
 export const VRAAGPOST_GB = '9999';
@@ -21,6 +21,8 @@ const SOORTEN = { bank: 'Bank', creditcard: 'Creditcard', memoriaal: 'Memoriaal'
 
 let gekozen = null;            // nummer van het dagboek, of 'vraagposten'
 let jaarKeuze = null, zoek = '';
+let periode = 'jaar', vanDatum = '', totDatum = '';   // 'jaar' | 'q1'..'q4' | 'm01'..'m12' | 'eigen'
+const MAANDEN = ['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December'];
 const aangevinkt = new Set();
 
 // ─── Dagboeken (rekeningen) ────────────────────────────────────────────────
@@ -84,6 +86,31 @@ export function wijzigBoekingen(ids, { gb, rek } = {}) {
 
 export function kiesDagboek(nr) { gekozen = nr; aangevinkt.clear(); renderDagboeken(); }
 export function zetDagboekJaar(j) { jaarKeuze = j; aangevinkt.clear(); renderDagboeken(); }
+export function zetDagboekPeriode(p) { periode = p; aangevinkt.clear(); renderDagboeken(); }
+export function zetDagboekVanTot(van, tot) { vanDatum = van || ''; totDatum = tot || ''; aangevinkt.clear(); renderDagboeken(); }
+
+/** Begin- en einddatum (ISO, inclusief) van de gekozen periode, of null als er geen beperking is. */
+function periodeGrenzen(jaar) {
+  if (periode === 'eigen') return { van: vanDatum || '0000-00-00', tot: totDatum || '9999-99-99' };
+  if (jaar === 'all' || periode === 'jaar') return null;
+  const laatste = (j, m) => new Date(Number(j), m, 0).getDate();
+  if (/^q[1-4]$/.test(periode)) {
+    const q = Number(periode[1]), m1 = (q - 1) * 3 + 1, m2 = q * 3;
+    return { van: `${jaar}-${String(m1).padStart(2, '0')}-01`, tot: `${jaar}-${String(m2).padStart(2, '0')}-${laatste(jaar, m2)}` };
+  }
+  if (/^m\d\d$/.test(periode)) {
+    const m = Number(periode.slice(1));
+    return { van: `${jaar}-${String(m).padStart(2, '0')}-01`, tot: `${jaar}-${String(m).padStart(2, '0')}-${laatste(jaar, m)}` };
+  }
+  return null;
+}
+const inPeriode = (t, g) => !g || (String(t.datum) >= g.van && String(t.datum) <= g.tot);
+function periodeTekst(jaar) {
+  if (periode === 'eigen') return `${vanDatum || 'begin'} t/m ${totDatum || 'nu'}`;
+  if (jaar === 'all' || periode === 'jaar') return jaar === 'all' ? 'alle jaren' : jaar;
+  if (periode[0] === 'q') return `${periode.toUpperCase()} ${jaar}`;
+  return `${MAANDEN[Number(periode.slice(1)) - 1]} ${jaar}`;
+}
 export function zetDagboekZoek(t) { zoek = String(t || '').toLowerCase(); renderDagboeken(true); }
 export function vinkDagboekRij(id, aan) { if (aan) aangevinkt.add(String(id)); else aangevinkt.delete(String(id)); renderDagboeken(true, true); }
 export function vinkDagboekAlles(aan) {
@@ -94,7 +121,8 @@ export function vinkDagboekAlles(aan) {
 
 function lijstRijen() {
   const jaar = jaarKeuze || String(lopendJaar());
-  let l = txVanJaar(jaar);
+  const g = periodeGrenzen(jaar);
+  let l = (periode === 'eigen' ? txVanJaar('all') : txVanJaar(jaar)).filter(t => inPeriode(t, g));
   if (gekozen === 'vraagposten') l = l.filter(isVraagpost);
   else l = l.filter(t => String(t.rek) === String(gekozen));
   if (zoek) l = l.filter(t => `${t.naam || ''} ${t.omschr || ''} ${t.gb} ${t.bedrag}`.toLowerCase().includes(zoek));
@@ -107,7 +135,8 @@ export function renderDagboeken(behoudFocus = false, behoudScroll = false) {
   zorgVoorDagboeken();
   if (!gekozen || (gekozen !== 'vraagposten' && !dagboekVan(gekozen))) gekozen = (state.REKENINGEN.find(r => r.isHoofdrekening) || state.REKENINGEN[0]).nummer;
   const jaar = jaarKeuze || String(lopendJaar());
-  const alle = txVanJaar(jaar);
+  const grenzen = periodeGrenzen(jaar);
+  const alle = (periode === 'eigen' ? txVanJaar('all') : txVanJaar(jaar)).filter(t => inPeriode(t, grenzen));
   const GB = grootboekNamen();
   const vraag = alle.filter(isVraagpost).length;
   const scrollY = window.scrollY;
@@ -182,12 +211,21 @@ export function renderDagboeken(behoudFocus = false, behoudScroll = false) {
       : `<p class="muted" style="font-size:13px;margin:0 0 10px">${dagboek ? esc(uitleg(dagboek, jaar)) : ''}</p>`}
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
       <select id="dagboek-jaar" onchange="zetDagboekJaar(this.value)" aria-label="Jaar">${gebruikteJaren.map(y => `<option ${y === jaar ? 'selected' : ''}>${esc(y)}</option>`).join('')}<option value="all" ${jaar === 'all' ? 'selected' : ''}>Alle jaren</option></select>
+      <select id="dagboek-periode" onchange="zetDagboekPeriode(this.value)" aria-label="Periode" ${jaar === 'all' && periode !== 'eigen' ? 'disabled' : ''}>
+        <option value="jaar" ${periode === 'jaar' ? 'selected' : ''}>Hele jaar</option>
+        <optgroup label="Kwartaal">${[1,2,3,4].map(q => `<option value="q${q}" ${periode === 'q' + q ? 'selected' : ''}>Kwartaal ${q}</option>`).join('')}</optgroup>
+        <optgroup label="Maand">${MAANDEN.map((n, i) => { const v = 'm' + String(i + 1).padStart(2, '0'); return `<option value="${v}" ${periode === v ? 'selected' : ''}>${n}</option>`; }).join('')}</optgroup>
+        <option value="eigen" ${periode === 'eigen' ? 'selected' : ''}>Eigen periode…</option></select>
+      ${periode === 'eigen' ? `<input type="date" id="dagboek-van" value="${esc(vanDatum)}" onchange="zetDagboekVanTot(this.value, document.getElementById('dagboek-tot').value)" aria-label="Van"> t/m
+      <input type="date" id="dagboek-tot" value="${esc(totDatum)}" onchange="zetDagboekVanTot(document.getElementById('dagboek-van').value, this.value)" aria-label="Tot">` : ''}
       <input type="search" id="dagboek-zoek" placeholder="Zoek in dit dagboek…" value="${esc(zoek)}" oninput="zetDagboekZoek(this.value)" style="min-width:220px">
       <span class="muted" style="font-size:13px">${rijen.length} boeking${rijen.length === 1 ? '' : 'en'}${rijen.length > 600 ? ' (eerste 600 getoond)' : ''}</span>
       <span style="flex:1"></span>
+      ${gekozen !== 'vraagposten' && dagboek?.soort !== 'memoriaal' ? `<button type="button" class="btn btn-sm btn-primary" onclick="nieuweBoekingInDagboek()">+ Boeking in ${esc(dagboek?.naam || 'dagboek')}</button>` : ''}
       <button type="button" class="btn btn-sm" onclick="openMemoriaalBoeking()">+ Memoriaalboeking</button>
     </div>
     <div class="dg-samenvatting">
+      <div><div class="lbl">Periode</div><div class="val" style="font-size:16px;padding-top:3px">${esc(periodeTekst(jaar))}</div></div>
       <div><div class="lbl">Bij</div><div class="val dg-plus">${fmt(bij)}</div></div>
       <div><div class="lbl">Af</div><div class="val dg-min">${fmt(af)}</div></div>
       <div><div class="lbl">Netto</div><div class="val">${fmt(bij - af)}</div></div>
@@ -366,3 +404,22 @@ export function bewaarMemoriaal() {
   gekozen = rek;
   renderDagboeken();
 }
+
+
+/** Nieuwe boeking in het gekozen dagboek, met een datum binnen de gekozen periode. */
+export function nieuweBoekingInDagboek() {
+  window.openTxModal();
+  const rek = el('tx-rek'), d = el('tx-d');
+  if (rek && gekozen && gekozen !== 'vraagposten') rek.value = String(gekozen);
+  const g = periodeGrenzen(jaarKeuze || String(lopendJaar()));
+  if (d && g) {
+    const nu = vandaagIso();
+    if (nu < g.van || nu > g.tot) d.value = g.tot < '9999' ? g.tot : g.van;
+    d.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+}
+
+// Na opslaan of wijzigen van een boeking (ook vanuit dit scherm) de lijst bijwerken.
+document.addEventListener('tx-opgeslagen', () => {
+  if (location.hash === '#dagboeken' && el('dagboeken-inhoud')) renderDagboeken(true, true);
+});
