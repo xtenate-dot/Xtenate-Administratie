@@ -126,3 +126,20 @@ Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
 - Klanten/Leveranciers: relatienummer, open facturen en factuuroverzicht per partij.
 - Nog te testen door gebruiker met echte facturen en een echte bankregel. Bekend: een factuur telt direct als geheel betaald (geen deelbetalingen).
 - Nog niet gedaan: weekoverzicht per e-mail (mailservice nodig), terugkerende boekingen, voorraad bijwerken uit Bol (EAN nodig), 24 vastgelopen HNVI-wachtrij-items opruimen (toestemming nodig).
+
+## Dagboeken (gevraagd 5-11, bouwen op 5 of 6 november)
+Wens van de gebruiker: een eigen blok "Dagboeken" waarin hij zelf dagboeken kan aanmaken.
+- Vanuit een dagboek boekingen kunnen wijzigen, iets op een tussenrekening/vraagpost zetten, makkelijker corrigeren en memoriaal boeken.
+- Er moet een vast dagboek **Bank** zijn waar alle bankmutaties binnenkomen (bank-inbox, Revolut-koppeling en import). Andere dagboeken (bijv. Memoriaal, Kas/Privé, Bol, Veiling) staan daar los van, maar alles komt in dezelfde boekingen-tabel.
+- Ontwerpkeuzes om te bevestigen: boekingen krijgen een veld `dagboek`; kolom in Supabase + migratie (bestaande boekingen = Bank); memoriaal-boeking met debet/credit; vraagposten (tussenrekening) als aparte lijst "nog uit te zoeken".
+
+## Voorraad: inkoopprijs per stuk met meerdere inkopen (gevraagd 5-11)
+- Overzicht van Voorraad & Mutaties in de Excel is te onoverzichtelijk. Wens: per artikel de inkoopprijs per stuk zien.
+- Moet kunnen met meerdere inkopen op verschillende data en bedragen (inkoopregels per artikel: datum, aantal, totaalbedrag, optioneel factuur/bankboeking). Gemiddelde kostprijs per stuk uit alle inkopen, gewogen op aantal.
+- In de app bouwen; in afwachting van de gebruiker (hij kan pas vanavond of morgen wijzigingen doorvoeren).
+
+## Nog open vragen aan de gebruiker (5-11)
+- Gele Hond: nieuwe Excel zegt eindvoorraad 2025 = 1, de app heeft 0. Voorstel: 2025 op 1 zetten.
+- Fujifilm X-S10 (HNVI) staat in Excel als verkocht 18-09-2026 voor € 385, in de app nog op voorraad.
+- 2 privé-stortingen (€ 7,50 en € 5,00) horen inkomst op grootboek 8000 te zijn.
+- Nieuwe Excel heeft verkopen sinds laatste controle: Mini Toothless 6 (voorraad 1), M4 RGB roze 7 (voorraad 9), M42 RGB wit 3 (voorraad 1).
