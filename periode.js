@@ -6,10 +6,10 @@
 // bedrijfskosten (geen balansposten, geen HNVI- of voorraadinkoop).
 // HNVI-inkoop staat apart, omdat die pas bij verkoop een kostenpost is.
 
-import { state } from './storage.js?v=20261105c';
-import { esc, fmt, isInkomst, isOmzet, isUitgave, MND_KORT } from './helpers.js?v=20261105c';
-import { isKostenpost, inkoopOverzicht } from './belasting.js?v=20261105c';
-import { kmTarief } from './km.js?v=20261105c';
+import { state } from './storage.js?v=20261106a';
+import { esc, fmt, isInkomst, isKostenBoeking, isKostenTerugbetaling, isOmzet, isUitgave, MND_KORT } from './helpers.js?v=20261106a';
+import { isKostenpost, inkoopOverzicht, voorraadRekeningen } from './belasting.js?v=20261106a';
+import { kmTarief } from './km.js?v=20261106a';
 
 const el = id => document.getElementById(id);
 let stand = 'maand';          // 'maand' | 'kwartaal' | 'jaar'
@@ -61,23 +61,30 @@ export function perPeriode(boekingen, soort) {
   for (const t of boekingen) {
     if (!t.datum) continue;
     const k = sleutelVan(t.datum, soort);
-    if (!groepen.has(k)) groepen.set(k, { sleutel: k, omzet: 0, kosten: 0, hnviInkoop: 0, priveSt: 0, priveOp: 0, aantal: 0 });
+    if (!groepen.has(k)) groepen.set(k, { sleutel: k, omzet: 0, kosten: 0, hnviInkoop: 0, voorraadInkoop: 0, priveSt: 0, priveOp: 0, aantal: 0 });
     const g = groepen.get(k);
     g.aantal++;
     if (isInkomst(t) && isOmzet(t.gb)) g.omzet += bedrag(t);
     else if (isUitgave(t) && isOmzet(t.gb)) g.omzet -= bedrag(t);   // terugbetaling
     if (isKostenpost(t)) g.kosten += bedrag(t);
-    if (isUitgave(t) && String(t.gb) === '7010') g.hnviInkoop += bedrag(t);
+    else if (isKostenBoeking(t) && String(t.gb) === '7010') g.hnviInkoop += bedrag(t);
+    else if (isKostenBoeking(t) && voorraadRekeningen().includes(String(t.gb))) g.voorraadInkoop += bedrag(t);
+    else if (isKostenTerugbetaling(t)) {
+      // geld terug op een kosten- of inkooprekening: verlaagt die kosten
+      if (String(t.gb) === '7010') g.hnviInkoop -= bedrag(t);
+      else if (voorraadRekeningen().includes(String(t.gb))) g.voorraadInkoop -= bedrag(t);
+      else if (isKostenpost({ ...t, type: 'uitgave' })) g.kosten -= bedrag(t);
+    }
     if (t.type === 'prive_storting') g.priveSt += bedrag(t);
     if (t.type === 'prive_opname') g.priveOp += bedrag(t);
   }
   for (const [k, e] of kmPerPeriode(boekingen, soort)) {
-    if (!groepen.has(k)) groepen.set(k, { sleutel: k, omzet: 0, kosten: 0, hnviInkoop: 0, priveSt: 0, priveOp: 0, aantal: 0 });
+    if (!groepen.has(k)) groepen.set(k, { sleutel: k, omzet: 0, kosten: 0, hnviInkoop: 0, voorraadInkoop: 0, priveSt: 0, priveOp: 0, aantal: 0 });
     const g = groepen.get(k);
     g.kosten += e.bedrag; g.km = e.km; g.kmBedrag = e.bedrag;
   }
   return [...groepen.values()]
-    .map(g => ({ ...g, resultaat: g.omzet - g.kosten - g.hnviInkoop }))
+    .map(g => ({ ...g, resultaat: g.omzet - g.kosten - g.hnviInkoop - g.voorraadInkoop }))
     .sort((a, b) => a.sleutel < b.sleutel ? -1 : 1);
 }
 
@@ -236,17 +243,17 @@ export function downloadPeriodeExcel() {
   const X = window.XLSX;
   if (!X) { alert('De Excel-bibliotheek is niet geladen. Ververs de pagina en probeer opnieuw.'); return; }
   const alles = alleBoekingen();
-  const kop = ['Periode', 'Omzet', 'Kosten', 'HNVI-inkoop (bank)', 'Resultaat (kas)', 'Privé gestort', 'Privé opgenomen', 'Boekingen'];
-  const blad = soort => [kop, ...perPeriode(alles, soort).map(r => [labelVan(r.sleutel, soort), r.omzet, r.kosten, r.hnviInkoop, r.resultaat, r.priveSt, r.priveOp, r.aantal])];
+  const kop = ['Periode', 'Omzet', 'Kosten', 'HNVI-inkoop (bank)', 'Inkoop voorraad (bank)', 'Resultaat (kas)', 'Privé gestort', 'Privé opgenomen', 'Boekingen'];
+  const blad = soort => [kop, ...perPeriode(alles, soort).map(r => [labelVan(r.sleutel, soort), r.omzet, r.kosten, r.hnviInkoop, r.voorraadInkoop, r.resultaat, r.priveSt, r.priveOp, r.aantal])];
   const wb = X.utils.book_new();
   const voeg = (naam, rijen, breedtes) => {
     const ws = X.utils.aoa_to_sheet(rijen);
     if (breedtes) ws['!cols'] = breedtes.map(w => ({ wch: w }));
     X.utils.book_append_sheet(wb, ws, naam);
   };
-  voeg('Per maand', blad('maand'), [14, 12, 12, 18, 16, 14, 16, 10]);
-  voeg('Per kwartaal', blad('kwartaal'), [14, 12, 12, 18, 16, 14, 16, 10]);
-  voeg('Per jaar', blad('jaar'), [10, 12, 12, 18, 16, 14, 16, 10]);
+  voeg('Per maand', blad('maand'), [14, 12, 12, 18, 20, 16, 14, 16, 10]);
+  voeg('Per kwartaal', blad('kwartaal'), [14, 12, 12, 18, 20, 16, 14, 16, 10]);
+  voeg('Per jaar', blad('jaar'), [10, 12, 12, 18, 20, 16, 14, 16, 10]);
 
   const jaren = [...new Set(alles.map(t => (t.datum || '').slice(0, 4)).filter(Boolean))].sort();
   const inkoop = [['Jaar', 'Rekening', 'Naam', 'Ingekocht (bank)', 'Telt dit jaar mee', 'Voorraad (telt niet)', 'Nog te verdelen', 'Toelichting']];
@@ -304,9 +311,9 @@ export function renderPeriode() {
   const rijen = perPeriode(zichtbaar, stand);
 
   const tot = rijen.reduce((s, r) => ({
-    omzet: s.omzet + r.omzet, kosten: s.kosten + r.kosten, hnviInkoop: s.hnviInkoop + r.hnviInkoop,
+    omzet: s.omzet + r.omzet, kosten: s.kosten + r.kosten, hnviInkoop: s.hnviInkoop + r.hnviInkoop, voorraadInkoop: s.voorraadInkoop + r.voorraadInkoop,
     resultaat: s.resultaat + r.resultaat, priveSt: s.priveSt + r.priveSt, priveOp: s.priveOp + r.priveOp, aantal: s.aantal + r.aantal
-  }), { omzet: 0, kosten: 0, hnviInkoop: 0, resultaat: 0, priveSt: 0, priveOp: 0, aantal: 0 });
+  }), { omzet: 0, kosten: 0, hnviInkoop: 0, voorraadInkoop: 0, resultaat: 0, priveSt: 0, priveOp: 0, aantal: 0 });
 
   const knop = (id, naam) => `<div class="vtab${stand === id ? ' active' : ''}" onclick="kiesPeriodeSoort('${id}')" role="tab" tabindex="0" aria-selected="${stand === id}">${naam}</div>`;
   const jaarKeuze = stand === 'jaar' && weergave !== 'grootboek' ? '' : `<select onchange="kiesPeriodeJaar(this.value)" aria-label="Jaar">${jaren.map(j => `<option value="${j}"${j === gekozenJaar ? ' selected' : ''}>${j}</option>`).join('')}</select>`;
@@ -319,6 +326,7 @@ export function renderPeriode() {
       <td style="text-align:right">${fmt(r.omzet)}</td>
       <td style="text-align:right">${fmt(r.kosten)}</td>
       <td style="text-align:right">${fmt(r.hnviInkoop)}</td>
+      <td style="text-align:right">${fmt(r.voorraadInkoop)}</td>
       <td style="text-align:right;color:${kleur(r.resultaat)}"><strong>${fmt(r.resultaat)}</strong></td>
       <td style="text-align:right">${fmt(r.priveSt)}</td>
       <td style="text-align:right">${fmt(r.priveOp)}</td>
@@ -331,22 +339,23 @@ export function renderPeriode() {
       ${kpi('Omzet', fmt(tot.omzet))}
       ${kpi('Kosten', fmt(tot.kosten))}
       ${kpi('HNVI-inkoop (bank)', fmt(tot.hnviInkoop))}
+      ${kpi('Inkoop voorraad (bank)', fmt(tot.voorraadInkoop))}
       ${kpi('Resultaat (kas)', fmt(tot.resultaat), kleur(tot.resultaat))}
     </div>
     ${rijen.length ? `<div class="card card-flush"><div class="table-wrap"><table class="tbl-compact">
       <thead><tr><th>Periode</th><th style="text-align:right">Omzet</th><th style="text-align:right">Kosten</th>
-        <th style="text-align:right">HNVI-inkoop</th><th style="text-align:right">Resultaat</th>
+        <th style="text-align:right">HNVI-inkoop</th><th style="text-align:right">Inkoop voorraad</th><th style="text-align:right">Resultaat</th>
         <th style="text-align:right">Privé gestort</th><th style="text-align:right">Privé opgenomen</th>
         <th style="text-align:right">Kilometers</th><th style="text-align:right">Boekingen</th></tr></thead>
       <tbody>${lijst}</tbody>
       <tfoot><tr style="font-weight:600"><td>Totaal</td><td style="text-align:right">${fmt(tot.omzet)}</td>
-        <td style="text-align:right">${fmt(tot.kosten)}</td><td style="text-align:right">${fmt(tot.hnviInkoop)}</td>
+        <td style="text-align:right">${fmt(tot.kosten)}</td><td style="text-align:right">${fmt(tot.hnviInkoop)}</td><td style="text-align:right">${fmt(tot.voorraadInkoop)}</td>
         <td style="text-align:right;color:${kleur(tot.resultaat)}">${fmt(tot.resultaat)}</td>
         <td style="text-align:right">${fmt(tot.priveSt)}</td><td style="text-align:right">${fmt(tot.priveOp)}</td>
         <td style="text-align:right">${rijen.reduce((s, r) => s + (r.km || 0), 0).toLocaleString('nl-NL')} km</td><td style="text-align:right">${tot.aantal}</td></tr></tfoot></table></div></div>`
       : '<div class="card"><p>Geen boekingen gevonden.</p></div>'}
     <p class="muted" style="font-size:12px;margin-top:var(--spacing-2)">
-      Resultaat (kas) = omzet min kosten min HNVI-inkoop zoals die in de bank staat. De kosten bevatten de kilometervergoeding (kilometers × tarief uit de pagina Kilometers). Het fiscale resultaat staat op de pagina Belasting:
+      Resultaat (kas) = omzet min kosten min HNVI-inkoop en voorraadinkoop (AliExpress enz.) zoals die in de bank staan. Terugbetalingen op kostenrekeningen zijn van de kosten afgehaald. De kosten bevatten de kilometervergoeding (kilometers × tarief uit de pagina Kilometers). Het fiscale resultaat staat op de pagina Belasting:
       daar telt HNVI-inkoop pas mee zodra het lot is verkocht.</p>
     ${stand === 'jaar' ? '' : inkoopSectie(gekozenJaar)}`;
 

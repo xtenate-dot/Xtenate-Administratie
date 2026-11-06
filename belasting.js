@@ -1,14 +1,14 @@
 // belasting.js — Belasting-pagina (indicatieve IB-berekening).
 
-import { splitsLoten } from './hnvilot.js?v=20261105c';
-import { tarievenVoor, ibDetail, pct, zelfstandigenaftrekAan, zetZelfstandigenaftrek, bewaarTarieven, herstelStandaardTarieven } from './tarieven.js?v=20261105c';
-import { lopendJaar, txVanJaar } from './jaren.js?v=20261105c';
-import { charts, dc, kleurVoorGb } from './charts.js?v=20261105c';
-import { ddmm, fmt, gbCode, isInkomst, isKostenBoeking, isOmzet, isPriveBetaaldeKost, isUitgave } from './helpers.js?v=20261105c';
-import { downloadModelPdf } from './pdf.js?v=20261105c';
-import { state, grootboekNamen } from './storage.js?v=20261105c';
-import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261105c';
-import { totaalAfschrijvingVanJaar } from './activa.js?v=20261105c';
+import { splitsLoten } from './hnvilot.js?v=20261106a';
+import { tarievenVoor, ibDetail, pct, zelfstandigenaftrekAan, zetZelfstandigenaftrek, bewaarTarieven, herstelStandaardTarieven } from './tarieven.js?v=20261106a';
+import { lopendJaar, txVanJaar } from './jaren.js?v=20261106a';
+import { charts, dc, kleurVoorGb } from './charts.js?v=20261106a';
+import { ddmm, fmt, gbCode, isInkomst, isKostenBoeking, isKostenTerugbetaling, isOmzet, isPriveBetaaldeKost, isUitgave } from './helpers.js?v=20261106a';
+import { downloadModelPdf } from './pdf.js?v=20261106a';
+import { state, grootboekNamen } from './storage.js?v=20261106a';
+import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261106a';
+import { totaalAfschrijvingVanJaar } from './activa.js?v=20261106a';
 
 
 /** Sleutel waaronder de handmatige posten van één jaar staan opgeslagen. */
@@ -193,6 +193,37 @@ export function isKostenpost(t) {
 }
 
 /**
+ * Terugbetalingen op gewone kostenrekeningen (niet op voorraad of HNVI, die lopen
+ * via hun eigen berekening). Die verlagen de kosten: je krijgt geld terug voor iets
+ * dat je eerder als kosten had geboekt.
+ */
+export function kostenTerugbetalingen(belTX) {
+  const perGb = {};
+  let totaal = 0;
+  for (const t of belTX || []) {
+    if (!isKostenTerugbetaling(t) || !isKostenpost({ ...t, type: 'uitgave' })) continue;
+    const b = Number(t.bedrag) || 0, gb = String(t.gb);
+    perGb[gb] = (perGb[gb] || 0) + b;
+    totaal += b;
+  }
+  return { totaal, perGb };
+}
+
+/** Gemiddelde inkoopprijs uit de inkoopregels van een artikel (Winst per artikel), tot en met een jaar. */
+function regelPrijs(art, jaar) {
+  const lijst = (state.ARTIKELREGELS?.inkopen || []).filter(r => String(r.artikelId) === String(art?.id));
+  const tot = jaar && jaar !== 'all' ? `${jaar}-12-31` : null;
+  let n = 0, bedrag = 0;
+  for (const r of lijst) {
+    if (tot && r.datum && r.datum > tot) continue;
+    const a = Number(r.aantal), b = Number(r.bedrag);
+    if (a > 0 && Number.isFinite(b) && b > 0) { n += a; bedrag += b; }
+  }
+  return n > 0 ? bedrag / n : null;
+}
+const heeftInkoopRegels = art => (state.ARTIKELREGELS?.inkopen || []).some(r => String(r.artikelId) === String(art?.id) && Number(r.aantal) > 0 && Number(r.bedrag) > 0);
+
+/**
  * Welke inkooprekening artikel-voorraad draagt: 7000 (AliExpress en Alibaba, ook voor
  * de artikelen van Bol.com en Helmetcoverstore). MijnMagie (7020) doet niet mee: dat is
  * een directe kostenpost.
@@ -256,7 +287,7 @@ export function inkoopprijzenUitBank(alleTX, covers) {
 
   for (const art of covers || []) {
     if (!isHandelsvoorraad(art)) continue;
-    if (heeftHandmatigePrijs(art)) continue;   // eigen prijs: buiten de verdeling
+    if (heeftHandmatigePrijs(art) || heeftInkoopRegels(art)) continue;   // eigen prijs of eigen inkoopregels: buiten de verdeling
     const gb = inkoopRekeningVan(art);
     const f = factorVan(art);
     gewogen[gb] = gewogen[gb] || {};
@@ -269,12 +300,29 @@ export function inkoopprijzenUitBank(alleTX, covers) {
   }
 
   for (const t of alleTX || []) {
-    if (!isKostenBoeking(t)) continue;
+    const uitgave = isKostenBoeking(t);
+    if (!uitgave && !isKostenTerugbetaling(t)) continue;   // een terugbetaling verlaagt wat er voor de voorraad is betaald
     const gb = gbCode(t.gb);
     if (!gewogen[gb]) continue;
     const jr = String(t.datum || '').slice(0, 4);
     bedrag[gb] = bedrag[gb] || {};
-    bedrag[gb][jr] = (bedrag[gb][jr] || 0) + (Number(t.bedrag) || 0);
+    bedrag[gb][jr] = (bedrag[gb][jr] || 0) + (uitgave ? 1 : -1) * (Number(t.bedrag) || 0);
+  }
+  // Artikelen met eigen inkoopregels doen niet mee in de verdeling. Het bankbedrag dat bij hun
+  // regels hoort gaat dan ook uit de pot, anders zou het over de overige artikelen worden verdeeld.
+  const txVan = new Map((alleTX || []).map(t => [String(t.id), t]));
+  for (const art of covers || []) {
+    if (!isHandelsvoorraad(art) || heeftHandmatigePrijs(art)) continue;
+    const gb = inkoopRekeningVan(art);
+    if (!gewogen[gb]) gewogen[gb] = {};
+    for (const r of state.ARTIKELREGELS?.inkopen || []) {
+      if (String(r.artikelId) !== String(art.id) || !r.txId) continue;
+      const tx = txVan.get(String(r.txId));
+      if (!tx || gbCode(tx.gb) !== gb) continue;
+      const jr = String(tx.datum || '').slice(0, 4);
+      bedrag[gb] = bedrag[gb] || {};
+      bedrag[gb][jr] = (bedrag[gb][jr] || 0) - (Number(r.bedrag) || 0);
+    }
   }
 
   const uit = {};
@@ -304,6 +352,9 @@ export function inkoopprijzenUitBank(alleTX, covers) {
  * gaat voor; anders komt de prijs uit de bank.
  */
 export function prijsPerStuk(art, prijzenUitBank, jaar) {
+  // Eigen inkoopregels (per partij) gaan voor: dat is de nauwkeurigste bron, en dezelfde als op de Voorraad-pagina.
+  const uitRegels = regelPrijs(art, jaar);
+  if (uitRegels != null && uitRegels > 0) return uitRegels;
   const handmatig = Number(art?.inkoopprijs);
   if (handmatig > 0) {
     // Soms staat het totaalbedrag van de bestelling in dit veld in plaats van
@@ -427,7 +478,7 @@ export function renderBelasting() {
   const vrdRek = voorraadRekeningen(state.COVERS);
   const isVoorraadInkoop = t => t.gb === '7010' || vrdRek.includes(String(t.gb));
   const pctKaart = aftrekPercentages();
-  const kostenOverig = belTX.filter(isKostenpost).reduce((s,t)=>s+aftrekbaarBedrag(t,pctKaart),0);
+  const kostenOverig = belTX.filter(isKostenpost).reduce((s,t)=>s+aftrekbaarBedrag(t,pctKaart),0) - kostenTerugbetalingen(belTX).totaal;
 
   // Wat er dit jaar op die voorraadrekeningen is uitgegeven. Niet als kosten
   // geteld, maar wel getoond zodat je ziet waar het gebleven is.
@@ -921,6 +972,7 @@ export function aangifteVelden(belTX, { cogs = 0, hnviInkoop = 0, handmatig = []
     const gb = String(t.gb);
     perGb[gb] = (perGb[gb] || 0) + aftrekbaarBedrag(t, kaart);
   }
+  for (const [gb, b] of Object.entries(kostenTerugbetalingen(belTX).perGb)) perGb[gb] = (perGb[gb] || 0) - b;
   for (const [gb, bedrag] of Object.entries(perGb)) {
     if (!(bedrag > 0)) continue;
     voegToe(AANGIFTE_VELD[gb] || 'Overige kosten', bedrag, `${gb} ${GBNM[gb] || ''}`.trim());
@@ -1033,7 +1085,7 @@ export function aangifteModel(jaar = gekozenJaar()) {
   // de inkoopwaarde van de omzet, anders staat dezelfde inkoop er dubbel in.
   const vrdRek = voorraadRekeningen(state.COVERS);
   const prijzenUitBank = inkoopprijzenUitBank([...state.HIST_TX, ...state.TX], state.COVERS);
-  const kostenOverig = belTX.filter(isKostenpost).reduce((s, t) => s + aftrekbaarBedrag(t), 0);
+  const kostenOverig = belTX.filter(isKostenpost).reduce((s, t) => s + aftrekbaarBedrag(t), 0) - kostenTerugbetalingen(belTX).totaal;
 
   const hnviJaar = hnviLotenVanJaar(jaar);
   const hnviBank = belTX.filter(t => isUitgave(t) && t.gb === '7010').reduce((s, t) => s + (Number(t.bedrag) || 0), 0);

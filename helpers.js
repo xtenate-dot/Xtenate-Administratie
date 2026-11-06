@@ -62,6 +62,14 @@ export const isInkomst = t => t.type === 'inkomst';
 export const isPriveBetaaldeKost = t =>
   t.type === 'prive_storting' && gbCode(t.gb) !== '600' && Number(gbCode(t.gb)) >= 4000 && !isOmzet(t.gb);
 
+/**
+ * Geld dat terugkomt op een kosten- of inkooprekening (4000 en hoger, geen omzet):
+ * een teruggestorte verzendlabel, een geannuleerde bestelling, een creditnota. Het is
+ * geen omzet maar een verlaging van die kosten, dus het hoort van de kosten af.
+ */
+export const isKostenTerugbetaling = t =>
+  t.type === 'inkomst' && Number(gbCode(t.gb)) >= 4000 && !isOmzet(t.gb);
+
 /** Een uitgave of een privé betaalde kost: alles wat als kosten kan tellen. */
 export const isKostenBoeking = t => isUitgave(t) || isPriveBetaaldeKost(t);
 

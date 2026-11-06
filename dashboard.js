@@ -1,22 +1,22 @@
 // dashboard.js — Home: het financiële dashboard.
 
-import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261105c';
+import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261106a';
 import {
-  BEGINSALDO_2026, calcIB, ddmm, esc, fmt, fmtKort, isInkomst, isKostenBoeking, isOmzet, isUitgave,
+  BEGINSALDO_2026, calcIB, ddmm, esc, fmt, fmtKort, isInkomst, isKostenBoeking, isKostenTerugbetaling, isOmzet, isUitgave,
   maandLabel, rekBadge, saldoDelta, typeBadge, weergaveNaam
-} from './helpers.js?v=20261105c';
-import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen, bankKoppelingDagenTotVerval } from './storage.js?v=20261105c';
-import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261105c';
-import { draaiControles } from './controle.js?v=20261105c';
-import { aangifteModel, ibOver } from './belasting.js?v=20261105c';
-import { splitsLoten } from './hnvilot.js?v=20261105c';
-import { dagenSindsCloudBackup } from './cloudbackup.js?v=20261105c';
-import { factuurSamenvatting } from './facturen.js?v=20261105c';
-import { korStatus } from './kor.js?v=20261105c';
-import { maakSorteerbaar } from './tables.js?v=20261105c';
-import { hertekenHuidigePagina } from './ui.js?v=20261105c';
-import { txVanJaar, lopendJaar, isTxJaar, banksaldoTot } from './jaren.js?v=20261105c';
-import { tarievenVoor } from './tarieven.js?v=20261105c';
+} from './helpers.js?v=20261106a';
+import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen, bankKoppelingDagenTotVerval } from './storage.js?v=20261106a';
+import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261106a';
+import { draaiControles } from './controle.js?v=20261106a';
+import { aangifteModel, ibOver } from './belasting.js?v=20261106a';
+import { splitsLoten } from './hnvilot.js?v=20261106a';
+import { dagenSindsCloudBackup } from './cloudbackup.js?v=20261106a';
+import { factuurSamenvatting } from './facturen.js?v=20261106a';
+import { korStatus } from './kor.js?v=20261106a';
+import { maakSorteerbaar } from './tables.js?v=20261106a';
+import { hertekenHuidigePagina } from './ui.js?v=20261106a';
+import { txVanJaar, lopendJaar, isTxJaar, banksaldoTot } from './jaren.js?v=20261106a';
+import { tarievenVoor } from './tarieven.js?v=20261106a';
 
 
 export function wisselJaar() {
@@ -38,7 +38,7 @@ function berekenJaarMetrics(jaar, txVanJaar) {
   
   return {
     omzet: txVanJaar.filter(t => isInkomst(t) && isOmzet(t.gb)).reduce((s, t) => s + t.bedrag, 0),
-    kosten: txVanJaar.filter(isKostenBoeking).reduce((s, t) => s + t.bedrag, 0),
+    kosten: txVanJaar.filter(isKostenBoeking).reduce((s, t) => s + t.bedrag, 0) - txVanJaar.filter(isKostenTerugbetaling).reduce((s, t) => s + t.bedrag, 0),
     omzXt: txVanJaar.filter(t => isInkomst(t) && t.gb === '8000').reduce((s, t) => s + t.bedrag, 0),
     omzBol: txVanJaar.filter(t => isInkomst(t) && t.gb === '8010').reduce((s, t) => s + t.bedrag, 0),
     omzHC: txVanJaar.filter(t => isInkomst(t) && t.gb === '8020').reduce((s, t) => s + t.bedrag, 0),
