@@ -3,12 +3,12 @@
 // heeft verkocht, naast wat jij als verkocht hebt vastgelegd. Zo zie je eerst of de cijfers kloppen
 // voordat iets automatisch wordt bijgewerkt.
 
-import { state, saveCoversData } from './storage.js?v=20261106a';
-import { saveCoverToSupabase, addToPendingQueue } from './supabase-client-v2.js?v=20261106a';
-import { legVast } from './voorraadlog.js?v=20261106a';
-import { leesBestellingen } from './bol.js?v=20261106a';
-import { esc } from './helpers.js?v=20261106a';
-import { lopendJaar } from './jaren.js?v=20261106a';
+import { state, saveCoversData } from './storage.js?v=20261106b';
+import { saveCoverToSupabase, addToPendingQueue } from './supabase-client-v2.js?v=20261106b';
+import { legVast } from './voorraadlog.js?v=20261106b';
+import { leesBestellingen } from './bol.js?v=20261106b';
+import { esc } from './helpers.js?v=20261106b';
+import { lopendJaar } from './jaren.js?v=20261106b';
 
 const eansVan = a => (Array.isArray(a.ean) ? a.ean : a.ean ? [a.ean] : []).map(String);
 
@@ -130,7 +130,9 @@ export async function verwerkBolVerkopen() {
   const lijst = nogTeVerwerken(best);
   if (!lijst.length) { alert('Er is niets nieuws te verwerken.'); return; }
   const tekst = lijst.map(n => `${n.artikel.artikel}: ${n.delta > 0 ? '+' : ''}${n.delta} verkocht (voorraad ${Number(n.artikel.voorraad) || 0} → ${(Number(n.artikel.voorraad) || 0) - n.delta})`).join('\n');
-  if (!confirm(`Deze Bol-verkopen verwerken in je voorraad?\n\n${tekst}`)) return;
+  const negatief = lijst.filter(n => (Number(n.artikel.voorraad) || 0) - n.delta < 0).map(n => n.artikel.artikel);
+  const waarschuwing = negatief.length ? `\n\n⚠ Let op: bij ${negatief.join(', ')} komt de voorraad onder nul. Dan is er een inkoop of telling niet bijgewerkt. Pas dat eerst aan, of verwerk het toch en corrigeer daarna de voorraad.` : '';
+  if (!confirm(`Deze Bol-verkopen verwerken in je voorraad?\n\n${tekst}${waarschuwing}`)) return;
   const perEan = new Map(bolPerEan(best, lopendJaar()).map(e => [e.ean, e.jaar]));
   for (const { artikel: a, delta, jaar } of lijst) {
     const j = String(jaar);
