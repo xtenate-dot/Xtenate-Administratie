@@ -5,10 +5,10 @@
 // en zet daar de opbrengst per kanaal (Bol.com, Marktplaats, overig) naast.
 // De voorraadtelling zelf (aantal stuks) wordt hier NIET door aangepast; de regels geven alleen prijzen.
 
-import { state, saveArtikelRegels } from './storage.js?v=20261107c';
-import { esc, fmt } from './helpers.js?v=20261107c';
-import { lopendJaar, vandaagIso } from './jaren.js?v=20261107c';
-import { leesBestellingen } from './bol.js?v=20261107c';
+import { state, saveArtikelRegels } from './storage.js?v=20261107d';
+import { esc, fmt } from './helpers.js?v=20261107d';
+import { lopendJaar, vandaagIso } from './jaren.js?v=20261107d';
+import { leesBestellingen } from './bol.js?v=20261107d';
 
 export const KANALEN = ['Bol.com', 'Marktplaats', 'Overig'];
 const el = id => document.getElementById(id);
@@ -385,7 +385,8 @@ const ivOpties = sel => [...state.COVERS].sort((a, b) => String(a.artikel).local
 
 function ivRijenHtml() {
   return ivRijen.map((r, i) => `<tr>
-    <td><select id="iv-a-${i}" onchange="ivRekenen()" style="max-width:240px"><option value="">— kies artikel —</option>${ivOpties(r.artikelId)}</select></td>
+    <td><select id="iv-a-${i}" onchange="ivKies(${i})" style="max-width:240px"><option value="">— kies artikel —</option>${ivOpties(r.artikelId)}</select>
+      <div class="muted" id="iv-h-${i}" style="font-size:11px"></div></td>
     <td><input id="iv-n-${i}" value="${esc(r.aantal ?? '')}" inputmode="numeric" oninput="ivRekenen()" style="width:64px;text-align:right" aria-label="Aantal"></td>
     <td><input id="iv-p-${i}" value="${esc(r.prijs ?? '')}" inputmode="decimal" placeholder="automatisch" oninput="ivRekenen()" style="width:96px;text-align:right" aria-label="Prijs per stuk"></td>
     <td style="text-align:right" id="iv-b-${i}">—</td><td style="text-align:right" id="iv-s-${i}">—</td>
@@ -416,8 +417,34 @@ function ivBereken() {
   return { rijen, geldig, som, verschil: r2(totaal - som), restNegatief: rest.length > 0 && restBedrag < -0.005, heeftRest: rest.length > 0 };
 }
 
+/** Stuks die dit jaar volgens de voorraad zijn ingekocht en nog aan geen enkele betaling hangen. */
+function ivNogTeVerdelen(artikelId) {
+  const c = artikelVan(artikelId);
+  if (!c) return null;
+  const jaar = String(ivTx.datum).slice(0, 4);
+  const ingekocht = Number(c.jaren?.[jaar]?.inkoop);
+  if (!Number.isFinite(ingekocht)) return null;
+  const verwerkt = regels().inkopen
+    .filter(r => String(r.artikelId) === String(artikelId) && String(r.datum).startsWith(jaar) && String(r.txId) !== String(ivTx.id))
+    .reduce((s, r) => s + (Number(r.aantal) || 0), 0);
+  return { ingekocht, open: Math.max(0, ingekocht - verwerkt) };
+}
+
+/** Artikel gekozen: het aantal wordt alvast ingevuld met wat er volgens je voorraad nog te verdelen is. */
+export function ivKies(i) {
+  const a = el(`iv-a-${i}`)?.value, n = el(`iv-n-${i}`);
+  const t = a ? ivNogTeVerdelen(a) : null;
+  if (n && t && String(n.value).trim() === '' && t.open > 0) n.value = String(t.open);
+  ivRekenen();
+}
+
 export function ivRekenen() {
   ivLees();
+  ivRijen.forEach((r, i) => {
+    const t = r.artikelId ? ivNogTeVerdelen(r.artikelId) : null;
+    const h = el(`iv-h-${i}`);
+    if (h) h.textContent = t ? `voorraad: ${t.ingekocht} ingekocht dit jaar, nog te verdelen ${t.open}` : '';
+  });
   const b = ivBereken();
   b.rijen.forEach((r, i) => {
     const ok = b.geldig(r) && Number.isFinite(r.bedrag);
