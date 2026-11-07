@@ -1,21 +1,21 @@
 // voorraad.js — Voorraad: kerncijfers, groepen per tab en voorraad per jaar.
 
-import { esc, fmt, gbCode } from './helpers.js?v=20261107a';
-import { REDENEN, legVast, logVan, verschilTekst, datumTekst } from './voorraadlog.js?v=20261107a';
+import { esc, fmt, gbCode } from './helpers.js?v=20261107b';
+import { REDENEN, legVast, logVan, verschilTekst, datumTekst } from './voorraadlog.js?v=20261107b';
 import {
   standaardMinVoorraad, groepId, groepNaam, saveCoversData, saveGroepen, standaardGroep, state,
   grootboekNamen
-} from './storage.js?v=20261107a';
-import { maakSorteerbaar } from './tables.js?v=20261107a';
-import { factorVan, heeftHandmatigePrijs, isHandelsvoorraad } from './belasting.js?v=20261107a';
+} from './storage.js?v=20261107b';
+import { maakSorteerbaar } from './tables.js?v=20261107b';
+import { factorVan, heeftHandmatigePrijs, isHandelsvoorraad } from './belasting.js?v=20261107b';
 import {
   bankPrijzenNu, inkoopprijsVan as _inkoopprijsVan, verkoopprijsVan,
   inkoopwaardeVan as _inkoopwaardeVan, verkoopwaardeVan as _verkoopwaardeVan,
   margeVan as _margeVan, omzetVan as _omzetVan, totalenVan
-} from './voorraadwaarde.js?v=20261107a';
-import { saveCoverToSupabase, deleteFromSupabase, addToPendingQueue, syncAllesNaarSupabase } from './supabase-client-v2.js?v=20261107a';
-import { downloadModelPdf } from './pdf.js?v=20261107a';
-import { lopendJaar } from './jaren.js?v=20261107a';
+} from './voorraadwaarde.js?v=20261107b';
+import { saveCoverToSupabase, deleteFromSupabase, addToPendingQueue, syncAllesNaarSupabase } from './supabase-client-v2.js?v=20261107b';
+import { downloadModelPdf } from './pdf.js?v=20261107b';
+import { lopendJaar } from './jaren.js?v=20261107b';
 
 const el = id => document.getElementById(id);
 

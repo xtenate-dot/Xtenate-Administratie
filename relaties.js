@@ -10,12 +10,12 @@
 // samenvoegen op basis van relatieSleutel() bleek op de echte data lang
 // niet betrouwbaar genoeg (114 rauwe schrijfwijzen → maar 108 sleutels).
 
-import { state, saveFacturen } from './storage.js?v=20261107a';
-import { getClient } from './supabase.js?v=20261107a';
+import { state, saveFacturen } from './storage.js?v=20261107b';
+import { getClient } from './supabase.js?v=20261107b';
 import {
   loadRelatiesFromSupabase, maakRelatieInSupabase,
   werkRelatieBijInSupabase, verwijderRelatieInSupabase
-} from './supabase-client-v2.js?v=20261107a';
+} from './supabase-client-v2.js?v=20261107b';
 
 export function vindRelatie(id) {
   return state.RELATIES.find(r => r.id === id) || null;

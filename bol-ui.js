@@ -2,10 +2,11 @@
 // verkocht per artikel, en een vergelijking met wat Bol op je bankrekening heeft gestort.
 // Alleen kijken: er wordt niets geboekt en de voorraad verandert niet.
 
-import { esc, fmt, ddmm } from './helpers.js?v=20261107a';
-import { bolArtikelenHtml } from './bolartikelen.js?v=20261107a';
-import { lopendJaar } from './jaren.js?v=20261107a';
-import { leesBestellingen, leesRetouren, retourSamenvatting, haalBijBol, samenvatting, bolUitbetalingen, standaardPeriodes, leesBolAccounts } from './bol.js?v=20261107a';
+import { esc, fmt, ddmm } from './helpers.js?v=20261107b';
+import { bolArtikelenHtml } from './bolartikelen.js?v=20261107b';
+import { lopendJaar } from './jaren.js?v=20261107b';
+import { state } from './storage.js?v=20261107b';
+import { leesBestellingen, leesRetouren, retourSamenvatting, haalBijBol, samenvatting, bolUitbetalingen, standaardPeriodes, leesBolAccounts } from './bol.js?v=20261107b';
 
 const el = id => document.getElementById(id);
 const MAAND = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
@@ -41,7 +42,7 @@ export async function renderBol() {
   const doel = el('bol-inhoud');
   if (!doel) return;
   // De jaarkeuze bovenin de app bepaalt ook de periode hier: kies je 2025, dan zie je Heel 2025.
-  const hj = String(lopendJaar());
+  const hj = String(state.huidigJaar || lopendJaar());
   if (gevolgdJaar !== null && gevolgdJaar !== hj) periode = 'jaar:' + hj;
   gevolgdJaar = hj;
   if (bestellingen === null && !laadFout) {
