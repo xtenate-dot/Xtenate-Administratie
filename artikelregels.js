@@ -5,10 +5,10 @@
 // en zet daar de opbrengst per kanaal (Bol.com, Marktplaats, overig) naast.
 // De voorraadtelling zelf (aantal stuks) wordt hier NIET door aangepast; de regels geven alleen prijzen.
 
-import { state, saveArtikelRegels } from './storage.js?v=20261107b';
-import { esc, fmt } from './helpers.js?v=20261107b';
-import { lopendJaar, vandaagIso } from './jaren.js?v=20261107b';
-import { leesBestellingen } from './bol.js?v=20261107b';
+import { state, saveArtikelRegels } from './storage.js?v=20261107c';
+import { esc, fmt } from './helpers.js?v=20261107c';
+import { lopendJaar, vandaagIso } from './jaren.js?v=20261107c';
+import { leesBestellingen } from './bol.js?v=20261107c';
 
 export const KANALEN = ['Bol.com', 'Marktplaats', 'Overig'];
 const el = id => document.getElementById(id);
@@ -124,6 +124,7 @@ export function renderRendement(behoudFocus = false) {
       <input type="search" id="rend-zoek" placeholder="Zoek artikel…" value="${esc(zoek)}" oninput="zetRendementZoek(this.value)" style="min-width:200px">
       <label style="font-size:13px"><input type="checkbox" ${alleenMetRegels ? 'checked' : ''} onchange="zetRendementFilter(this.checked)"> alleen met regels</label>
       <span style="flex:1"></span>
+      <button type="button" class="btn btn-sm btn-primary" onclick="openInkoopLijst()">Inkoop verwerken${onverwerkteInkoop(jaar) ? ` (${onverwerkteInkoop(jaar)} open)` : ''}</button>
       <button type="button" class="btn btn-sm" onclick="haalBolVerkopen()">Bol-verkopen ophalen</button>
       <button type="button" class="btn btn-sm" onclick="exporteerRendement()">Excel-uitdraai</button>
     </div>
@@ -360,4 +361,163 @@ export function exporteerRendement() {
   XLSX.utils.book_append_sheet(wb, blad(ink, [12, 30, 8, 13, 10, 40]), 'Inkopen');
   XLSX.utils.book_append_sheet(wb, blad(ver, [12, 30, 8, 12, 10, 12, 10, 40]), 'Verkopen');
   XLSX.writeFile(wb, `Voorraad-rendement-${jaar}.xlsx`);
+}
+
+
+// ─── Inkoop verwerken vanuit een bankbetaling ──────────────────────────────
+// Je kiest bij een betaling welke artikelen erin zaten en hoeveel. Uit het bedrag volgt de prijs per
+// stuk; die gaat mee in de gemiddelde kostprijs. Bij verkoop telt de aangifte dan automatisch die kostprijs.
+
+const INKOOP_GB = '7000';
+const inkoopBetaling = t => String(t.gb) === INKOOP_GB && t.type === 'uitgave';
+export const inkoopBetalingen = () => [...state.HIST_TX, ...state.TX].filter(inkoopBetaling)
+  .sort((a, b) => String(b.datum).localeCompare(String(a.datum)));
+const regelsVanTx = txId => regels().inkopen.filter(r => String(r.txId) === String(txId));
+
+/** Aantal inkoopbetalingen van het gegeven jaar waar nog geen artikelen aan gekoppeld zijn. */
+export function onverwerkteInkoop(jaar = String(lopendJaar())) {
+  return inkoopBetalingen().filter(t => String(t.datum).startsWith(String(jaar)) && !regelsVanTx(t.id).length).length;
+}
+
+let ivTx = null, ivRijen = [];
+const ivOpties = sel => [...state.COVERS].sort((a, b) => String(a.artikel).localeCompare(String(b.artikel), 'nl'))
+  .map(c => `<option value="${esc(String(c.id))}"${String(c.id) === String(sel) ? ' selected' : ''}>${esc(c.artikel)}</option>`).join('');
+
+function ivRijenHtml() {
+  return ivRijen.map((r, i) => `<tr>
+    <td><select id="iv-a-${i}" onchange="ivRekenen()" style="max-width:240px"><option value="">— kies artikel —</option>${ivOpties(r.artikelId)}</select></td>
+    <td><input id="iv-n-${i}" value="${esc(r.aantal ?? '')}" inputmode="numeric" oninput="ivRekenen()" style="width:64px;text-align:right" aria-label="Aantal"></td>
+    <td><input id="iv-p-${i}" value="${esc(r.prijs ?? '')}" inputmode="decimal" placeholder="automatisch" oninput="ivRekenen()" style="width:96px;text-align:right" aria-label="Prijs per stuk"></td>
+    <td style="text-align:right" id="iv-b-${i}">—</td><td style="text-align:right" id="iv-s-${i}">—</td>
+    <td>${ivRijen.length > 1 ? `<button type="button" class="pm-mini pm-mini-rood" onclick="ivVerwijderRij(${i})" aria-label="Regel weg">×</button>` : ''}</td></tr>`).join('');
+}
+
+function ivLees() {
+  ivRijen = ivRijen.map((_, i) => ({ artikelId: el(`iv-a-${i}`)?.value || '', aantal: el(`iv-n-${i}`)?.value ?? '', prijs: el(`iv-p-${i}`)?.value ?? '' }));
+}
+
+/** Rekent de verdeling door: vaste prijzen eerst, het restbedrag gelijk per stuk over de rest. */
+function ivBereken() {
+  const totaal = Number(ivTx.bedrag) || 0;
+  const rijen = ivRijen.map(r => ({ ...r, n: getal(r.aantal), p: String(r.prijs).trim() === '' ? null : getal(r.prijs) }));
+  const geldig = r => r.artikelId && Number.isInteger(r.n) && r.n > 0;
+  const vast = rijen.filter(r => geldig(r) && r.p != null && Number.isFinite(r.p) && r.p > 0);
+  const rest = rijen.filter(r => geldig(r) && !vast.includes(r));
+  const vastBedrag = vast.reduce((s, r) => s + r.p * r.n, 0);
+  const restStuks = rest.reduce((s, r) => s + r.n, 0);
+  const restBedrag = totaal - vastBedrag;
+  vast.forEach(r => { r.bedrag = r2(r.p * r.n); });
+  let verdeeld = 0;
+  rest.forEach((r, k) => {
+    r.bedrag = k === rest.length - 1 ? r2(restBedrag - verdeeld) : r2(restBedrag * r.n / Math.max(1, restStuks));
+    verdeeld += r.bedrag;
+  });
+  const som = r2(rijen.reduce((s, r) => s + (geldig(r) ? (r.bedrag || 0) : 0), 0));
+  return { rijen, geldig, som, verschil: r2(totaal - som), restNegatief: rest.length > 0 && restBedrag < -0.005, heeftRest: rest.length > 0 };
+}
+
+export function ivRekenen() {
+  ivLees();
+  const b = ivBereken();
+  b.rijen.forEach((r, i) => {
+    const ok = b.geldig(r) && Number.isFinite(r.bedrag);
+    if (el(`iv-b-${i}`)) el(`iv-b-${i}`).textContent = ok ? fmt(r.bedrag) : '—';
+    if (el(`iv-s-${i}`)) el(`iv-s-${i}`).textContent = ok ? fmt(r.bedrag / r.n) : '—';
+  });
+  const doel = el('iv-samen');
+  if (doel) {
+    const stuks = b.rijen.filter(b.geldig).reduce((s, r) => s + r.n, 0);
+    doel.innerHTML = `${stuks} stuks · verdeeld ${fmt(b.som)} van ${fmt(ivTx.bedrag)}` +
+      (b.restNegatief ? ` <span style="color:var(--red-text,#c0392b)">· de vaste prijzen zijn samen hoger dan de betaling</span>`
+        : Math.abs(b.verschil) > 0.005 ? ` <span style="color:var(--amber-text,#b7791f)">· ${fmt(Math.abs(b.verschil))} ${b.verschil > 0 ? 'niet verdeeld' : 'te veel'}</span>` : ' <span style="color:var(--green-text,#0a7d33)">· klopt</span>');
+  }
+}
+
+export function ivRijToevoegen() { ivLees(); ivRijen.push({ artikelId: '', aantal: '', prijs: '' }); const t = el('iv-rijen'); if (t) t.innerHTML = ivRijenHtml(); ivRekenen(); }
+export function ivVerwijderRij(i) { ivLees(); ivRijen.splice(i, 1); const t = el('iv-rijen'); if (t) t.innerHTML = ivRijenHtml(); ivRekenen(); }
+
+/** Venster om bij één bankbetaling artikelen en aantallen in te vullen. */
+export function openInkoopVerwerken(txId) {
+  const t = [...state.HIST_TX, ...state.TX].find(x => String(x.id) === String(txId));
+  if (!t) return;
+  ivTx = t;
+  const bestaand = regelsVanTx(t.id);
+  ivRijen = bestaand.length
+    ? bestaand.map(r => ({ artikelId: String(r.artikelId), aantal: String(r.aantal), prijs: '' }))
+    : [{ artikelId: '', aantal: '', prijs: '' }];
+  toonVenster(`
+    <div class="pm-kop"><div><h3 style="margin:0">Inkoop verwerken</h3>
+      <div class="pm-sub">${esc(t.datum)} · ${esc(t.naam || '—')} · <b>${fmt(t.bedrag)}</b>${t.omschr ? ' · ' + esc(String(t.omschr).slice(0, 50)) : ''}</div></div>
+      <button type="button" class="pm-kruis" data-ar-sluit aria-label="Sluiten">×</button></div>
+    <div class="pm-inhoud">
+      <p class="muted" style="font-size:13px;margin:0 0 10px">Welke artikelen zaten in deze betaling en hoeveel stuks? Laat de prijs leeg: dan wordt het bedrag gelijk over de stuks verdeeld. Weet je de prijs van een artikel wel, vul die dan in; de rest wordt verdeeld over wat overblijft.</p>
+      <table class="pm-tabel"><thead><tr><th>Artikel</th><th style="text-align:right">Aantal</th><th style="text-align:right">Prijs p/s</th><th style="text-align:right">Bedrag</th><th style="text-align:right">Per stuk</th><th></th></tr></thead>
+        <tbody id="iv-rijen">${ivRijenHtml()}</tbody></table>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+        <button type="button" class="btn btn-sm" onclick="ivRijToevoegen()">+ Artikel</button>
+        <div id="iv-samen" style="font-size:13px"></div></div>
+      <p class="muted" style="font-size:12px;margin:10px 0 0">Dit past je voorraadaantallen niet aan; die houd je zelf bij. Het bepaalt alleen wat een stuk gekost heeft, en dus wat bij verkoop als kosten telt.</p>
+    </div>
+    <div class="pm-voet"><button type="button" class="btn" data-ar-sluit>Annuleren</button>
+      ${bestaand.length ? '<button type="button" class="btn" style="margin-right:auto" onclick="ivVerwijderAlles()">Koppeling weghalen</button>' : ''}
+      <button type="button" class="btn btn-primary" onclick="ivBewaar()">Opslaan</button></div>`, true);
+  ivRekenen();
+}
+
+function naInkoopWijziging() {
+  saveArtikelRegels();
+  sluitHuidige?.();
+  renderRendement();
+  window.hertekenHuidigePagina?.();
+}
+
+export function ivVerwijderAlles() {
+  if (!ivTx || !confirm('De artikelen bij deze betaling weghalen?')) return;
+  regels().inkopen = regels().inkopen.filter(r => String(r.txId) !== String(ivTx.id));
+  naInkoopWijziging();
+}
+
+export function ivBewaar() {
+  if (!ivTx) return;
+  ivLees();
+  const b = ivBereken();
+  const goed = b.rijen.filter(b.geldig);
+  if (!goed.length) { alert('Kies minstens één artikel met een aantal (een heel getal boven 0).'); return; }
+  if (b.rijen.some(r => (r.artikelId || String(r.aantal).trim() !== '') && !b.geldig(r))) { alert('Een regel is niet compleet: kies een artikel en vul een heel aantal in, of haal de regel weg.'); return; }
+  if (b.restNegatief) { alert('De vaste prijzen zijn samen hoger dan het bedrag van de betaling. Pas een prijs of aantal aan.'); return; }
+  if (!b.heeftRest && Math.abs(b.verschil) > 0.005 && !confirm(`De regels komen samen op ${fmt(b.som)}, de betaling is ${fmt(ivTx.bedrag)}. Toch opslaan?`)) return;
+  regels().inkopen = regels().inkopen.filter(r => String(r.txId) !== String(ivTx.id));
+  for (const r of goed) {
+    regels().inkopen.push({ id: nieuwId('i'), artikelId: r.artikelId, datum: ivTx.datum, aantal: r.n, bedrag: r2(r.bedrag),
+      omschr: String(ivTx.naam || '').slice(0, 60), txId: String(ivTx.id) });
+  }
+  naInkoopWijziging();
+}
+
+/** Overzicht van de inkoopbetalingen van een jaar: wat is al verwerkt en wat nog niet. */
+let ilJaar = null, ilAlleenOpen = true;
+export function zetInkoopLijst(jaar, open) { if (jaar != null) ilJaar = jaar; if (open != null) ilAlleenOpen = !!open; openInkoopLijst(); }
+export function openInkoopLijst() {
+  const jaar = ilJaar || String(state.huidigJaar || lopendJaar());
+  const alle = inkoopBetalingen();
+  const jaren = [...new Set([...alle.map(t => String(t.datum).slice(0, 4)), jaar])].sort().reverse();
+  const van = alle.filter(t => String(t.datum).startsWith(jaar));
+  const open = van.filter(t => !regelsVanTx(t.id).length);
+  const toon = ilAlleenOpen ? open : van;
+  const naam = id => artikelVan(id)?.artikel || id;
+  toonVenster(`
+    <div class="pm-kop"><div><h3 style="margin:0">Inkoop verwerken</h3>
+      <div class="pm-sub">${open.length} van ${van.length} betalingen in ${esc(jaar)} nog zonder artikelen · ${fmt(open.reduce((s, t) => s + (Number(t.bedrag) || 0), 0))}</div></div>
+      <button type="button" class="pm-kruis" data-ar-sluit aria-label="Sluiten">×</button></div>
+    <div class="pm-inhoud">
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:10px">
+        <select onchange="zetInkoopLijst(this.value)" aria-label="Jaar">${jaren.map(y => `<option${y === jaar ? ' selected' : ''}>${esc(y)}</option>`).join('')}</select>
+        <label style="font-size:13px"><input type="checkbox" ${ilAlleenOpen ? 'checked' : ''} onchange="zetInkoopLijst(null,this.checked)"> alleen nog te verwerken</label></div>
+      <table class="pm-tabel"><thead><tr><th>Datum</th><th>Leverancier</th><th style="text-align:right">Bedrag</th><th>Artikelen</th><th></th></tr></thead><tbody>
+      ${toon.map(t => { const rg = regelsVanTx(t.id); return `<tr><td>${esc(String(t.datum).slice(8, 10) + '-' + String(t.datum).slice(5, 7))}</td>
+        <td>${esc(t.naam || '—')}<div class="muted" style="font-size:11px">${esc(String(t.omschr || '').slice(0, 40))}</div></td>
+        <td style="text-align:right">${fmt(t.bedrag)}</td>
+        <td style="font-size:12px">${rg.length ? esc(rg.map(r => `${r.aantal}× ${naam(r.artikelId)}`).join(', ')) : '<span class="muted">nog niet verwerkt</span>'}</td>
+        <td style="text-align:right"><button type="button" class="btn-details" onclick="openInkoopVerwerken('${esc(String(t.id))}')">${rg.length ? 'Wijzig' : 'Verwerk'}</button></td></tr>`; }).join('') || '<tr><td colspan="5" class="muted" style="padding:14px">Alles is verwerkt.</td></tr>'}
+      </tbody></table></div>`, true);
 }

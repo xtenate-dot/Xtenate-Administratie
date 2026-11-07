@@ -8,11 +8,11 @@
 import {
   state, saveHistTxData, saveTxData, saveRekeningen, saveGrootboek, jaarIsVergrendeld,
   grootboekNamen, grootboekOptgroepen, rekeningenLijst
-} from './storage.js?v=20261107b';
-import { addToPendingQueue, syncPendingQueue, isSupabaseReady } from './supabase-client-v2.js?v=20261107b';
-import { esc, fmt, isInkomst, maandLabel } from './helpers.js?v=20261107b';
-import { lopendJaar, txVanJaar, banksaldoTot, vandaagIso } from './jaren.js?v=20261107b';
-import { telInbox } from './bankinbox.js?v=20261107b';
+} from './storage.js?v=20261107c';
+import { addToPendingQueue, syncPendingQueue, isSupabaseReady } from './supabase-client-v2.js?v=20261107c';
+import { esc, fmt, isInkomst, maandLabel } from './helpers.js?v=20261107c';
+import { lopendJaar, txVanJaar, banksaldoTot, vandaagIso } from './jaren.js?v=20261107c';
+import { telInbox } from './bankinbox.js?v=20261107c';
 
 const el = id => document.getElementById(id);
 export const VRAAGPOST_GB = '9999';
@@ -182,7 +182,8 @@ export function renderDagboeken(behoudFocus = false, behoudScroll = false) {
     <td>${isVraagpost(t) ? `<span class="badge badge-amber">vraagpost</span> ` : ''}${esc(GB[t.gb] || t.gb || '—')} <span class="muted">${esc(t.gb || '')}</span></td>
     ${gekozen === 'vraagposten' ? `<td class="muted">${esc(dagboekVan(t.rek)?.naam || t.rek || '—')}</td>` : ''}
     <td class="dg-bedragcel">${bedragHtml(t)}</td>
-    <td style="text-align:right"><button type="button" class="btn-details" onclick="bewerkBoeking('${esc(String(t.id))}')">Bewerk</button></td></tr>`;
+    <td style="text-align:right;white-space:nowrap">${String(t.gb) === '7000' && t.type === 'uitgave'
+      ? `<button type="button" class="btn-details" title="Artikelen en aantallen bij deze inkoop invullen" onclick="openInkoopVerwerken('${esc(String(t.id))}')">${(state.ARTIKELREGELS?.inkopen || []).some(r => String(r.txId) === String(t.id)) ? 'Inkoop \u2713' : 'Inkoop'}</button> ` : ''}<button type="button" class="btn-details" onclick="bewerkBoeking('${esc(String(t.id))}')">Bewerk</button></td></tr>`;
   }
 
   const actief = document.activeElement?.id;

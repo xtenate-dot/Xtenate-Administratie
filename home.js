@@ -8,11 +8,12 @@
 // nodig is. Alle gebruikte functies zijn alleen-lezend; deze module wijzigt
 // nooit data.
 
-import { draaiControles } from './controle.js?v=20261107b';
-import { factuurSamenvatting } from './facturen.js?v=20261107b';
-import { esc, fmt } from './helpers.js?v=20261107b';
-import { standaardMinVoorraad, state } from './storage.js?v=20261107b';
-import { telInbox } from './bankinbox.js?v=20261107b';
+import { draaiControles } from './controle.js?v=20261107c';
+import { factuurSamenvatting } from './facturen.js?v=20261107c';
+import { esc, fmt } from './helpers.js?v=20261107c';
+import { standaardMinVoorraad, state } from './storage.js?v=20261107c';
+import { telInbox } from './bankinbox.js?v=20261107c';
+import { onverwerkteInkoop } from './artikelregels.js?v=20261107c';
 
 const el = id => document.getElementById(id);
 
@@ -152,6 +153,8 @@ export function renderPortaal() {
   const taak = (tekst, pagina) => `<li><button type="button" class="btn-details" onclick="gaNaar('${pagina}')">${esc(tekst)} \u2192</button></li>`;
   const taken = [];
   if (teLaat > 0) taken.push(taak(`${teLaat} factuur${teLaat === 1 ? '' : 'en'} te laat`, 'inkoopfacturen'));
+  const openInkoop = onverwerkteInkoop(String(state.huidigJaar));
+  if (openInkoop > 0) taken.push(`<li><button type="button" class="btn-details" onclick="openInkoopLijst()">${openInkoop} inkoopbetaling${openInkoop === 1 ? '' : 'en'} zonder artikelen \u2192</button></li>`);
   if (ctr && ctr.fout > 0) taken.push(taak(`${ctr.fout} fout${ctr.fout === 1 ? '' : 'en'} in de controle`, 'controle'));
   if (ctr && ctr.waarschuwing > 0) taken.push(taak(`${ctr.waarschuwing} aandachtspunt${ctr.waarschuwing === 1 ? '' : 'en'} in de controle`, 'controle'));
 
