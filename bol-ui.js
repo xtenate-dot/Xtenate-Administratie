@@ -2,10 +2,10 @@
 // verkocht per artikel, en een vergelijking met wat Bol op je bankrekening heeft gestort.
 // Alleen kijken: er wordt niets geboekt en de voorraad verandert niet.
 
-import { esc, fmt, ddmm } from './helpers.js?v=20261106b';
-import { bolArtikelenHtml } from './bolartikelen.js?v=20261106b';
-import { lopendJaar } from './jaren.js?v=20261106b';
-import { leesBestellingen, leesRetouren, retourSamenvatting, haalBijBol, samenvatting, bolUitbetalingen, standaardPeriodes, leesBolAccounts } from './bol.js?v=20261106b';
+import { esc, fmt, ddmm } from './helpers.js?v=20261107a';
+import { bolArtikelenHtml } from './bolartikelen.js?v=20261107a';
+import { lopendJaar } from './jaren.js?v=20261107a';
+import { leesBestellingen, leesRetouren, retourSamenvatting, haalBijBol, samenvatting, bolUitbetalingen, standaardPeriodes, leesBolAccounts } from './bol.js?v=20261107a';
 
 const el = id => document.getElementById(id);
 const MAAND = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
@@ -13,6 +13,7 @@ let bestellingen = null;      // null = nog niet geladen
 let retouren = null;          // null = niet beschikbaar (tabel ontbreekt of nog niet geladen)
 let periode = 'maand';        // 'maand' (deze) | 'JJJJ-MM' | 'jaar:JJJJ' | 'alles'
 let ophaal = 'laatste31';
+let gevolgdJaar = null;       // laatst gezien jaar uit de jaarkeuze bovenin; verandert die, dan volgt deze pagina
 let melding = '', bezig = false, laadFout = false;
 let accounts = null;          // [{ nummer, naam }] uit Supabase, of null
 let accountFilter = 'alle';   // weergave: 'alle' of een accountnummer
@@ -39,6 +40,10 @@ function maandBereik(jm) {
 export async function renderBol() {
   const doel = el('bol-inhoud');
   if (!doel) return;
+  // De jaarkeuze bovenin de app bepaalt ook de periode hier: kies je 2025, dan zie je Heel 2025.
+  const hj = String(lopendJaar());
+  if (gevolgdJaar !== null && gevolgdJaar !== hj) periode = 'jaar:' + hj;
+  gevolgdJaar = hj;
   if (bestellingen === null && !laadFout) {
     doel.innerHTML = '<div class="card"><p class="muted">Laden…</p></div>';
     try { bestellingen = await leesBestellingen(); retouren = await leesRetouren(); }
@@ -87,7 +92,9 @@ function teken() {
   const rsV = retourSamenvatting(retourLijst.filter(r => r.datum >= bankVan), bestellingen);
   const nettoNaRetour = r2(s.netto - rsV.bedrag + rsV.commissie);
   const maanden = maandenInData();
-  const jaren = [...new Set(maanden.map(m => m.slice(0, 4)))];
+  const bankRegels = bolUitbetalingen('0000-01-01', '9999-12-31').regels;
+  const bankJaren = [...new Set(bankRegels.map(t => String(t.datum).slice(0, 4)))];
+  const jaren = [...new Set([...maanden.map(m => m.slice(0, 4)), ...bankJaren, String(lopendJaar())])].sort().reverse();
   const kwartalen = [...new Set(maanden.map(m => `kw:${m.slice(0, 4)}-${Math.ceil(Number(m.slice(5)) / 3)}`))];
   const huidig = lopendJaar();
   const opties = [
@@ -95,7 +102,7 @@ function teken() {
     ...maanden.map(m => [m, `${MAAND[Number(m.slice(5)) - 1]} ${m.slice(0, 4)}`]),
     ...kwartalen.map(k => [k, `${k.slice(8)}e kwartaal ${k.slice(3, 7)}`]),
     ...jaren.map(j => [`jaar:${j}`, `Heel ${j}`]),
-    ['alles', 'Alles']
+    ['alles', 'Alle jaren samen']
   ].filter(([w], i, a) => a.findIndex(x => x[0] === w) === i);
 
   const geenData = !bestellingen.length;
@@ -120,7 +127,28 @@ function teken() {
   }
 
   const verschil = r2(bank.totaal - nettoNaRetour);
-  const vergelijk = accountFilter !== 'alle' ? `<p class="muted" style="font-size:12px;margin-bottom:var(--spacing-4)">De vergelijking met de bank staat alleen bij "Alle accounts", omdat de stortingen op de bank niet per Bol-account te scheiden zijn.</p>` : `<div class="card" style="margin-bottom:var(--spacing-4)">
+  const periodeVoorData = !!eersteBestelling && tot < eersteBestelling;   // gekozen periode ligt helemaal vóór de opgeslagen bestellingen
+  const jaarRijen = (() => {
+    const alle = [...new Set([...bankJaren, ...(bestellingen || []).map(b => String(b.datum || '').slice(0, 4)).filter(Boolean)])].sort().reverse();
+    let tb = 0, tn = 0, ts = 0, tbn = 0;
+    const rijen = alle.map(j => {
+      const bj = (bestellingen || []).filter(b => String(b.datum || '').startsWith(j) && (accountFilter === 'alle' || String(b.account || '1') === accountFilter));
+      const sj = samenvatting(bj);
+      const ub = bolUitbetalingen(`${j}-01-01`, `${j}-12-31`);
+      const heeft = bj.length > 0;
+      const gedeeltelijk = heeft && eersteBestelling > `${j}-01-01`;
+      tb += ub.totaal; tbn += ub.aantal; if (heeft) { tn += sj.netto; ts += sj.stuks; }
+      const actief = periode === `jaar:${j}`;
+      return `<tr${actief ? ' style="font-weight:600"' : ''}><td><a href="#" onclick="zetBolPeriode('jaar:${j}');return false">${j}</a></td>
+        <td style="text-align:right">${heeft ? sj.stuks : '—'}</td><td style="text-align:right">${heeft ? fmt(sj.netto) : '—'}${gedeeltelijk ? `<div class="muted" style="font-size:11px">vanaf ${esc(ddmm(eersteBestelling))}</div>` : ''}</td>
+        <td style="text-align:right">${ub.aantal}</td><td style="text-align:right">${fmt(ub.totaal)}</td></tr>`;
+    }).join('');
+    return `${rijen}<tr style="border-top:1px solid var(--border-default)"><td><b>Totaal</b></td><td style="text-align:right"><b>${ts}</b></td><td style="text-align:right"><b>${fmt(r2(tn))}</b></td><td style="text-align:right"><b>${tbn}</b></td><td style="text-align:right"><b>${fmt(r2(tb))}</b></td></tr>`;
+  })();
+  const jarenKaart = `<div class="card card-flush" style="margin-bottom:var(--spacing-4)"><div style="padding:14px 16px 4px"><div class="section-titel">Per jaar</div></div>
+      <div class="table-wrap"><table class="tbl-compact"><thead><tr><th>Jaar</th><th style="text-align:right">Stuks (Bol)</th><th style="text-align:right">Netto volgens Bol</th><th style="text-align:right">Stortingen</th><th style="text-align:right">Door Bol gestort op de bank</th></tr></thead><tbody>${jaarRijen}</tbody></table></div>
+      <p class="muted" style="font-size:12px;padding:8px 16px 14px;margin:0">Bol geeft zelf maar ongeveer 3 maanden aan bestellingen terug, daarom staan de bestellingen pas vanaf ${esc(eerste ? ddmm(eerste) + '-' + eerste.slice(0, 4) : '—')}. Wat Bol aan je heeft overgemaakt zie je wel over alle jaren, want dat staat in je bank. Voor oudere jaren zijn dat dus de betrouwbare cijfers.</p></div>`;
+  const vergelijk = periodeVoorData ? `<p class="muted" style="font-size:12px;margin-bottom:var(--spacing-4)">Voor ${esc(label)} zijn geen Bol-bestellingen opgeslagen. In het overzicht per jaar hierboven staat wat Bol in die periode aan je heeft overgemaakt: ${fmt(bolUitbetalingen(van, tot).totaal)} in ${bolUitbetalingen(van, tot).aantal} stortingen.</p>` : accountFilter !== 'alle' ? `<p class="muted" style="font-size:12px;margin-bottom:var(--spacing-4)">De vergelijking met de bank staat alleen bij "Alle accounts", omdat de stortingen op de bank niet per Bol-account te scheiden zijn.</p>` : `<div class="card" style="margin-bottom:var(--spacing-4)">
       <div class="section-titel" style="margin-bottom:6px">Vergelijking met je bank (${esc(label)})</div>
       ${bankBeperkt ? `<p class="muted" style="font-size:12px;margin:0 0 6px">Bol geeft bestellingen maar ongeveer 3 maanden terug. Daarom tellen alleen de stortingen vanaf ${esc(ddmm ? ddmm(bankVan) : bankVan)} mee; eerdere stortingen horen bij bestellingen die hier niet in staan.</p>` : ''}
       <table class="tbl-compact" style="max-width:520px"><tbody>
@@ -153,6 +181,7 @@ function teken() {
       ${retouren ? `<div class="kpi kpi--secondary"><div class="kpi-lbl">Retouren</div><div class="kpi-val">${rs.stuks}</div><div class="kpi-sub">${fmt(rs.bedrag)} terugbetaald${rs.inBehandeling ? ` · ${rs.inBehandeling} nog in behandeling` : ''}${rs.onbekend ? ` · van ${rs.onbekend} stuks is het bedrag onbekend (bestelling van vóór de opgeslagen periode)` : ''}</div></div>` : ''}
     </div>
     ${retouren === null ? `<p class="muted" style="font-size:12px;margin-bottom:var(--spacing-4)">Retouren staan hier nog niet in: de tabel <code>bol_retouren</code> bestaat nog niet in Supabase.</p>` : ''}
+    ${jarenKaart}
     ${vergelijk}
     <div class="section-head"><div class="section-titel">Verkocht per artikel</div></div>
     <div class="card card-flush" style="margin-bottom:var(--spacing-4)"><div class="table-wrap"><table class="tbl-compact">
