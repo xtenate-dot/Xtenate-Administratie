@@ -53,12 +53,14 @@ export function zetNavPil() {
 
 /** Volgt het menu een korte tijd, bijvoorbeeld terwijl het in- of uitklapt. */
 export function volgNavPil(ms = 320) {
+  zetNavPil();                            // meteen, ook als de tab op de achtergrond staat
   const eind = performance.now() + ms;
   const stap = () => {
     zetNavPil();
     if (performance.now() < eind) requestAnimationFrame(stap);
   };
   requestAnimationFrame(stap);
+  setTimeout(zetNavPil, ms + 40);         // eindstand, ook zonder animatieframes
 }
 
 export function initNavPil() {
