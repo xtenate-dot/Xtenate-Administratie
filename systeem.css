@@ -177,3 +177,11 @@ tfoot td, tr.totaal td {
   .kpi-grid:not(:has(> .kpi:not(.kpi--secondary))) > .kpi + .kpi,
   .page .dg-samenvatting > div + div { border-left: none; }
 }
+
+/* Home: grafiek en recente boekingen naast elkaar op brede schermen. */
+.home-twee { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: var(--spacing-4); margin-bottom: var(--spacing-4); align-items: stretch; }
+.home-twee .card { margin-bottom: 0; }
+.home-recent table td { height: 38px; padding-top: 6px; padding-bottom: 6px; }
+.home-recent th:first-child, .home-recent td:first-child { padding-left: 0; }
+.home-recent td:last-child { padding-right: 0; }
+@media (max-width: 900px) { .home-twee { grid-template-columns: 1fr; } }

@@ -8,16 +8,16 @@
 // nodig is. Alle gebruikte functies zijn alleen-lezend; deze module wijzigt
 // nooit data.
 
-import { draaiControles } from './controle.js?v=20261109l';
-import { factuurSamenvatting } from './facturen.js?v=20261109l';
-import { esc, fmt } from './helpers.js?v=20261109l';
-import { standaardMinVoorraad, state } from './storage.js?v=20261109l';
-import { telInbox } from './bankinbox.js?v=20261109l';
-import { onverwerkteInkoop } from './artikelregels.js?v=20261109l';
-import { berekenJaarMetrics, berekenBanksaldo, vorigJaarMetrics, kpi, kpiTrend } from './dashboard.js?v=20261109l';
-import { txVanJaar, lopendJaar } from './jaren.js?v=20261109l';
-import { charts, cssVar, dc, baseOpts, lijn } from './charts.js?v=20261109l';
-import { fmtKort, isInkomst, isOmzet } from './helpers.js?v=20261109l';
+import { draaiControles } from './controle.js?v=20261109m';
+import { factuurSamenvatting } from './facturen.js?v=20261109m';
+import { esc, fmt } from './helpers.js?v=20261109m';
+import { standaardMinVoorraad, state } from './storage.js?v=20261109m';
+import { telInbox } from './bankinbox.js?v=20261109m';
+import { onverwerkteInkoop } from './artikelregels.js?v=20261109m';
+import { berekenJaarMetrics, berekenBanksaldo, vorigJaarMetrics, berekenVoorraad, kpi, kpiTrend } from './dashboard.js?v=20261109m';
+import { txVanJaar, lopendJaar } from './jaren.js?v=20261109m';
+import { charts, cssVar, dc, baseOpts, lijn } from './charts.js?v=20261109m';
+import { fmtKort, isInkomst, isOmzet, ddmm, weergaveNaam } from './helpers.js?v=20261109m';
 
 const el = id => document.getElementById(id);
 
@@ -127,6 +127,36 @@ function tekenJaarVergelijk(jaar) {
       tooltipFmt: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.parsed.y)}`
     })
   });
+}
+
+function bijzakenBalk(fac) {
+  try {
+    const vrd = berekenVoorraad();
+    const open = f => `${f.aantal} open${f.teLaat ? ` \u00b7 ${f.teLaat} te laat` : ''}`;
+    return `<div class="kpi-grid home-kpi-rij">` +
+      kpi('Voorraadwaarde', fmt(vrd.waarde), '', `${vrd.loten} loten \u00b7 ${vrd.covers} covers`, ' kpi--secondary') +
+      kpi('Te ontvangen', fmt(fac.debiteuren.bedrag), '', open(fac.debiteuren), ' kpi--secondary') +
+      kpi('Te betalen', fmt(fac.crediteuren.bedrag), '', open(fac.crediteuren), ' kpi--secondary') +
+      `</div>`;
+  } catch (e) {
+    console.error('Bijzaken-balk voor Home kon niet worden berekend:', e);
+    return '';
+  }
+}
+
+function recenteBoekingen() {
+  const rijen = [...(state.TX || [])]
+    .filter(t => t.datum)
+    .sort((a, b) => (a.datum < b.datum ? 1 : a.datum > b.datum ? -1 : 0))
+    .slice(0, 8);
+  if (!rijen.length) return '<div class="muted" style="font-size:13px">Nog geen boekingen.</div>';
+  return `<table class="tbl-compact"><tbody>${rijen.map(t => {
+    const plus = isInkomst(t) || t.type === 'prive_storting';
+    return `<tr class="row-click" onclick="gaNaar('dagboeken')">
+      <td style="width:54px;color:var(--text-muted)">${esc(ddmm(t.datum))}</td>
+      <td class="td-trunc">${esc(weergaveNaam(t))}</td>
+      <td class="td-num ${plus ? 'pos' : 'neg'}">${plus ? '+' : '\u2013'}${fmt(t.bedrag)}</td></tr>`;
+  }).join('')}</tbody></table>`;
 }
 
 // ─── Tegel ─────────────────────────────────────────────────────────────────
@@ -245,10 +275,20 @@ export function renderPortaal() {
       <ul id="home-todo-lijst" style="margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:8px">${taken.join('')}</ul>
       <div id="home-todo-leeg" class="muted" style="font-size:14px;display:${taken.length ? 'none' : 'block'}">Alles op orde.</div>
     </div>
-    <div class="card home-jaren">
-      <div style="font-weight:600">Omzet, opgeteld per maand</div>
-      <div class="muted" style="font-size:13px;margin-bottom:8px">${esc(jaar)} tegenover het jaar ervoor</div>
-      <div class="chart-box"><canvas id="c-home-jaren" role="img" aria-label="Omzet opgeteld per maand, dit jaar tegenover vorig jaar"></canvas></div>
+    ${bijzakenBalk(fac)}
+    <div class="home-twee">
+      <div class="card home-jaren">
+        <div style="font-weight:600">Omzet, opgeteld per maand</div>
+        <div class="muted" style="font-size:13px;margin-bottom:8px">${esc(jaar)} tegenover het jaar ervoor</div>
+        <div class="chart-box"><canvas id="c-home-jaren" role="img" aria-label="Omzet opgeteld per maand, dit jaar tegenover vorig jaar"></canvas></div>
+      </div>
+      <div class="card home-recent">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+          <span style="font-weight:600">Recente boekingen</span>
+          <button type="button" class="btn-details" onclick="gaNaar('dagboeken')">Alle boekingen \u2192</button>
+        </div>
+        ${recenteBoekingen()}
+      </div>
     </div>
     <div class="home-tegels">${tegels}</div>`;
   tekenJaarVergelijk(jaar);

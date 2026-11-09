@@ -2,10 +2,10 @@
 // Foto's worden met OCR gelezen, pdf's met pdf.js (en bij een gescande pdf ook met OCR). Daarmee worden
 // de velden alvast ingevuld; jij controleert en drukt op Opslaan. Niets verlaat de browser.
 
-import { state } from './storage.js?v=20261109l';
-import { leesBon, leesFoto, laadTesseract } from './bonnetscan.js?v=20261109l';
-import { bijlagenVan, bijlageBlob } from './bonnetjes.js?v=20261109l';
-import { esc, fmt } from './helpers.js?v=20261109l';
+import { state } from './storage.js?v=20261109m';
+import { leesBon, leesFoto, laadTesseract } from './bonnetscan.js?v=20261109m';
+import { bijlagenVan, bijlageBlob } from './bonnetjes.js?v=20261109m';
+import { esc, fmt } from './helpers.js?v=20261109m';
 
 const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
 const PDFWORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
