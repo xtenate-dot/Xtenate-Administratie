@@ -2,7 +2,7 @@
 // De logica staat in partijen.js, zodat debiteuren en crediteuren elkaars
 // knoppen niet meer kapen.
 
-import { tekenPartijen } from './partijen.js?v=20261109k';
+import { tekenPartijen } from './partijen.js?v=20261109l';
 
 const opties = {
   lijstId: 'crediteuren-list',

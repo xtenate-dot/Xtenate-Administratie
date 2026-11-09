@@ -8,11 +8,11 @@
 import {
   state, saveHistTxData, saveTxData, saveRekeningen, saveGrootboek, jaarIsVergrendeld,
   grootboekNamen, grootboekOptgroepen, rekeningenLijst
-} from './storage.js?v=20261109k';
-import { addToPendingQueue, syncPendingQueue, isSupabaseReady } from './supabase-client-v2.js?v=20261109k';
-import { esc, fmt, isInkomst, maandLabel } from './helpers.js?v=20261109k';
-import { lopendJaar, txVanJaar, banksaldoTot, vandaagIso } from './jaren.js?v=20261109k';
-import { telInbox } from './bankinbox.js?v=20261109k';
+} from './storage.js?v=20261109l';
+import { addToPendingQueue, syncPendingQueue, isSupabaseReady } from './supabase-client-v2.js?v=20261109l';
+import { esc, fmt, isInkomst, maandLabel } from './helpers.js?v=20261109l';
+import { lopendJaar, txVanJaar, banksaldoTot, vandaagIso } from './jaren.js?v=20261109l';
+import { telInbox } from './bankinbox.js?v=20261109l';
 
 const el = id => document.getElementById(id);
 export const VRAAGPOST_GB = '9999';
@@ -239,7 +239,7 @@ export function renderDagboeken(behoudFocus = false, behoudScroll = false) {
       <button type="button" class="btn btn-sm" onclick="bulkVraagpost()">Zet op vraagpost</button></div>` : ''}
     <div class="card card-flush"><div class="table-wrap"><table class="tbl-compact">
       <thead><tr><th style="width:32px"><input type="checkbox" onchange="vinkDagboekAlles(this.checked)" aria-label="Alles selecteren" ${rijen.length && geselecteerd.length === rijen.length ? 'checked' : ''}></th>
-        <th>Datum</th><th>Naam en omschrijving</th><th>Grootboek</th>${gekozen === 'vraagposten' ? '<th>Dagboek</th>' : ''}<th style="text-align:right">Bedrag</th><th></th></tr></thead>
+        <th style="width:84px">Datum</th><th>Naam en omschrijving</th><th style="width:26%">Grootboek</th>${gekozen === 'vraagposten' ? '<th>Dagboek</th>' : ''}<th style="text-align:right;width:130px">Bedrag</th><th style="width:1%"></th></tr></thead>
       <tbody>${tbody || `<tr><td colspan="7" class="muted" style="padding:16px">Geen boekingen.</td></tr>`}</tbody></table></div></div>
     <div id="dagboek-inbox" class="muted" style="font-size:13px;margin-top:10px"></div>`;
   if (dagboek?.soort === 'bank' || dagboek?.isHoofdrekening) {
