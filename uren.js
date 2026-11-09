@@ -5,8 +5,8 @@
 // 1.225 uur per jaar (en meer dan de helft van je werktijd). Deze pagina houdt
 // alleen de uren bij; ze raken de boekingen en de belastingberekening niet.
 
-import { state, saveUren } from './storage.js?v=20261109s';
-import { vandaagIso } from './jaren.js?v=20261109s';
+import { state, saveUren } from './storage.js?v=20261109t';
+import { vandaagIso } from './jaren.js?v=20261109t';
 
 export const URENCRITERIUM = 1225;
 

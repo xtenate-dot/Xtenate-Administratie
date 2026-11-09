@@ -21,11 +21,11 @@
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<link rel="stylesheet" href="theme.css?v=20261109s">
-<link rel="stylesheet" href="layout.css?v=20261109s">
-<link rel="stylesheet" href="components.css?v=20261109s">
-<link rel="stylesheet" href="systeem.css?v=20261109s">
-<link rel="stylesheet" href="responsive.css?v=20261109s">
+<link rel="stylesheet" href="theme.css?v=20261109t">
+<link rel="stylesheet" href="layout.css?v=20261109t">
+<link rel="stylesheet" href="components.css?v=20261109t">
+<link rel="stylesheet" href="systeem.css?v=20261109t">
+<link rel="stylesheet" href="responsive.css?v=20261109t">
 </head>
 <body>
 
@@ -199,7 +199,7 @@
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
     <span class="nav-label">Voorraad</span>
   </div>
-  <div class="nav-item" data-page="rendement" onclick="nav('rendement',this)" title="Inkoop en verkoop per artikel">
+  <div class="nav-item" data-page="rendement" onclick="nav('rendement',this)" title="Inkoop en verkoop per artikel" style="display:none">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>
     <span class="nav-label">Winst per artikel</span>
   </div>
@@ -835,6 +835,7 @@
     </select>
     <button class="btn btn-primary btn-ml" onclick="openImportModalVoorraad()" title="Import Excel 2022-2026">📥 Import</button>
     <button class="btn btn-ml" onclick="openVerdeling()" title="Verdeel het bankbedrag van de inkooprekening over je artikelen">Inkoopverdeling</button>
+    <button class="btn" onclick="gaNaar('rendement')" title="Inkoop verwerken, regels per artikel en verkopen ophalen">Inkoop en verkoop per artikel</button>
     <label class="kol-schakelaar btn btn-ml" title="Toont Groep, Ingekocht, Verkocht en de zoeklink">
       <input type="checkbox" id="voorraad-toon-detail" onchange="wisselDetailKolommen(this)"> Meer kolommen
     </label>
@@ -1509,6 +1510,6 @@
 </div>
 </div>
 
-<script type="module" src="app.js?v=20261109s"></script>
+<script type="module" src="app.js?v=20261109t"></script>
 </body>
 </html>
