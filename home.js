@@ -8,16 +8,16 @@
 // nodig is. Alle gebruikte functies zijn alleen-lezend; deze module wijzigt
 // nooit data.
 
-import { draaiControles } from './controle.js?v=20261109m';
-import { factuurSamenvatting } from './facturen.js?v=20261109m';
-import { esc, fmt } from './helpers.js?v=20261109m';
-import { standaardMinVoorraad, state } from './storage.js?v=20261109m';
-import { telInbox } from './bankinbox.js?v=20261109m';
-import { onverwerkteInkoop } from './artikelregels.js?v=20261109m';
-import { berekenJaarMetrics, berekenBanksaldo, vorigJaarMetrics, berekenVoorraad, kpi, kpiTrend } from './dashboard.js?v=20261109m';
-import { txVanJaar, lopendJaar } from './jaren.js?v=20261109m';
-import { charts, cssVar, dc, baseOpts, lijn } from './charts.js?v=20261109m';
-import { fmtKort, isInkomst, isOmzet, ddmm, weergaveNaam } from './helpers.js?v=20261109m';
+import { draaiControles } from './controle.js?v=20261109n';
+import { factuurSamenvatting } from './facturen.js?v=20261109n';
+import { esc, fmt } from './helpers.js?v=20261109n';
+import { standaardMinVoorraad, state } from './storage.js?v=20261109n';
+import { telInbox } from './bankinbox.js?v=20261109n';
+import { onverwerkteInkoop } from './artikelregels.js?v=20261109n';
+import { berekenJaarMetrics, berekenBanksaldo, vorigJaarMetrics, berekenVoorraad, kpi, kpiTrend } from './dashboard.js?v=20261109n';
+import { txVanJaar, lopendJaar } from './jaren.js?v=20261109n';
+import { charts, cssVar, dc, baseOpts, lijn } from './charts.js?v=20261109n';
+import { fmtKort, isInkomst, isOmzet, ddmm, weergaveNaam } from './helpers.js?v=20261109n';
 
 const el = id => document.getElementById(id);
 
@@ -134,7 +134,7 @@ function bijzakenBalk(fac) {
     const vrd = berekenVoorraad();
     const open = f => `${f.aantal} open${f.teLaat ? ` \u00b7 ${f.teLaat} te laat` : ''}`;
     return `<div class="kpi-grid home-kpi-rij">` +
-      kpi('Voorraadwaarde', fmt(vrd.waarde), '', `${vrd.loten} loten \u00b7 ${vrd.covers} covers`, ' kpi--secondary') +
+      kpi('Voorraadwaarde', fmt(vrd.waarde), '', `Covers ${fmt(vrd.coversWaarde)} \u00b7 HNVI ${fmt(vrd.lotenWaarde)}`, ' kpi--secondary') +
       kpi('Te ontvangen', fmt(fac.debiteuren.bedrag), '', open(fac.debiteuren), ' kpi--secondary') +
       kpi('Te betalen', fmt(fac.crediteuren.bedrag), '', open(fac.crediteuren), ' kpi--secondary') +
       `</div>`;
