@@ -8,14 +8,14 @@
 //   'gb:<nr>'  -> die grootboekrekening
 //   'pagina:<naam>' -> die pagina
 
-import { BEGINSALDO_2026, esc, fmt, isPriveBetaaldeKost, teltBij, weergaveNaam } from './helpers.js?v=20261109t';
-import { txVanJaar, isTxJaar, banksaldoTot, lopendJaar } from './jaren.js?v=20261109t';
-import { MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261109t';
-import { DREMPEL, vindDuplicaten } from './duplicaten.js?v=20261109t';
+import { BEGINSALDO_2026, esc, fmt, isPriveBetaaldeKost, teltBij, weergaveNaam } from './helpers.js?v=20261109u';
+import { txVanJaar, isTxJaar, banksaldoTot, lopendJaar } from './jaren.js?v=20261109u';
+import { MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261109u';
+import { DREMPEL, vindDuplicaten } from './duplicaten.js?v=20261109u';
 import {
   REDEN_LABEL, aantalVerborgen, herstelAlles, herstelControle, herstelMelding,
   isControleUit, isVerborgen, verbergMelding, verborgenOverzicht, zetControleUit
-} from './negeren.js?v=20261109t';
+} from './negeren.js?v=20261109u';
 
 const el = id => document.getElementById(id);
 const HOOFDREKENING = '1010';
