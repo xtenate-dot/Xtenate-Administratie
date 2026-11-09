@@ -14,14 +14,14 @@ import {
   facturenVan, openstaandSaldo, factuurnummerInGebruik,
   vindBoeking, koppelBetaling, ontkoppelBetaling,
   ouderdomsanalyse, OUDERDOM_VOLGORDE
-} from './facturen.js?v=20261109h';
-import { esc, fmt, ddmm, bedragUit, leegVlak, isInkomst, isUitgave, weergaveNaam } from './helpers.js?v=20261109h';
-import { downloadModelPdf } from './pdf.js?v=20261109h';
-import { state, grootboekNamen, grootboekOptgroepen, BEDRIJFSGEGEVENS } from './storage.js?v=20261109h';
-import { zoekBoekingen } from './search.js?v=20261109h';
-import { vindRelatie, zoekRelaties, maakRelatie, hernoemRelatie, voegRelatiesSamen, herlaadRelaties, bewaarRelatieAdres, relatieNummer, zorgRelatienummer } from './relaties.js?v=20261109h';
-import { bijlagenVan, voegBonnetjeToe, bonnetjesBeschikbaar } from './bonnetjes.js?v=20261109h';
-import { kiesFactuurUpload, resetFactuurUpload, wachtendFactuurBestand, toonBestaandeBijlage, kiesMeerdereFacturen, overslaanFactuur, leegRij, rij, zetRijUi, volgendeInRij } from './factuurupload.js?v=20261109h';
+} from './facturen.js?v=20261109i';
+import { esc, fmt, ddmm, bedragUit, leegVlak, isInkomst, isUitgave, weergaveNaam } from './helpers.js?v=20261109i';
+import { downloadModelPdf } from './pdf.js?v=20261109i';
+import { state, grootboekNamen, grootboekOptgroepen, BEDRIJFSGEGEVENS } from './storage.js?v=20261109i';
+import { zoekBoekingen } from './search.js?v=20261109i';
+import { vindRelatie, zoekRelaties, maakRelatie, hernoemRelatie, voegRelatiesSamen, herlaadRelaties, bewaarRelatieAdres, relatieNummer, zorgRelatienummer } from './relaties.js?v=20261109i';
+import { bijlagenVan, voegBonnetjeToe, bonnetjesBeschikbaar } from './bonnetjes.js?v=20261109i';
+import { kiesFactuurUpload, resetFactuurUpload, wachtendFactuurBestand, toonBestaandeBijlage, kiesMeerdereFacturen, overslaanFactuur, leegRij, rij, zetRijUi, volgendeInRij } from './factuurupload.js?v=20261109i';
 export { kiesFactuurUpload, kiesMeerdereFacturen, overslaanFactuur };
 
 const el = id => document.getElementById(id);
@@ -110,12 +110,12 @@ export function renderFacturen() {
   const binnenkort = lijst.filter(f => vervaltBinnenkort(f)).length;
 
   const kop = `
-    <div class="page-head" style="margin-bottom:var(--spacing-3);align-items:flex-end">
-      <div class="kpi-grid" style="flex:1">
+    <div class="kpi-grid kpi-grid--3">
         <div class="kpi kpi--secondary"><div class="kpi-lbl">Openstaand</div><div class="kpi-val">${fmt(openstaandSaldo(soort))}</div></div>
         <div class="kpi kpi--secondary"><div class="kpi-lbl">Te laat</div><div class="kpi-val${teLaat ? ' neg' : ''}">${teLaat}</div></div>
         <div class="kpi kpi--secondary"><div class="kpi-lbl">Vervalt binnenkort</div><div class="kpi-val">${binnenkort}</div></div>
-      </div>
+    </div>
+    <div class="page-acties">
       <button class="btn btn-ghost btn-sm" onclick="kenRelatienummersToe()" title="Geeft elke relatie met een factuur hier een ${isDeb ? 'debiteurnummer (vanaf 10000)' : 'crediteurnummer (vanaf 20000)'}">Nummers toekennen</button>
       <button class="btn btn-ghost btn-sm" onclick="openRelatiesBeheerModal()">Relaties beheren</button>
       <button class="btn btn-ghost btn-sm" onclick="openIbanClusterScherm()">Boekingen koppelen aan relaties</button>

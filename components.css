@@ -1431,3 +1431,14 @@ body.nav-collapsed .nav-section-btn { pointer-events: none; }
 .home-kpi-rij { margin-bottom: var(--spacing-4); }
 .home-jaren { margin-bottom: 16px; padding: 14px 18px; }
 .home-jaren .chart-box { height: 220px; }
+
+
+/* Cijferkaartjes in een eigen rij met genoeg breedte, en knoppen die netjes
+   doorlopen op een tweede regel in plaats van tussen de kaartjes te persen. */
+.kpi-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.page-acties {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end;
+  gap: var(--spacing-2) var(--spacing-3);
+  margin-bottom: var(--spacing-4);
+}
+@media (max-width: 640px) { .kpi-grid--3 { grid-template-columns: 1fr; } }

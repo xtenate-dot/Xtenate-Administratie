@@ -5,14 +5,14 @@
 // niet nog eens voorgesteld. Grootboek en soort worden afgeleid uit eerdere
 // boekingen met dezelfde naam; wat onbekend is kies je zelf.
 
-import { state, saveTxData, jaarIsVergrendeld } from './storage.js?v=20261109h';
-import { isTxJaar, jaarVan, EERSTE_TX_JAAR, vandaagIso } from './jaren.js?v=20261109h';
-import { esc, fmt } from './helpers.js?v=20261109h';
-import { addToPendingQueue } from './supabase-client-v2.js?v=20261109h';
-import { maakHerstelpunt } from './herstelpunt.js?v=20261109h';
-import { facturenVan, isOpenstaand, koppelBetaling, vindFactuur, restBedrag, isDeelsBetaald } from './facturen.js?v=20261109h';
-import { vindRelatie, relatieNummer } from './relaties.js?v=20261109h';
-import { telInbox, haalInboxOp, zetInboxStatus } from './bankinbox.js?v=20261109h';
+import { state, saveTxData, jaarIsVergrendeld } from './storage.js?v=20261109i';
+import { isTxJaar, jaarVan, EERSTE_TX_JAAR, vandaagIso } from './jaren.js?v=20261109i';
+import { esc, fmt } from './helpers.js?v=20261109i';
+import { addToPendingQueue } from './supabase-client-v2.js?v=20261109i';
+import { maakHerstelpunt } from './herstelpunt.js?v=20261109i';
+import { facturenVan, isOpenstaand, koppelBetaling, vindFactuur, restBedrag, isDeelsBetaald } from './facturen.js?v=20261109i';
+import { vindRelatie, relatieNummer } from './relaties.js?v=20261109i';
+import { telInbox, haalInboxOp, zetInboxStatus } from './bankinbox.js?v=20261109i';
 
 const REK = '1010';          // dagboek "Bank" (rekening 1010)
 const el = id => document.getElementById(id);

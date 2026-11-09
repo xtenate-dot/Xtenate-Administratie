@@ -1,14 +1,14 @@
 // belasting.js — Belasting-pagina (indicatieve IB-berekening).
 
-import { splitsLoten } from './hnvilot.js?v=20261109h';
-import { tarievenVoor, ibDetail, pct, zelfstandigenaftrekAan, zetZelfstandigenaftrek, bewaarTarieven, herstelStandaardTarieven } from './tarieven.js?v=20261109h';
-import { lopendJaar, txVanJaar } from './jaren.js?v=20261109h';
-import { charts, dc, kleurVoorGb } from './charts.js?v=20261109h';
-import { ddmm, fmt, gbCode, isInkomst, isKostenBoeking, isKostenTerugbetaling, isOmzet, isPriveBetaaldeKost, isUitgave } from './helpers.js?v=20261109h';
-import { downloadModelPdf } from './pdf.js?v=20261109h';
-import { state, grootboekNamen } from './storage.js?v=20261109h';
-import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261109h';
-import { totaalAfschrijvingVanJaar } from './activa.js?v=20261109h';
+import { splitsLoten } from './hnvilot.js?v=20261109i';
+import { tarievenVoor, ibDetail, pct, zelfstandigenaftrekAan, zetZelfstandigenaftrek, bewaarTarieven, herstelStandaardTarieven } from './tarieven.js?v=20261109i';
+import { lopendJaar, txVanJaar } from './jaren.js?v=20261109i';
+import { charts, dc, kleurVoorGb } from './charts.js?v=20261109i';
+import { ddmm, fmt, gbCode, isInkomst, isKostenBoeking, isKostenTerugbetaling, isOmzet, isPriveBetaaldeKost, isUitgave } from './helpers.js?v=20261109i';
+import { downloadModelPdf } from './pdf.js?v=20261109i';
+import { state, grootboekNamen } from './storage.js?v=20261109i';
+import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261109i';
+import { totaalAfschrijvingVanJaar } from './activa.js?v=20261109i';
 
 
 /** Sleutel waaronder de handmatige posten van één jaar staan opgeslagen. */
