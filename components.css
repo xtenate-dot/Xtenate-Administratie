@@ -1421,3 +1421,8 @@ body.nav-collapsed .nav-section-btn { pointer-events: none; }
 .fact-upload-rij { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
 .fact-hint { font-size: 12px; color: var(--text-secondary); margin: 4px 0 8px; }
 @media (max-width: 800px) { .modal.fact-breed .fact-split { grid-template-columns: 1fr; } .fact-voorbeeld { position: static; height: 45vh; } }
+
+/* Home: cijfertegels en jaarvergelijk */
+.home-kpi-rij { margin-bottom: var(--spacing-4); }
+.home-jaren { margin-bottom: 16px; padding: 14px 18px; }
+.home-jaren .chart-box { height: 220px; }

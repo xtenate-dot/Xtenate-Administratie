@@ -8,12 +8,16 @@
 // nodig is. Alle gebruikte functies zijn alleen-lezend; deze module wijzigt
 // nooit data.
 
-import { draaiControles } from './controle.js?v=20261109b';
-import { factuurSamenvatting } from './facturen.js?v=20261109b';
-import { esc, fmt } from './helpers.js?v=20261109b';
-import { standaardMinVoorraad, state } from './storage.js?v=20261109b';
-import { telInbox } from './bankinbox.js?v=20261109b';
-import { onverwerkteInkoop } from './artikelregels.js?v=20261109b';
+import { draaiControles } from './controle.js?v=20261109c';
+import { factuurSamenvatting } from './facturen.js?v=20261109c';
+import { esc, fmt } from './helpers.js?v=20261109c';
+import { standaardMinVoorraad, state } from './storage.js?v=20261109c';
+import { telInbox } from './bankinbox.js?v=20261109c';
+import { onverwerkteInkoop } from './artikelregels.js?v=20261109c';
+import { berekenJaarMetrics, berekenBanksaldo, vorigJaarMetrics, kpi, kpiTrend } from './dashboard.js?v=20261109c';
+import { txVanJaar, lopendJaar } from './jaren.js?v=20261109c';
+import { charts, cssVar, dc, baseOpts, lijn } from './charts.js?v=20261109c';
+import { fmtKort, isInkomst, isOmzet } from './helpers.js?v=20261109c';
 
 const el = id => document.getElementById(id);
 
@@ -52,6 +56,77 @@ function hnviStand() {
 
 function boekingenStand() {
   return { jaar: (state.TX || []).length, historisch: (state.HIST_TX || []).length };
+}
+
+// ─── Cijfertegels en jaarvergelijk ─────────────────────────────────────────
+// Alleen-lezen. De cijfers komen uit dezelfde functies als de pagina
+// Overzicht, zodat Home en Overzicht nooit verschillende bedragen tonen.
+
+function homeJaar() {
+  const j = String(state.huidigJaar);
+  return /^\d{4}$/.test(j) ? j : String(lopendJaar());
+}
+
+function kpiRij(jaar) {
+  try {
+    const m = berekenJaarMetrics(jaar, txVanJaar(jaar));
+    const vorig = vorigJaarMetrics(jaar);
+    const winst = m.omzet - m.kosten;
+    const bank = berekenBanksaldo(jaar);
+    const groei = (nu, toen) =>
+      (vorig && Number.isFinite(toen) && toen !== 0) ? ((nu - toen) / Math.abs(toen)) * 100 : NaN;
+    return `<div class="kpi-grid home-kpi-rij">` +
+      kpi(`Omzet ${jaar}`, fmt(m.omzet), 'pos', `Xtenate ${fmt(m.omzXt)} \u00b7 Bol ${fmt(m.omzBol)}`, '',
+          { icoon: 'omzet', trend: kpiTrend(groei(m.omzet, vorig?.omzet), true), primair: true }) +
+      kpi('Totale kosten', fmt(m.kosten), 'neg', '', '',
+          { icoon: 'kosten', trend: kpiTrend(groei(m.kosten, vorig?.kosten), false) }) +
+      kpi('Netto resultaat', fmt(winst), winst >= 0 ? 'pos' : 'neg',
+          m.omzet > 0 ? `kasresultaat \u00b7 marge ${Math.round(winst / m.omzet * 100)}%` : '', '',
+          { icoon: 'winst', trend: kpiTrend(groei(winst, vorig ? vorig.omzet - vorig.kosten : NaN), true) }) +
+      kpi('Banksaldo', bank.saldo === null ? '\u2014' : fmt(bank.saldo), bank.saldo !== null && bank.saldo < 0 ? 'neg' : '', bank.label, '',
+          { icoon: 'bank' }) +
+      `</div>`;
+  } catch (e) {
+    console.error('Cijfertegels voor Home konden niet worden berekend:', e);
+    return '';
+  }
+}
+
+const MND = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+
+/** Omzet per maand, opgeteld. Zelfde omzetdefinitie als de tegel Omzet. */
+function omzetOpgeteld(jaar, tot = 12) {
+  const alle = [...(state.HIST_TX || []), ...(state.TX || [])]
+    .filter(t => t.datum && t.datum.startsWith(jaar) && isInkomst(t) && isOmzet(t.gb));
+  const perMaand = Array(12).fill(0);
+  for (const t of alle) perMaand[Number(t.datum.slice(5, 7)) - 1] += t.bedrag;
+  let som = 0;
+  return perMaand.map((v, i) => (i < tot ? (som += v) : null));
+}
+
+function tekenJaarVergelijk(jaar) {
+  const canvas = document.getElementById('c-home-jaren');
+  if (!canvas || typeof Chart === 'undefined') return;
+  dc('c-home-jaren');
+  const vorigJaar = String(Number(jaar) - 1);
+  const tot = jaar === String(lopendJaar()) ? new Date().getMonth() + 1 : 12;
+  const dit = omzetOpgeteld(jaar, tot);
+  const toen = omzetOpgeteld(vorigJaar);
+  const heeftVorig = toen.some(v => v);
+  const sets = [lijn(jaar, dit, cssVar('--chart-revenue'), { punten: false })];
+  if (heeftVorig) {
+    const s = lijn(vorigJaar, toen, cssVar('--text-muted'), { vulling: false, punten: false });
+    s.borderDash = [5, 5]; s.borderWidth = 1.6;
+    sets.push(s);
+  }
+  charts['c-home-jaren'] = new Chart(canvas, {
+    type: 'line',
+    data: { labels: MND, datasets: sets },
+    options: baseOpts({
+      legend: heeftVorig, yFmt: fmtKort,
+      tooltipFmt: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.parsed.y)}`
+    })
+  });
 }
 
 // ─── Tegel ─────────────────────────────────────────────────────────────────
@@ -104,6 +179,7 @@ export function renderPortaal() {
   const ctr = controleStand();
   const hn = hnviStand();
   const bk = boekingenStand();
+  const jaar = homeJaar();
 
   const open = fac.debiteuren.aantal + fac.crediteuren.aantal;
   const teLaat = fac.debiteuren.teLaat + fac.crediteuren.teLaat;
@@ -163,12 +239,19 @@ export function renderPortaal() {
       <h1 class="home-titel">Welkom bij Xtenate Administratie</h1>
       <p class="home-sub">Kies waar je heen wilt.</p>
     </div>
+    ${kpiRij(jaar)}
     <div class="card" id="home-todo" style="margin-bottom:16px;padding:14px 18px">
       <div style="font-weight:600;margin-bottom:6px">Nog te doen</div>
       <ul id="home-todo-lijst" style="margin:0;padding-left:18px;line-height:1.9">${taken.join('')}</ul>
       <div id="home-todo-leeg" class="muted" style="font-size:13px;display:${taken.length ? 'none' : 'block'}">Alles op orde.</div>
     </div>
+    <div class="card home-jaren">
+      <div style="font-weight:600">Omzet, opgeteld per maand</div>
+      <div class="muted" style="font-size:12px;margin-bottom:8px">${esc(jaar)} tegenover het jaar ervoor</div>
+      <div class="chart-box"><canvas id="c-home-jaren" role="img" aria-label="Omzet opgeteld per maand, dit jaar tegenover vorig jaar"></canvas></div>
+    </div>
     <div class="home-tegels">${tegels}</div>`;
+  tekenJaarVergelijk(jaar);
 
   // De bank-inbox komt uit Supabase en wordt daarom pas daarna toegevoegd.
   telInbox().then(n => {

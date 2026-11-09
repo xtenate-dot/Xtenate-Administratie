@@ -1,22 +1,22 @@
 // dashboard.js — Home: het financiële dashboard.
 
-import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261109b';
+import { alpha, baseOpts, charts, cssVar, dc, donutMidden, lijn, lijnGloed, palette, staaf } from './charts.js?v=20261109c';
 import {
   BEGINSALDO_2026, calcIB, ddmm, esc, fmt, fmtKort, isInkomst, isKostenBoeking, isKostenTerugbetaling, isOmzet, isUitgave,
   maandLabel, rekBadge, saldoDelta, typeBadge, weergaveNaam
-} from './helpers.js?v=20261109b';
-import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen, bankKoppelingDagenTotVerval } from './storage.js?v=20261109b';
-import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261109b';
-import { draaiControles } from './controle.js?v=20261109b';
-import { aangifteModel, ibOver } from './belasting.js?v=20261109b';
-import { splitsLoten } from './hnvilot.js?v=20261109b';
-import { dagenSindsCloudBackup } from './cloudbackup.js?v=20261109b';
-import { factuurSamenvatting } from './facturen.js?v=20261109b';
-import { korStatus } from './kor.js?v=20261109b';
-import { maakSorteerbaar } from './tables.js?v=20261109b';
-import { hertekenHuidigePagina } from './ui.js?v=20261109b';
-import { txVanJaar, lopendJaar, isTxJaar, banksaldoTot } from './jaren.js?v=20261109b';
-import { tarievenVoor } from './tarieven.js?v=20261109b';
+} from './helpers.js?v=20261109c';
+import { HOME_TOTALS, MAAND_SALDOS, state, grootboekNamen, rekeningNamen, bankKoppelingDagenTotVerval } from './storage.js?v=20261109c';
+import { bankPrijzenNu, inkoopwaardeVan } from './voorraadwaarde.js?v=20261109c';
+import { draaiControles } from './controle.js?v=20261109c';
+import { aangifteModel, ibOver } from './belasting.js?v=20261109c';
+import { splitsLoten } from './hnvilot.js?v=20261109c';
+import { dagenSindsCloudBackup } from './cloudbackup.js?v=20261109c';
+import { factuurSamenvatting } from './facturen.js?v=20261109c';
+import { korStatus } from './kor.js?v=20261109c';
+import { maakSorteerbaar } from './tables.js?v=20261109c';
+import { hertekenHuidigePagina } from './ui.js?v=20261109c';
+import { txVanJaar, lopendJaar, isTxJaar, banksaldoTot } from './jaren.js?v=20261109c';
+import { tarievenVoor } from './tarieven.js?v=20261109c';
 
 
 export function wisselJaar() {
@@ -31,7 +31,7 @@ export function getHomeTX() {
 // Berekent de hoofdcijfers voor één jaar. Jaartotalen uit een Excel-import
 // ("Per Periode") komen rechtstreeks uit de boekhouding en zijn leidend;
 // alleen als die ontbreken wordt er opgeteld uit de losse boekingen.
-function berekenJaarMetrics(jaar, txVanJaar) {
+export function berekenJaarMetrics(jaar, txVanJaar) {
   // Fase 3B: Excel-overrides UITGESCHAKELD — altijd live van Supabase rekenen
   // const override = HOME_TOTALS[jaar];
   // if (override) return { ...override, uitExcel: true };
@@ -53,7 +53,7 @@ function berekenJaarMetrics(jaar, txVanJaar) {
  * Banksaldo van de hoofdrekening. Voor 2026 loopt het door vanaf het beginsaldo;
  * voor afgesloten jaren wordt het eindsaldo van de laatste maand gebruikt.
  */
-function berekenBanksaldo(jaar) {
+export function berekenBanksaldo(jaar) {
   if (jaar === 'all' || jaar === lopendJaar()) return { saldo: banksaldoTot(), label: 'Bank · nu' };
 
   const maandenVanJaar = Object.keys(MAAND_SALDOS).filter(m => m.startsWith(jaar)).sort();
@@ -146,7 +146,7 @@ function kpiIcoon(naam, toon = '') {
  * Trendlabel op basis van een percentage. Geeft niets terug wanneer er geen
  * betrouwbaar vergelijkingscijfer is — liever leeg dan een verzonnen trend.
  */
-function kpiTrend(pct, hogerIsBeter = true) {
+export function kpiTrend(pct, hogerIsBeter = true) {
   if (!Number.isFinite(pct)) return '';
   const afgerond = Math.round(Math.abs(pct) * 10) / 10;
   if (afgerond === 0) {
@@ -168,7 +168,7 @@ function kpiTrend(pct, hogerIsBeter = true) {
  * opties: { icoon, toon, trend, primair } — allemaal optioneel, zodat
  * bestaande aanroepen met vier argumenten onveranderd blijven werken.
  */
-function kpi(label, waarde, klasse = '', sub = '', extra = '', opties = {}) {
+export function kpi(label, waarde, klasse = '', sub = '', extra = '', opties = {}) {
   const { icoon = '', toon = '', trend = '', primair = false } = opties;
   const klassen = ['kpi'];
   if (primair) klassen.push('kpi--primair');
@@ -346,7 +346,7 @@ function tekenAandacht() {
  * er geen vorig jaar is of dat jaar geen boekingen bevat: dan tonen we geen
  * trend in plaats van een misleidend percentage.
  */
-function vorigJaarMetrics(jaar) {
+export function vorigJaarMetrics(jaar) {
   if (!jaar || jaar === 'all') return null;
   const vorig = String(Number(jaar) - 1);
   if (!/^\d{4}$/.test(vorig)) return null;
