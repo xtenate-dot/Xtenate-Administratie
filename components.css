@@ -1108,10 +1108,15 @@ body.nav-collapsed .account-blok .btn { justify-content: center; }
 .btn-details {
   justify-self: end;
   padding: 5px 12px; font: inherit; font-size: 12px; font-weight: 500;
-  color: var(--accent-contrast); background: var(--semantic-info-bright);
-  border: none; border-radius: var(--radius-sm); cursor: pointer;
+  color: var(--text-lavender); background: transparent;
+  border: 1px solid var(--border-purple); border-radius: var(--radius-sm); cursor: pointer;
+  transition: background var(--duration-fast) var(--easing-standard), border-color var(--duration-fast) var(--easing-standard);
 }
-.btn-details:hover { filter: brightness(.92); }
+.btn-details:hover { background: var(--accent-primary-soft); border-color: var(--border-purple-strong); }
+.btn-details:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 2px; }
+
+/* Aanvinkvakjes en keuzerondjes in de merkkleur in plaats van browsergeel/blauw. */
+input[type="checkbox"], input[type="radio"] { accent-color: var(--accent-primary); }
 
 @media (max-width: 640px) {
   .partij-rij { grid-template-columns: minmax(0,1fr) 44px 104px 72px; gap: 8px; padding: 10px 12px; }
