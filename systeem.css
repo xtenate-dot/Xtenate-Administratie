@@ -185,3 +185,35 @@ tfoot td, tr.totaal td {
 .home-recent th:first-child, .home-recent td:first-child { padding-left: 0; }
 .home-recent td:last-child { padding-right: 0; }
 @media (max-width: 900px) { .home-twee { grid-template-columns: 1fr; } }
+
+/* ---------- Paginakop met knoppen: titel links, acties rechts ---------- */
+.page-head:has(> div:not(.page-title):not(.page-sub)) { justify-content: space-between; }
+.page-head > div:first-child:not(.page-title):not(.page-sub) { flex: 1 1 280px; min-width: 0; }
+
+/* ---------- Tabbladen: ook als <button> geen browsergrijs ---------- */
+button.vtab {
+  background: none; border: none; border-bottom: 2px solid transparent;
+  font-family: inherit;
+}
+button.vtab.active { border-bottom-color: var(--accent-primary); }
+.vtab { padding: 10px 16px; }
+
+/* ---------- Cijferrij (.metrics): één balk met haarlijnen ----------
+   Geen losse kaartjes met een onvolledige laatste rij. */
+.metrics {
+  gap: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-base);
+  overflow: hidden;
+}
+.metrics > .metric {
+  border: none; border-radius: 0; box-shadow: 1px 0 0 var(--border-default), 0 1px 0 var(--border-default);
+  background: none; padding: var(--spacing-3) var(--spacing-5);
+}
+.metrics > .metric:hover { background: var(--bg-card-hover); box-shadow: 1px 0 0 var(--border-default), 0 1px 0 var(--border-default); border: none; }
+.metric .lbl {
+  font-size: var(--fs-klein); font-weight: 600; letter-spacing: 0.5px;
+  text-transform: uppercase; color: var(--text-muted);
+}
+.metric .sub { color: var(--text-muted); }
