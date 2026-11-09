@@ -22,10 +22,10 @@
 // (`voorraadEind` in belasting.js). Home en Excel horen daar niet van af te
 // wijken, anders staan er twee voorraadwaarden in dezelfde administratie.
 
-import { inkoopprijzenUitBank, prijsPerStuk } from './belasting.js?v=20261109j';
-import { PRIJS_COVER } from './helpers.js?v=20261109j';
-import { state } from './storage.js?v=20261109j';
-import { gemKostprijs } from './artikelregels.js?v=20261109j';
+import { inkoopprijzenUitBank, prijsPerStuk } from './belasting.js?v=20261109k';
+import { PRIJS_COVER } from './helpers.js?v=20261109k';
+import { state } from './storage.js?v=20261109k';
+import { gemKostprijs } from './artikelregels.js?v=20261109k';
 
 /**
  * De uit de bank afgeleide prijzen. Loopt over alle boekingen, dus bereken je

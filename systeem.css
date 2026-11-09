@@ -139,3 +139,41 @@ tfoot td, tr.totaal td {
   border-top: 1px solid var(--border-soft);
 }
 .form-sectie:first-child { border-top: none; padding-top: 0; }
+
+/* ---------- Samenvattingsbalk ----------
+   Een rij met bijzaken (bijv. Bij / Af / Netto) hoort rustig te zijn en niet
+   uit losse kaartjes te bestaan. Hoofdcijfers (grote .kpi-kaarten) blijven
+   zoals ze waren; alleen rijen met uitsluitend kleine cijfers worden een balk. */
+.kpi-grid:not(:has(> .kpi:not(.kpi--secondary))),
+.page .dg-samenvatting {
+  display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr);
+  grid-template-columns: none;
+  gap: 0;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-base);
+  background: var(--bg-card);
+  overflow: hidden;
+  margin-bottom: var(--spacing-4);
+}
+.kpi-grid:not(:has(> .kpi:not(.kpi--secondary))) > .kpi,
+.page .dg-samenvatting > div {
+  border: none; border-radius: 0; background: none; box-shadow: none; min-width: 0;
+  padding: var(--spacing-3) var(--spacing-5);
+}
+.kpi-grid:not(:has(> .kpi:not(.kpi--secondary))) > .kpi + .kpi,
+.page .dg-samenvatting > div + div { border-left: 1px solid var(--border-default); }
+.kpi-grid:not(:has(> .kpi:not(.kpi--secondary))) > .kpi:hover { box-shadow: none; }
+.kpi-grid:not(:has(> .kpi:not(.kpi--secondary))) .kpi-lbl,
+.page .dg-samenvatting .lbl {
+  font-size: var(--fs-klein); font-weight: 600; letter-spacing: 0.5px;
+  color: var(--text-muted); margin-bottom: 4px;
+}
+.page .dg-samenvatting .lbl { text-transform: uppercase; }
+.page .dg-samenvatting > div > div:not(.lbl) { font-size: 19px; font-weight: 600; letter-spacing: -0.3px; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 640px) {
+  .kpi-grid:not(:has(> .kpi:not(.kpi--secondary))),
+  .page .dg-samenvatting { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kpi-grid:not(:has(> .kpi:not(.kpi--secondary))) > .kpi + .kpi,
+  .page .dg-samenvatting > div + div { border-left: none; }
+}
