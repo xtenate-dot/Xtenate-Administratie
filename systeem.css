@@ -229,3 +229,15 @@ button.vtab.active { border-bottom-color: var(--accent-primary); }
 
 /* Periodes ("jan 2026") breken niet over twee regels. */
 #p-periode td:first-child, #p-periode th:first-child { white-space: nowrap; }
+
+/* "Bewerk" in een tabelrij: zelfde uiterlijk als de andere rijknoppen. */
+.sell-link {
+  display: inline-flex; align-items: center; min-height: 28px; padding: 0 12px;
+  font-size: 12px; font-weight: 500; text-decoration: none;
+  color: var(--text-lavender); border: 1px solid var(--border-purple); border-radius: var(--radius-sm);
+  transition: background var(--duration-fast) var(--easing-standard);
+}
+.sell-link:hover { background: var(--accent-primary-soft); border-color: var(--border-purple-strong); }
+
+/* Het artikelvenster heeft veel velden: breder, zodat de groepen rustig staan. */
+#modal-cover .modal { width: 660px; }

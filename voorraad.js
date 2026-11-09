@@ -1,21 +1,21 @@
 // voorraad.js — Voorraad: kerncijfers, groepen per tab en voorraad per jaar.
 
-import { esc, fmt, gbCode } from './helpers.js?v=20261109p';
-import { REDENEN, legVast, logVan, verschilTekst, datumTekst } from './voorraadlog.js?v=20261109p';
+import { esc, fmt, gbCode } from './helpers.js?v=20261109q';
+import { REDENEN, legVast, logVan, verschilTekst, datumTekst } from './voorraadlog.js?v=20261109q';
 import {
   standaardMinVoorraad, groepId, groepNaam, saveCoversData, saveGroepen, standaardGroep, state,
   grootboekNamen
-} from './storage.js?v=20261109p';
-import { maakSorteerbaar } from './tables.js?v=20261109p';
-import { factorVan, heeftHandmatigePrijs, isHandelsvoorraad } from './belasting.js?v=20261109p';
+} from './storage.js?v=20261109q';
+import { maakSorteerbaar } from './tables.js?v=20261109q';
+import { factorVan, heeftHandmatigePrijs, isHandelsvoorraad } from './belasting.js?v=20261109q';
 import {
   bankPrijzenNu, inkoopprijsVan as _inkoopprijsVan, verkoopprijsVan,
   inkoopwaardeVan as _inkoopwaardeVan, verkoopwaardeVan as _verkoopwaardeVan,
   margeVan as _margeVan, omzetVan as _omzetVan, totalenVan
-} from './voorraadwaarde.js?v=20261109p';
-import { saveCoverToSupabase, deleteFromSupabase, addToPendingQueue, syncAllesNaarSupabase } from './supabase-client-v2.js?v=20261109p';
-import { downloadModelPdf } from './pdf.js?v=20261109p';
-import { lopendJaar } from './jaren.js?v=20261109p';
+} from './voorraadwaarde.js?v=20261109q';
+import { saveCoverToSupabase, deleteFromSupabase, addToPendingQueue, syncAllesNaarSupabase } from './supabase-client-v2.js?v=20261109q';
+import { downloadModelPdf } from './pdf.js?v=20261109q';
+import { lopendJaar } from './jaren.js?v=20261109q';
 
 const el = id => document.getElementById(id);
 
@@ -234,14 +234,14 @@ function renderKerncijfers(lijst) {
     const laag = tel.laag;
     const uit = tel.uit;
     el('voorraad-kpi').innerHTML = `
-      <div class="kpi">
+      <div class="kpi kpi--secondary">
         <div class="kpi-lbl">Voorraadwaarde (inkoop)</div>
         <div class="kpi-val">${fmt(waarde)}</div>
         <div class="kpi-sub">${zonderPrijs > 0
           ? `${zonderPrijs} artikel${zonderPrijs === 1 ? '' : 'en'} zonder inkoopprijs`
           : `${tabNaam} · tegen inkoopprijs`}</div>
       </div>
-      <div class="kpi">
+      <div class="kpi kpi--secondary">
         <div class="kpi-lbl">Aantal producten</div>
         <div class="kpi-val">${lijst.length}</div>
         <div class="kpi-sub">${stuks} stuks op voorraad</div>
@@ -261,12 +261,12 @@ function renderKerncijfers(lijst) {
 
   const verkocht = standen.reduce((s, x) => s + (x.s.verkocht || 0), 0);
   el('voorraad-kpi').innerHTML = `
-    <div class="kpi">
+    <div class="kpi kpi--secondary">
       <div class="kpi-lbl">Inkoopwaarde 31-12-${gekozenJaar}</div>
       <div class="kpi-val">${fmt(waarde)}</div>
       <div class="kpi-sub">${zonderPrijs > 0 ? `${zonderPrijs} artikel${zonderPrijs === 1 ? '' : 'en'} zonder inkoopprijs` : 'tegen inkoopprijs'}</div>
     </div>
-    <div class="kpi">
+    <div class="kpi kpi--secondary">
       <div class="kpi-lbl">Vastgelegd</div>
       <div class="kpi-val">${vastgelegd.length}<span class="muted" style="font-size:15px"> / ${lijst.length}</span></div>
       <div class="kpi-sub">${stuks} stuks in voorraad</div>

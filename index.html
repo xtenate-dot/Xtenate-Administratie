@@ -21,11 +21,11 @@
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<link rel="stylesheet" href="theme.css?v=20261109p">
-<link rel="stylesheet" href="layout.css?v=20261109p">
-<link rel="stylesheet" href="components.css?v=20261109p">
-<link rel="stylesheet" href="systeem.css?v=20261109p">
-<link rel="stylesheet" href="responsive.css?v=20261109p">
+<link rel="stylesheet" href="theme.css?v=20261109q">
+<link rel="stylesheet" href="layout.css?v=20261109q">
+<link rel="stylesheet" href="components.css?v=20261109q">
+<link rel="stylesheet" href="systeem.css?v=20261109q">
+<link rel="stylesheet" href="responsive.css?v=20261109q">
 </head>
 <body>
 
@@ -1376,10 +1376,12 @@
 <div class="modal">
   <h3 id="cover-modal-title">Artikel toevoegen</h3>
   <div class="form-grid">
+    <div class="form-sectie">Artikel</div>
     <div class="form-group full"><label>Artikelnaam</label><input type="text" id="cv-naam" placeholder="bijv. Voorbeeldartikel"></div>
     <div class="form-group full"><label>Productgroep</label>
       <select id="cv-cat" aria-label="Productgroep"></select>
     </div>
+    <div class="form-sectie">Voorraad</div>
     <div class="form-group"><label>Huidige voorraad</label><input type="number" id="cv-vrd" placeholder="0" min="0"></div>
     <div class="form-group"><label>Melden onder <span style="color:var(--text-muted)" id="cv-min-hint">(standaard 3)</span></label><input type="number" id="cv-min" placeholder="3" min="0"></div>
     <div class="form-group">
@@ -1394,6 +1396,7 @@
       <label>Voorraadgeschiedenis</label>
       <div id="cv-log" class="voorraad-log"></div>
     </div>
+    <div class="form-sectie">Inkoop en belasting</div>
     <div class="form-group">
       <label>Telt mee als handelsvoorraad</label>
       <select id="cv-handelsvoorraad" aria-label="Handelsvoorraad">
@@ -1414,11 +1417,13 @@
     <div class="form-group"><label>Prijsfactor <span style="color:var(--text-secondary);font-weight:400">(1 = gemiddeld)</span></label>
       <input type="text" inputmode="decimal" id="cv-factor" placeholder="1">
       <div style="font-size:12px;line-height:1.45;margin-top:5px;color:var(--text-secondary)">Lager dan 1 maakt dit artikel goedkoper dan de rest; de andere artikelen worden dan iets duurder zodat het bankbedrag klopt.</div></div>
+    <div class="form-sectie">Verkoop en aantallen</div>
     <div class="form-group"><label>Verkoopprijs (€)</label><input type="text" inputmode="decimal" id="cv-prijs" placeholder="bijv. 31,95"></div>
     <div class="form-group"><label>Ingekocht totaal (stuks)</label><input type="number" id="cv-ink" placeholder="0" min="0"></div>
     <div class="form-group"><label>Verkocht totaal (stuks)</label><input type="number" id="cv-vk" placeholder="0" min="0"></div>
     <div class="form-group"><label id="cv-26-label">Verkocht in 2026 (stuks)</label><input type="number" id="cv-26" placeholder="0" min="0"></div>
     <div class="form-group"><label id="cv-jaar-eind-label">Eindvoorraad 31-12-2026</label><input type="number" id="cv-jaar-eind" placeholder="leeg = niet vastgelegd" min="0"></div>
+    <div class="form-sectie">Zoeken</div>
     <div class="form-group full"><label>Zoekterm AliExpress</label><input type="text" id="cv-zoek" placeholder="bijv. stitch helmet cover plush"></div>
   </div>
   <div class="modal-actions">
@@ -1504,6 +1509,6 @@
 </div>
 </div>
 
-<script type="module" src="app.js?v=20261109p"></script>
+<script type="module" src="app.js?v=20261109q"></script>
 </body>
 </html>
