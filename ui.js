@@ -1,32 +1,33 @@
 // ui.js — navigatie tussen pagina's en het onthouden van de actieve pagina.
 
-import { state } from './storage.js?v=20261107d';
-import { renderBank } from './bank.js?v=20261107d';
-import { renderBelasting } from './belasting.js?v=20261107d';
-import { renderBtw } from './btw.js?v=20261107d';
-import { renderCrediteuren } from './crediteuren.js?v=20261107d';
-import { renderDebiteuren } from './debiteuren.js?v=20261107d';
-import { renderHome } from './dashboard.js?v=20261107d';
-import { renderPortaal } from './home.js?v=20261107d';
-import { renderGrootboek } from './grootboek.js?v=20261107d';
-import { renderHNVI } from './hnvi.js?v=20261107d';
-import { renderDagboeken } from './dagboeken.js?v=20261107d';
-import { renderRendement } from './artikelregels.js?v=20261107d';
-import { renderTerugkerend } from './terugkerend.js?v=20261107d';
-import { renderControle } from './controle.js?v=20261107d';
-import { renderCovers } from './voorraad.js?v=20261107d';
-import { renderFacturenPagina, renderInkoopfacturen, renderVerkoopfacturen } from './facturen-ui.js?v=20261107d';
-import { renderKm } from './km-ui.js?v=20261107d';
-import { renderUren } from './uren-ui.js?v=20261107d';
-import { renderBol } from './bol-ui.js?v=20261107d';
-import { renderActiva } from './activa-ui.js?v=20261107d';
-import { renderVeiling } from './veiling-ui.js?v=20261107d';
-import { renderPeriode } from './periode.js?v=20261107d';
-import { renderFactuurmaker } from './factuurmaker.js?v=20261107d';
-import { renderBankimport } from './bankimport.js?v=20261107d';
-import { renderJaarafsluiting } from './jaarafsluiting.js?v=20261107d';
-import { renderBeheer } from './beheer.js?v=20261107d';
-import { toonGroepVan } from './navgroepen.js?v=20261107d';
+import { state } from './storage.js?v=20261109a';
+import { renderBank } from './bank.js?v=20261109a';
+import { renderBelasting } from './belasting.js?v=20261109a';
+import { renderBtw } from './btw.js?v=20261109a';
+import { renderCrediteuren } from './crediteuren.js?v=20261109a';
+import { renderDebiteuren } from './debiteuren.js?v=20261109a';
+import { renderHome } from './dashboard.js?v=20261109a';
+import { renderPortaal } from './home.js?v=20261109a';
+import { renderGrootboek } from './grootboek.js?v=20261109a';
+import { renderHNVI } from './hnvi.js?v=20261109a';
+import { renderDagboeken } from './dagboeken.js?v=20261109a';
+import { renderRendement } from './artikelregels.js?v=20261109a';
+import { renderTerugkerend } from './terugkerend.js?v=20261109a';
+import { renderControle } from './controle.js?v=20261109a';
+import { renderCovers } from './voorraad.js?v=20261109a';
+import { renderFacturenPagina, renderInkoopfacturen, renderVerkoopfacturen } from './facturen-ui.js?v=20261109a';
+import { renderKm } from './km-ui.js?v=20261109a';
+import { renderUren } from './uren-ui.js?v=20261109a';
+import { renderBol } from './bol-ui.js?v=20261109a';
+import { renderActiva } from './activa-ui.js?v=20261109a';
+import { renderVeiling } from './veiling-ui.js?v=20261109a';
+import { renderPeriode } from './periode.js?v=20261109a';
+import { renderFactuurmaker } from './factuurmaker.js?v=20261109a';
+import { renderBankimport } from './bankimport.js?v=20261109a';
+import { renderJaarafsluiting } from './jaarafsluiting.js?v=20261109a';
+import { renderBeheer } from './beheer.js?v=20261109a';
+import { toonGroepVan } from './navgroepen.js?v=20261109a';
+import { zetNavPil } from './navpil.js?v=20261109a';
 
 const RENDERS = {
   home: renderPortaal,      // de startpagina: tegels naar de onderdelen
@@ -120,7 +121,20 @@ export function nav(p, btn) {
   document.getElementById('nav-backdrop')?.classList.remove('open');
   window.scrollTo({ top: 0 });
 
+  zetNavPil();
+  speelPaginaIntro(p);
   tekenPagina(p);
+}
+
+/** Laat de blokken van een pagina één voor één binnenkomen (alleen bij openen). */
+function speelPaginaIntro(p) {
+  const pagina = document.getElementById('p-' + p);
+  if (!pagina) return;
+  pagina.classList.remove('intro');
+  void pagina.offsetWidth;               // animatie opnieuw laten starten
+  pagina.classList.add('intro');
+  clearTimeout(pagina._introTimer);
+  pagina._introTimer = setTimeout(() => pagina.classList.remove('intro'), 900);
 }
 
 /** Tekent de pagina die nu open staat opnieuw (na thema- of datawijziging). */

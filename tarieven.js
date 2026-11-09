@@ -9,7 +9,7 @@
 // (algemene heffingskorting, arbeidskorting) en je andere inkomsten zitten er
 // niet in.
 
-import { lopendJaar } from './jaren.js?v=20261107d';
+import { lopendJaar } from './jaren.js?v=20261109a';
 
 const KEY = 'xtenate_tarieven';
 const ZA_KEY = 'xtenate_zelfstandigenaftrek';
