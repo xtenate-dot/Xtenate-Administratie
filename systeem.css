@@ -274,3 +274,25 @@ button.vtab.active { border-bottom-color: var(--accent-primary); }
 #p-voorraad .kpi-grid, #p-rendement .kpi-grid { margin-bottom: var(--spacing-3); }
 #p-voorraad .kpi-grid > .kpi, #p-rendement .kpi-grid > .kpi { padding-top: var(--spacing-2); padding-bottom: var(--spacing-2); }
 #p-voorraad .toolbar, #p-rendement .toolbar { margin-bottom: var(--spacing-2); }
+
+/* ---------- Home: snelkoppelingen als compacte rij ----------
+   De uitleg en cijfers onder elke tegel staan al elders op Home (en in het
+   menu); wat overblijft is icoon, naam en eventueel een melding. */
+#home-inhoud .home-tegels { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--spacing-3); }
+#home-inhoud .home-tegel { padding: var(--spacing-3) var(--spacing-4); gap: 6px; min-height: 0; }
+#home-inhoud .home-tegel-uitleg, #home-inhoud .home-tegel-regels { display: none; }
+#home-inhoud .home-tegel-icoon svg { width: 20px; height: 20px; }
+
+/* ---------- Beheer: ingeklapt technisch onderhoud ---------- */
+.beheer-geavanceerd {
+  margin-top: var(--spacing-5);
+  border: 1px solid var(--border-default); border-radius: var(--radius-base);
+  background: var(--bg-card);
+}
+.beheer-geavanceerd > summary {
+  cursor: pointer; padding: var(--spacing-3) var(--spacing-4);
+  font-weight: 600; list-style-position: inside;
+}
+.beheer-geavanceerd > summary .muted { font-weight: 400; font-size: 13px; margin-left: 8px; }
+.beheer-geavanceerd[open] > summary { border-bottom: 1px solid var(--border-default); }
+.beheer-geavanceerd > :not(summary) { margin: var(--spacing-4); }

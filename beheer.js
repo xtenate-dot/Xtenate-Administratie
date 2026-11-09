@@ -5,15 +5,15 @@
 // ongewijzigd: elke tegel roept dezelfde globale functie aan als het
 // zijbalk-item, dus er verandert niets aan wat ze doen.
 
-import { herstelpuntenBlok } from './herstelpunt.js?v=20261109r';
-import { cloudBackupBlok } from './cloudbackup.js?v=20261109r';
-import { draaiControles } from './controle.js?v=20261109r';
-import { esc } from './helpers.js?v=20261109r';
-import { saveVoorraadInstellingen, standaardMinVoorraad, saveControleInstellingen, CONTROLE_INSTELLINGEN, saveBtwInstellingen, BTW_INSTELLINGEN, saveBedrijfsgegevens, BEDRIJFSGEGEVENS, saveKmInstellingen, KM_INSTELLINGEN, saveFactuurInstellingen, FACTUUR_INSTELLINGEN, appDataStatus, state, rekeningenLijst, bankKoppelingDagenTotVerval } from './storage.js?v=20261109r';
-import { werkBankKoppelingRekBijInSupabase } from './supabase-client-v2.js?v=20261109r';
-import { hertekenHuidigePagina } from './ui.js?v=20261109r';
-import { getPendingItems } from './supabase-client-v2.js?v=20261109r';
-import { syncNu } from './autosync.js?v=20261109r';
+import { herstelpuntenBlok } from './herstelpunt.js?v=20261109s';
+import { cloudBackupBlok } from './cloudbackup.js?v=20261109s';
+import { draaiControles } from './controle.js?v=20261109s';
+import { esc } from './helpers.js?v=20261109s';
+import { saveVoorraadInstellingen, standaardMinVoorraad, saveControleInstellingen, CONTROLE_INSTELLINGEN, saveBtwInstellingen, BTW_INSTELLINGEN, saveBedrijfsgegevens, BEDRIJFSGEGEVENS, saveKmInstellingen, KM_INSTELLINGEN, saveFactuurInstellingen, FACTUUR_INSTELLINGEN, appDataStatus, state, rekeningenLijst, bankKoppelingDagenTotVerval } from './storage.js?v=20261109s';
+import { werkBankKoppelingRekBijInSupabase } from './supabase-client-v2.js?v=20261109s';
+import { hertekenHuidigePagina } from './ui.js?v=20261109s';
+import { getPendingItems } from './supabase-client-v2.js?v=20261109s';
+import { syncNu } from './autosync.js?v=20261109s';
 
 const el = id => document.getElementById(id);
 
@@ -109,22 +109,27 @@ export function renderBeheer() {
         icoon: I.sync, actie: 'openVoorraadSyncModal()', nadruk: true
       })
     ]) +
-    herstelpuntenBlok() +
-    cloudBackupBlok() +
     synchronisatieBlok() +
     voorraadInstellingenBlok() +
-    controleInstellingenBlok() +
     btwInstellingenBlok() +
     bedrijfsgegevensBlok() +
     factuurInstellingenBlok() +
     kmInstellingenBlok() +
     bankKoppelingenBlok() +
-    groep('Voorzichtig', [
-      tegel({
-        titel: 'Data wissen', uitleg: 'Alles verwijderen uit deze browser — niet ongedaan te maken!',
-        icoon: I.wissen, actie: 'openWisModal()', gevaarlijk: true
-      })
-    ]);
+    // Technisch onderhoud staat ingeklapt: alle onderdelen en knoppen zijn er
+    // nog, ze nemen alleen geen ruimte in bij dagelijks gebruik.
+    `<details class="beheer-geavanceerd">
+      <summary>Geavanceerd <span class="muted">herstelpunten, back-up in de cloud, controle-instellingen en data wissen</span></summary>
+      ${herstelpuntenBlok()}
+      ${cloudBackupBlok()}
+      ${controleInstellingenBlok()}
+      ${groep('Voorzichtig', [
+        tegel({
+          titel: 'Data wissen', uitleg: 'Alles verwijderen uit deze browser — niet ongedaan te maken!',
+          icoon: I.wissen, actie: 'openWisModal()', gevaarlijk: true
+        })
+      ])}
+    </details>`;
 }
 
 /**
