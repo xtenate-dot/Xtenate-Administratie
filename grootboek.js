@@ -1,10 +1,10 @@
 // grootboek.js — Grootboek: compacte saldotabel per rekening, met doorklik
 // naar de losse boekingen van één rekening.
 
-import { ddmm, esc, fmt, isInkomst, isUitgave, leegVlak, rekBadge, teltBij, typeBadge, vulMaandSelect, weergaveNaam } from './helpers.js?v=20261109f';
-import { state, grootboekNamen, rekeningNamen, rekeningenLijst, saveGrootboek, saveRekeningen } from './storage.js?v=20261109f';
-import { maakSorteerbaar } from './tables.js?v=20261109f';
-import { txVanJaar, lopendJaar } from './jaren.js?v=20261109f';
+import { ddmm, esc, fmt, isInkomst, isUitgave, leegVlak, rekBadge, teltBij, typeBadge, vulMaandSelect, weergaveNaam } from './helpers.js?v=20261109g';
+import { state, grootboekNamen, rekeningNamen, rekeningenLijst, saveGrootboek, saveRekeningen } from './storage.js?v=20261109g';
+import { maakSorteerbaar } from './tables.js?v=20261109g';
+import { txVanJaar, lopendJaar } from './jaren.js?v=20261109g';
 
 const el = id => document.getElementById(id);
 const waarde = id => (el(id) ? el(id).value.trim() : '');
@@ -165,9 +165,9 @@ function renderDetail(boekingen) {
     </button>
     <div style="flex:1;min-width:0">
       <div style="font-size:15px;font-weight:600;letter-spacing:-0.3px">
-        <span class="gbnr" style="font-size:13px">${esc(gb)}</span> ${esc(GBNM[gb] || 'Onbekende rekening')}
+        <span class="gbnr" style="font-size:14px">${esc(gb)}</span> ${esc(GBNM[gb] || 'Onbekende rekening')}
       </div>
-      <div style="font-size:11.5px;color:var(--text-secondary);margin-top:2px">${rijen.length} boeking${rijen.length === 1 ? '' : 'en'} · ${RUBRIEK_NAAM[rubriekVan(gb)]}</div>
+      <div style="font-size:12.5px;color:var(--text-secondary);margin-top:2px">${rijen.length} boeking${rijen.length === 1 ? '' : 'en'} · ${RUBRIEK_NAAM[rubriekVan(gb)]}</div>
     </div>
     <div class="${saldo >= 0 ? 'pos' : 'neg'}" style="font-size:19px;font-weight:600;letter-spacing:-0.5px">${saldo >= 0 ? '+' : '–'}${fmt(Math.abs(saldo))}</div>`;
 
@@ -234,7 +234,7 @@ function renderGrootboekBeheerLijsten() {
     <div class="groep-rij">
       <span class="gbnr" style="min-width:44px">${esc(r.nummer)}</span>
       <input type="text" value="${esc(r.naam)}" data-rek-naam="${esc(r.nummer)}" aria-label="Naam van ${esc(r.naam)}">
-      ${r.isHoofdrekening ? '<span class="muted" style="font-size:11px;white-space:nowrap">hoofdrekening</span>' : ''}
+      ${r.isHoofdrekening ? '<span class="muted" style="font-size:12px;white-space:nowrap">hoofdrekening</span>' : ''}
       <button class="icon-btn" onclick="verwijderRekening('${esc(r.nummer)}')" title="Verwijderen" aria-label="Verwijder ${esc(r.naam)}">${svgVerwijder}</button>
     </div>`).join('');
 }

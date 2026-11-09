@@ -8,9 +8,9 @@
 // De koppeling loopt via het boekingnummer. Een back-up als bestand staat in
 // Beheer: de fiscus wil de stukken zeven jaar zien.
 
-import { state } from './storage.js?v=20261109f';
-import { esc } from './helpers.js?v=20261109f';
-import { getClient, heeftClient } from './supabase.js?v=20261109f';
+import { state } from './storage.js?v=20261109g';
+import { esc } from './helpers.js?v=20261109g';
+import { getClient, heeftClient } from './supabase.js?v=20261109g';
 
 const DB_NAAM = 'xtenate_bonnetjes';
 const MAX_PDF = 8 * 1024 * 1024;
@@ -243,24 +243,24 @@ export function tekenModalBonnetjes() {
   const host = el('tx-bonnetjes');
   if (!host) return;
   if (!bonnetjesBeschikbaar) {
-    host.innerHTML = '<span class="muted" style="font-size:12px">Bijlagen zijn in deze browser niet beschikbaar.</span>';
+    host.innerHTML = '<span class="muted" style="font-size:13px">Bijlagen zijn in deze browser niet beschikbaar.</span>';
     return;
   }
   const txId = state.editTxId;
   const bestaand = txId != null ? (perTx.get(String(txId)) || []) : [];
-  const rij = (naam, grootte, acties) => `<div style="display:flex;gap:8px;align-items:center;padding:4px 0;font-size:13px">
+  const rij = (naam, grootte, acties) => `<div style="display:flex;gap:8px;align-items:center;padding:4px 0;font-size:14px">
       <span aria-hidden="true">📎</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(naam)}</span>
-      <span class="muted" style="font-size:11px">${grootteTekst(grootte)}</span>${acties}</div>`;
+      <span class="muted" style="font-size:12px">${grootteTekst(grootte)}</span>${acties}</div>`;
   host.innerHTML =
     bestaand.map(m => rij(m.naam, m.grootte,
       `<button type="button" class="btn btn-sm" onclick="openBonnetje('${esc(m.bid)}')">Openen</button>
        <button type="button" class="btn btn-sm" onclick="verwijderBonnetje('${esc(m.bid)}')" aria-label="Bijlage ${esc(m.naam)} verwijderen">×</button>`)).join('') +
     wachtend.map((w, n) => rij(w.naam, w.blob.size,
-      `<span class="muted" style="font-size:11px">wordt bewaard bij Opslaan</span>
+      `<span class="muted" style="font-size:12px">wordt bewaard bij Opslaan</span>
        <button type="button" class="btn btn-sm" onclick="schrapWachtendBonnetje(${n})" aria-label="Bijlage ${esc(w.naam)} weghalen">×</button>`)).join('') +
     `<input type="file" id="tx-bonnetje-bestand" accept="image/*,application/pdf" multiple style="display:none" onchange="kiesBonnetjes(event)">
      <button type="button" class="btn btn-sm" style="margin-top:4px" onclick="document.getElementById('tx-bonnetje-bestand').click()">+ Bonnetje of factuur toevoegen</button>
-     <div id="tx-bonnetje-fout" style="font-size:12px;color:var(--semantic-danger-bright);margin-top:4px"></div>`;
+     <div id="tx-bonnetje-fout" style="font-size:13px;color:var(--semantic-danger-bright);margin-top:4px"></div>`;
 }
 
 export async function kiesBonnetjes(ev) {

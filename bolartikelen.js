@@ -3,12 +3,12 @@
 // heeft verkocht, naast wat jij als verkocht hebt vastgelegd. Zo zie je eerst of de cijfers kloppen
 // voordat iets automatisch wordt bijgewerkt.
 
-import { state, saveCoversData } from './storage.js?v=20261109f';
-import { saveCoverToSupabase, addToPendingQueue } from './supabase-client-v2.js?v=20261109f';
-import { legVast } from './voorraadlog.js?v=20261109f';
-import { leesBestellingen } from './bol.js?v=20261109f';
-import { esc } from './helpers.js?v=20261109f';
-import { lopendJaar } from './jaren.js?v=20261109f';
+import { state, saveCoversData } from './storage.js?v=20261109g';
+import { saveCoverToSupabase, addToPendingQueue } from './supabase-client-v2.js?v=20261109g';
+import { legVast } from './voorraadlog.js?v=20261109g';
+import { leesBestellingen } from './bol.js?v=20261109g';
+import { esc } from './helpers.js?v=20261109g';
+import { lopendJaar } from './jaren.js?v=20261109g';
 
 const eansVan = a => (Array.isArray(a.ean) ? a.ean : a.ean ? [a.ean] : []).map(String);
 
@@ -66,11 +66,11 @@ export function bolArtikelenHtml(bestellingen) {
   const rijen = perEan.map(e => {
     const a = eigenaar.get(e.ean);
     const v = a ? null : voorstelVoor(e.titel);
-    return `<tr><td>${esc(e.titel)}<div class="muted" style="font-size:11px">EAN ${esc(e.ean)}</div></td>
+    return `<tr><td>${esc(e.titel)}<div class="muted" style="font-size:12px">EAN ${esc(e.ean)}</div></td>
       <td style="text-align:right">${e.jaar}</td>
       <td>${a ? `<b>${esc(a.artikel)}</b> <button class="btn-details" onclick="ontkoppelBolEan('${esc(e.ean)}')">Loskoppelen</button>`
         : `${v ? `<button class="btn btn-sm btn-primary" onclick="koppelBolEan('${esc(e.ean)}','${esc(v.id)}')">Koppel aan ${esc(v.artikel)}</button> of ` : ''}
-           <select onchange="if(this.value)koppelBolEan('${esc(e.ean)}',this.value)" style="font-size:12px;max-width:200px"><option value="">— kies artikel —</option>${opties}</select>`}</td></tr>`;
+           <select onchange="if(this.value)koppelBolEan('${esc(e.ean)}',this.value)" style="font-size:13px;max-width:200px"><option value="">— kies artikel —</option>${opties}</select>`}</td></tr>`;
   }).join('');
 
   // Vergelijking per gekoppeld artikel
@@ -90,7 +90,7 @@ export function bolArtikelenHtml(bestellingen) {
       <thead><tr><th>Artikel</th><th style="text-align:right">Verkocht erbij</th><th style="text-align:right">Voorraad nu</th><th style="text-align:right">Wordt</th></tr></thead>
       <tbody>${nieuw.map(n => `<tr><td>${esc(n.artikel.artikel)}</td><td style="text-align:right">${n.delta > 0 ? '+' : ''}${n.delta}</td><td style="text-align:right">${Number(n.artikel.voorraad) || 0}</td><td style="text-align:right">${(Number(n.artikel.voorraad) || 0) - n.delta}</td></tr>`).join('')}</tbody></table></div></div>
     <div style="margin-bottom:var(--spacing-4)"><button class="btn btn-primary" onclick="verwerkBolVerkopen()">Verwerk in voorraad</button>
-    <span class="muted" style="font-size:12px;margin-left:8px">Verhoogt "verkocht" en verlaagt de voorraad en de eindstand van dit jaar; staat in het logboek. Inkoop en retour blijf je zelf bijwerken.</span></div>` : '';
+    <span class="muted" style="font-size:13px;margin-left:8px">Verhoogt "verkocht" en verlaagt de voorraad en de eindstand van dit jaar; staat in het logboek. Inkoop en retour blijf je zelf bijwerken.</span></div>` : '';
 
   return `${verwerk}<div class="section-head"><div class="section-titel">Bol-artikelen koppelen aan je voorraad</div></div>
     <div class="card card-flush" style="margin-bottom:var(--spacing-4)"><div class="table-wrap"><table class="tbl-compact">
@@ -100,7 +100,7 @@ export function bolArtikelenHtml(bestellingen) {
     <div class="card card-flush" style="margin-bottom:var(--spacing-4)"><div class="table-wrap"><table class="tbl-compact">
       <thead><tr><th>Artikel</th><th style="text-align:right">Bol verkocht</th><th style="text-align:right">Jij legde vast</th><th style="text-align:right">Verschil</th></tr></thead>
       <tbody>${vergelijk}</tbody></table></div></div>
-    <p class="muted" style="font-size:12px;margin-bottom:var(--spacing-4)">Er wordt niets aan je voorraad veranderd. Een verschil kan komen doordat je ook via andere kanalen verkoopt, of doordat je verkopen nog niet hebt bijgewerkt. Retouren zijn hier niet verrekend.</p>` : ''}`;
+    <p class="muted" style="font-size:13px;margin-bottom:var(--spacing-4)">Er wordt niets aan je voorraad veranderd. Een verschil kan komen doordat je ook via andere kanalen verkoopt, of doordat je verkopen nog niet hebt bijgewerkt. Retouren zijn hier niet verrekend.</p>` : ''}`;
 }
 
 export async function koppelBolEan(ean, artikelId) {

@@ -1,14 +1,14 @@
 // belasting.js — Belasting-pagina (indicatieve IB-berekening).
 
-import { splitsLoten } from './hnvilot.js?v=20261109f';
-import { tarievenVoor, ibDetail, pct, zelfstandigenaftrekAan, zetZelfstandigenaftrek, bewaarTarieven, herstelStandaardTarieven } from './tarieven.js?v=20261109f';
-import { lopendJaar, txVanJaar } from './jaren.js?v=20261109f';
-import { charts, dc, kleurVoorGb } from './charts.js?v=20261109f';
-import { ddmm, fmt, gbCode, isInkomst, isKostenBoeking, isKostenTerugbetaling, isOmzet, isPriveBetaaldeKost, isUitgave } from './helpers.js?v=20261109f';
-import { downloadModelPdf } from './pdf.js?v=20261109f';
-import { state, grootboekNamen } from './storage.js?v=20261109f';
-import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261109f';
-import { totaalAfschrijvingVanJaar } from './activa.js?v=20261109f';
+import { splitsLoten } from './hnvilot.js?v=20261109g';
+import { tarievenVoor, ibDetail, pct, zelfstandigenaftrekAan, zetZelfstandigenaftrek, bewaarTarieven, herstelStandaardTarieven } from './tarieven.js?v=20261109g';
+import { lopendJaar, txVanJaar } from './jaren.js?v=20261109g';
+import { charts, dc, kleurVoorGb } from './charts.js?v=20261109g';
+import { ddmm, fmt, gbCode, isInkomst, isKostenBoeking, isKostenTerugbetaling, isOmzet, isPriveBetaaldeKost, isUitgave } from './helpers.js?v=20261109g';
+import { downloadModelPdf } from './pdf.js?v=20261109g';
+import { state, grootboekNamen } from './storage.js?v=20261109g';
+import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261109g';
+import { totaalAfschrijvingVanJaar } from './activa.js?v=20261109g';
 
 
 /** Sleutel waaronder de handmatige posten van één jaar staan opgeslagen. */
@@ -438,10 +438,10 @@ export function openControleDialog() {
       </header>
       <div class="pm-inhoud" style="padding:16px 20px">
         ${problemen.length
-          ? `<ul style="margin:0;padding-left:20px;font-size:13px;line-height:1.6">
+          ? `<ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.6">
               ${problemen.map(p => `<li style="margin:6px 0">${escHtml(p)}</li>`).join('')}
              </ul>`
-          : `<p style="font-size:13px;color:var(--text-secondary)">Alle datavelden zijn ingevuld en logisch consistent.</p>`}
+          : `<p style="font-size:14px;color:var(--text-secondary)">Alle datavelden zijn ingevuld en logisch consistent.</p>`}
       </div>
       <footer class="pm-voet">
         <button type="button" class="btn" data-sluit>Sluiten</button>
@@ -723,16 +723,16 @@ export function renderBelasting() {
       <div style="display:flex;flex-direction:column;gap:8px">
         ${punten.map(p => {
           const [bg, fc, teken] = kleuren[p.soort] || kleuren['let-op'];
-          return `<div style="display:flex;gap:9px;align-items:flex-start;font-size:12px;line-height:1.5">
-            <span style="flex:0 0 17px;height:17px;margin-top:1px;border-radius:50%;background:${bg};color:${fc};font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center">${teken}</span>
+          return `<div style="display:flex;gap:9px;align-items:flex-start;font-size:13px;line-height:1.5">
+            <span style="flex:0 0 17px;height:17px;margin-top:1px;border-radius:50%;background:${bg};color:${fc};font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center">${teken}</span>
             <span style="color:var(--text-primary)">${p.tekst}</span>
           </div>`;
         }).join('')}
       </div>
     </div>` : `
     <div class="card" style="margin-bottom:1rem">
-      <div style="display:flex;gap:9px;align-items:center;font-size:12px;color:var(--text-secondary)">
-        <span style="flex:0 0 17px;height:17px;border-radius:50%;background:var(--semantic-success-soft);color:var(--semantic-success-bright);font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center">✓</span>
+      <div style="display:flex;gap:9px;align-items:center;font-size:13px;color:var(--text-secondary)">
+        <span style="flex:0 0 17px;height:17px;border-radius:50%;background:var(--semantic-success-soft);color:var(--semantic-success-bright);font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center">✓</span>
         <span>Geen aandachtspunten. Inkoopprijzen en verkoopaantallen zijn voor dit jaar ingevuld.</span>
       </div>
     </div>`;
@@ -745,29 +745,29 @@ export function renderBelasting() {
     ${handmatig.map(k => `<div class="ib-row"><span>${escHtml(k.label) || 'Overige post'}</span><span class="neg">– ${fmt(Number(k.bedrag) || 0)}</span></div>`).join('')}
     ${kmBedrag > 0 ? `<div class="ib-row"><span>Kilometervergoeding (${totaalKmVanJaar(jaar).toLocaleString('nl-NL')} km × ${fmt(kmTarief())})</span><span class="neg">– ${fmt(kmBedrag)}</span></div>` : ''}
     ${activaBedrag > 0 ? `<div class="ib-row"><span>Afschrijving bedrijfsmiddelen</span><span class="neg">– ${fmt(activaBedrag)}</span></div>` : ''}
-    <div class="ib-row" style="color:var(--text-secondary);font-size:11px"><span>HNVI inkoop (voorraad, niet aftrekbaar)</span><span>${fmt(hnviNietAftrekbaar)}</span></div>
-    <div class="ib-row" style="color:var(--text-secondary);font-size:11px"><span>Voorraad nog op de plank (bezitting)</span><span>${fmt(voorraadEind)}</span></div>
-    ${voorraadInkoopBank > 0 ? `<div class="ib-row" style="color:var(--text-secondary);font-size:11px"><span>Inkoop voorraad dit jaar (${vrdRek.join(', ')}) — geen kostenpost</span><span>${fmt(voorraadInkoopBank)}</span></div>` : ''}
+    <div class="ib-row" style="color:var(--text-secondary);font-size:12px"><span>HNVI inkoop (voorraad, niet aftrekbaar)</span><span>${fmt(hnviNietAftrekbaar)}</span></div>
+    <div class="ib-row" style="color:var(--text-secondary);font-size:12px"><span>Voorraad nog op de plank (bezitting)</span><span>${fmt(voorraadEind)}</span></div>
+    ${voorraadInkoopBank > 0 ? `<div class="ib-row" style="color:var(--text-secondary);font-size:12px"><span>Inkoop voorraad dit jaar (${vrdRek.join(', ')}) — geen kostenpost</span><span>${fmt(voorraadInkoopBank)}</span></div>` : ''}
     <div class="ib-row"><span style="font-weight:600">Winst / verlies</span><span style="font-weight:600" class="${winst>=0?'pos':'neg'}">${fmt(winst)}</span></div>
     ${winst > 0 ? `
     ${ibd.aftrek > 0 ? `<div class="ib-row"><span>Zelfstandigenaftrek ${escHtml(jaar)}</span><span class="neg">– ${fmt(ibd.aftrek)}</span></div>` : ''}
-    ${metMkb ? `<div class="ib-row"><span>MKB-winstvrijstelling (${pct(tarief.mkb)})</span><span class="neg">– ${fmt(mkb)}</span></div>` : `<div class="ib-row" style="color:var(--text-secondary);font-size:11px"><span>Geen MKB-winstvrijstelling (resultaat uit overig werk)</span><span>${fmt(0)}</span></div>`}
+    ${metMkb ? `<div class="ib-row"><span>MKB-winstvrijstelling (${pct(tarief.mkb)})</span><span class="neg">– ${fmt(mkb)}</span></div>` : `<div class="ib-row" style="color:var(--text-secondary);font-size:12px"><span>Geen MKB-winstvrijstelling (resultaat uit overig werk)</span><span>${fmt(0)}</span></div>`}
     <div class="ib-row"><span>Belastbaar inkomen</span><span>${fmt(Math.round(belastbaar))}</span></div>
-    ${ibd.perSchijf.map((s, n) => `<div class="ib-row" style="color:var(--text-secondary);font-size:11px"><span>Schijf ${n + 1} (${pct(s.tarief)}) over ${fmt(Math.round(s.bedrag))}</span><span>${fmt(Math.round(s.bedrag * s.tarief))}</span></div>`).join('')}
-    ${tarief.vanJaar !== tarief.jaar || tarief.voorlopig ? `<div class="ib-row" style="color:var(--semantic-warning-bright, #b45309);font-size:11px"><span>${tarief.vanJaar !== tarief.jaar ? `Voor ${escHtml(tarief.jaar)} zijn geen tarieven ingevuld; die van ${escHtml(tarief.vanJaar)} gelden.` : `De tarieven van ${escHtml(tarief.jaar)} zijn een voorstel, nog niet definitief.`} Controleer via “Tarieven”.</span><span></span></div>` : ''}
+    ${ibd.perSchijf.map((s, n) => `<div class="ib-row" style="color:var(--text-secondary);font-size:12px"><span>Schijf ${n + 1} (${pct(s.tarief)}) over ${fmt(Math.round(s.bedrag))}</span><span>${fmt(Math.round(s.bedrag * s.tarief))}</span></div>`).join('')}
+    ${tarief.vanJaar !== tarief.jaar || tarief.voorlopig ? `<div class="ib-row" style="color:var(--semantic-warning-bright, #b45309);font-size:12px"><span>${tarief.vanJaar !== tarief.jaar ? `Voor ${escHtml(tarief.jaar)} zijn geen tarieven ingevuld; die van ${escHtml(tarief.vanJaar)} gelden.` : `De tarieven van ${escHtml(tarief.jaar)} zijn een voorstel, nog niet definitief.`} Controleer via “Tarieven”.</span><span></span></div>` : ''}
     <div class="ib-total"><span>Geschatte inkomstenbelasting</span><span class="neg">${fmt(Math.round(ib))}</span></div>` : `
     <div class="ib-total"><span>${ib < 0 ? 'Geschatte teruggave (bij ander inkomen)' : 'Geen belasting verschuldigd'}</span><span class="${ib<0?'pos':''}">${ib<0?'+ '+fmt(Math.abs(Math.round(ib))):'€\u202f0,00'}</span></div>`}
 
     <div style="margin-top:.9rem;padding:12px 14px;border-radius:var(--radius-sm);background:${winst > 0 ? 'var(--semantic-danger-soft)' : 'var(--semantic-success-soft)'}">
-      <div style="font-weight:600;font-size:13px;margin-bottom:3px">${winst > 0
+      <div style="font-weight:600;font-size:14px;margin-bottom:3px">${winst > 0
         ? `Je moet hierover ongeveer ${fmt(Math.round(ib))} betalen`
         : `Dit jaar is er verlies — geen belasting over deze inkomsten`}</div>
-      <div style="font-size:11px;color:var(--text-secondary);line-height:1.5">${winst > 0
+      <div style="font-size:12px;color:var(--text-secondary);line-height:1.5">${winst > 0
         ? `Dit is de belasting over deze onderneming alleen. Heb je daarnaast loon waarop al belasting is ingehouden, dan verrekent de Belastingdienst dat; wat je uiteindelijk betaalt of terugkrijgt hangt dus ook van je andere inkomsten af.`
         : `Een verlies mag je verrekenen met ander inkomen in hetzelfde jaar. Dat kan een teruggave van ongeveer ${fmt(Math.abs(Math.round(ib)))} opleveren, maar alleen als je genoeg ander belast inkomen hebt.`}</div>
     </div>
 
-    <div style="margin-top:1rem;padding-top:.75rem;border-top:1px solid var(--border-default);font-size:11px;color:var(--text-secondary)">
+    <div style="margin-top:1rem;padding-top:.75rem;border-top:1px solid var(--border-default);font-size:12px;color:var(--text-secondary)">
       <strong>Projectie heel jaar</strong> (op basis van ${maandenMet} maanden): omzet ${fmt(omzetJaar)} · kosten ${fmt(kostenJaar)} · winst ${fmt(winstJaar)} · geschatte IB ${ibJaar<0?'teruggave '+fmt(Math.abs(Math.round(ibJaar))):fmt(Math.round(ibJaar))}
     </div>
 
@@ -843,14 +843,14 @@ export function renderBelasting() {
   schijf('c-bel-kosten', 'bel-legend-kosten', alleGb.filter(gb => gb < '7000'));
   schijf('c-bel-inkoop', 'bel-legend-inkoop', alleGb.filter(gb => gb >= '7000'));
 
-  const subkop = (tekst) => `<tr><td colspan="4" style="padding:10px 0 4px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-secondary)">${tekst}</td></tr>`;
+  const subkop = (tekst) => `<tr><td colspan="4" style="padding:10px 0 4px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-secondary)">${tekst}</td></tr>`;
   const rij = (gb, bedrag, richting, label, kleur) => {
     const bg = kleur==='pos'?'var(--semantic-success-soft)':kleur==='neg'?'var(--semantic-danger-soft)':'var(--semantic-gray-soft)';
     const fc = kleur==='pos'?'var(--semantic-success-bright)':kleur==='neg'?'var(--semantic-danger-bright)':'var(--text-secondary)';
     return `<tr>
-      <td style="color:var(--text-secondary);font-size:11px">${gb}</td>
+      <td style="color:var(--text-secondary);font-size:12px">${gb}</td>
       <td>${GBNM[gb]||gb}</td>
-      <td><span style="font-size:10px;padding:2px 7px;border-radius:20px;background:${bg};color:${fc}">${label}</span></td>
+      <td><span style="font-size:11px;padding:2px 7px;border-radius:20px;background:${bg};color:${fc}">${label}</span></td>
       <td style="text-align:right" class="${kleur==='pos'?'pos':kleur==='neg'?'neg':''}">${richting==='plus'?'+ ':'– '}${fmt(Math.abs(bedrag))}</td>
     </tr>`;
   };
@@ -879,7 +879,7 @@ export function renderBelasting() {
       : rij(gb, tot, 'min', 'alleen als verkocht', '');
   }).join('');
 
-  const aftrekbaarheidsNota = `<div style="margin-top:1rem;padding-top:.75rem;font-size:11px;color:var(--text-secondary);border-top:1px solid var(--border-default);line-height:1.55">
+  const aftrekbaarheidsNota = `<div style="margin-top:1rem;padding-top:.75rem;font-size:12px;color:var(--text-secondary);border-top:1px solid var(--border-default);line-height:1.55">
     <strong>Over de inkooprekeningen (7000–7900).</strong> Deze bedragen zijn niet vanzelf aftrekbaar. Aftrekbaar is alleen de inkoopprijs van wat je dat jaar daadwerkelijk verkocht hebt; wat nog op de plank ligt is een bezitting.
     ${heeftVoorraadAdmin
       ? `Voor de artikelen die je in Voorraad hebt staan rekent de app dat zelf uit — dat is de regel “Voorraad (inkoopprijs verkochte artikelen)” hierboven. De bedragen in deze tabel zijn de kale bankmutaties en tellen dus niet nog een keer mee.`
@@ -1270,7 +1270,7 @@ function toonAangifte(tekst, melding) {
         <button type="button" class="pm-kruis" data-sluit aria-label="Sluiten">&times;</button>
       </header>
       <div class="pm-inhoud">
-        <pre style="margin:0;padding:16px 20px;font-size:12px;line-height:1.55;white-space:pre-wrap;font-variant-numeric:tabular-nums">${escHtml(tekst)}</pre>
+        <pre style="margin:0;padding:16px 20px;font-size:13px;line-height:1.55;white-space:pre-wrap;font-variant-numeric:tabular-nums">${escHtml(tekst)}</pre>
       </div>
       <footer class="pm-voet">
         <span class="pm-hint">Esc sluit dit venster</span>
@@ -1300,12 +1300,12 @@ export function openExtraKosten() {
       </header>
       <div class="pm-inhoud">
         <div style="padding:16px 20px 0">
-          <div style="display:grid;grid-template-columns:minmax(0,1fr) 120px 34px;gap:8px;margin-bottom:8px;font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em">
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 120px 34px;gap:8px;margin-bottom:8px;font-size:12px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em">
             <span>Omschrijving</span><span style="text-align:right">Bedrag</span><span></span>
           </div>
         </div>
         <div id="xk-rijen" style="padding:0 20px 16px">${rijen}</div>
-        <p style="padding:0 20px 16px;margin:0;font-size:12px;color:var(--text-secondary)">
+        <p style="padding:0 20px 16px;margin:0;font-size:13px;color:var(--text-secondary)">
           Met de rode knop haal je een post weg. Verwijderen is pas definitief als je op Opslaan klikt.
         </p>
       </div>
@@ -1347,9 +1347,9 @@ function rijHtml(k, i) {
   return `
     <div class="xk-rij" style="display:grid;grid-template-columns:minmax(0,1fr) 120px 34px;gap:8px;margin-bottom:10px">
       <input class="xk-label" type="text" placeholder="Omschrijving" value="${escHtml(k.label || '')}"
-             style="padding:8px 10px;font:inherit;font-size:13px;color:var(--text-primary);background:var(--bg-card);border:1px solid var(--border-default);border-radius:var(--radius-sm)">
+             style="padding:8px 10px;font:inherit;font-size:14px;color:var(--text-primary);background:var(--bg-card);border:1px solid var(--border-default);border-radius:var(--radius-sm)">
       <input class="xk-bedrag" type="number" step="0.01" min="0" placeholder="0,00" value="${k.bedrag ?? ''}"
-             style="padding:8px 10px;font:inherit;font-size:13px;text-align:right;color:var(--text-primary);background:var(--bg-card);border:1px solid var(--border-default);border-radius:var(--radius-sm)">
+             style="padding:8px 10px;font:inherit;font-size:14px;text-align:right;color:var(--text-primary);background:var(--bg-card);border:1px solid var(--border-default);border-radius:var(--radius-sm)">
       <button type="button" class="xk-weg" aria-label="Deze aftrekpost verwijderen"
               title="Deze aftrekpost verwijderen"
               style="border:1px solid var(--value-negative);background:transparent;border-radius:var(--radius-sm);cursor:pointer;color:var(--value-negative);font-size:16px;line-height:1">&times;</button>
@@ -1382,18 +1382,18 @@ export function openInkomenssoort() {
         <label style="display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--border-default);border-radius:var(--radius-sm);margin-bottom:10px;cursor:pointer">
           <input type="radio" name="soort" value="onderneming"${nu === 'onderneming' ? ' checked' : ''} style="margin-top:3px">
           <span>
-            <strong style="display:block;font-size:13px">Winst uit onderneming</strong>
-            <span style="font-size:12px;color:var(--text-secondary);line-height:1.5">De Belastingdienst ziet je als ondernemer voor de inkomstenbelasting. De MKB-winstvrijstelling van ${pct(tarievenVoor(gekozenJaar()).mkb)} geldt: je betaalt over ${pct(1 - tarievenVoor(gekozenJaar()).mkb)} van de winst.</span>
+            <strong style="display:block;font-size:14px">Winst uit onderneming</strong>
+            <span style="font-size:13px;color:var(--text-secondary);line-height:1.5">De Belastingdienst ziet je als ondernemer voor de inkomstenbelasting. De MKB-winstvrijstelling van ${pct(tarievenVoor(gekozenJaar()).mkb)} geldt: je betaalt over ${pct(1 - tarievenVoor(gekozenJaar()).mkb)} van de winst.</span>
           </span>
         </label>
         <label style="display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--border-default);border-radius:var(--radius-sm);cursor:pointer">
           <input type="radio" name="soort" value="overig"${nu === 'overig' ? ' checked' : ''} style="margin-top:3px">
           <span>
-            <strong style="display:block;font-size:13px">Resultaat uit overig werk</strong>
-            <span style="font-size:12px;color:var(--text-secondary);line-height:1.5">Je verdient er iets bij, maar bent geen ondernemer voor de inkomstenbelasting. De MKB-winstvrijstelling geldt dan niet: je betaalt over de hele winst.</span>
+            <strong style="display:block;font-size:14px">Resultaat uit overig werk</strong>
+            <span style="font-size:13px;color:var(--text-secondary);line-height:1.5">Je verdient er iets bij, maar bent geen ondernemer voor de inkomstenbelasting. De MKB-winstvrijstelling geldt dan niet: je betaalt over de hele winst.</span>
           </span>
         </label>
-        <p style="margin:14px 0 0;font-size:12px;color:var(--text-secondary);line-height:1.6">
+        <p style="margin:14px 0 0;font-size:13px;color:var(--text-secondary);line-height:1.6">
           Welke van de twee klopt hangt af van je situatie, niet van deze instelling. De Belastingdienst kijkt onder meer naar hoeveel klanten je hebt, of je zelf je prijzen bepaalt, hoeveel je investeert en of je ondernemersrisico loopt. Twijfel je, gebruik dan de OndernemersCheck van de Belastingdienst of vraag het na bij een adviseur.
         </p>
       </div>
@@ -1445,9 +1445,9 @@ export function openTarieven() {
         <div class="form-group"><label>Zelfstandigenaftrek (€)</label><input type="text" inputmode="numeric" id="tar-za" value="${t.zelfstandigenaftrek}" style="width:100px"></div>
         <label style="display:flex;gap:8px;align-items:flex-start;margin-top:10px;cursor:pointer">
           <input type="checkbox" id="tar-za-aan" ${zelfstandigenaftrekAan() ? 'checked' : ''} style="margin-top:3px">
-          <span style="font-size:12px;line-height:1.5">Zelfstandigenaftrek toepassen. Alleen aanvinken als je aan het urencriterium voldoet (minimaal 1.225 uur per jaar aan je onderneming). Dit geldt voor alle jaren. Vraag bij twijfel je boekhouder of de Belastingdienst.</span>
+          <span style="font-size:13px;line-height:1.5">Zelfstandigenaftrek toepassen. Alleen aanvinken als je aan het urencriterium voldoet (minimaal 1.225 uur per jaar aan je onderneming). Dit geldt voor alle jaren. Vraag bij twijfel je boekhouder of de Belastingdienst.</span>
         </label>
-        <p style="margin:12px 0 0;font-size:12px;color:var(--text-secondary);line-height:1.6">Dit blijft een schatting over de winst uit onderneming. Heffingskortingen en je andere inkomsten zitten er niet in.</p>
+        <p style="margin:12px 0 0;font-size:13px;color:var(--text-secondary);line-height:1.6">Dit blijft een schatting over de winst uit onderneming. Heffingskortingen en je andere inkomsten zitten er niet in.</p>
       </div>
       <footer class="pm-voet">
         <div class="pm-knoppen">
@@ -1512,17 +1512,17 @@ export function openPercentages(startGb = '4235') {
       </header>
       <div class="pm-inhoud">
         <div style="padding:14px 20px 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <label for="pc-gb" style="font-size:12px;color:var(--text-secondary)">Grootboekrekening</label>
-          <select id="pc-gb" style="padding:7px 10px;font:inherit;font-size:13px;color:var(--text-primary);background:var(--bg-card);border:1px solid var(--border-default);border-radius:var(--radius-sm)">
+          <label for="pc-gb" style="font-size:13px;color:var(--text-secondary)">Grootboekrekening</label>
+          <select id="pc-gb" style="padding:7px 10px;font:inherit;font-size:14px;color:var(--text-primary);background:var(--bg-card);border:1px solid var(--border-default);border-radius:var(--radius-sm)">
             ${rekeningen.map(r => `<option value="${r}"${r === gb ? ' selected' : ''}>${r} — ${escHtml(GBNM[r] || 'onbekend')}</option>`).join('')}
           </select>
           <input id="pc-zoek" type="search" placeholder="Zoek op omschrijving of naam"
-                 style="flex:1;min-width:170px;padding:7px 10px;font:inherit;font-size:13px;color:var(--text-primary);background:var(--bg-card);border:1px solid var(--border-default);border-radius:var(--radius-sm)">
+                 style="flex:1;min-width:170px;padding:7px 10px;font:inherit;font-size:14px;color:var(--text-primary);background:var(--bg-card);border:1px solid var(--border-default);border-radius:var(--radius-sm)">
         </div>
         <div id="pc-lijst" style="padding:12px 20px 16px"></div>
       </div>
       <footer class="pm-voet">
-        <div id="pc-totaal" style="font-size:12px;color:var(--text-secondary)"></div>
+        <div id="pc-totaal" style="font-size:13px;color:var(--text-secondary)"></div>
         <div class="pm-knoppen">
           <button type="button" class="btn" data-sluit>Annuleren</button>
           <button type="button" class="btn btn-primary" id="pc-bewaar">Opslaan</button>
@@ -1545,14 +1545,14 @@ export function openPercentages(startGb = '4235') {
       .sort((a, b) => a.datum.localeCompare(b.datum));
 
     if (!rijen.length) {
-      lijst.innerHTML = '<p style="margin:8px 0;font-size:13px;color:var(--text-secondary)">Geen boekingen op deze rekening in dit jaar.</p>';
+      lijst.innerHTML = '<p style="margin:8px 0;font-size:14px;color:var(--text-secondary)">Geen boekingen op deze rekening in dit jaar.</p>';
       totaalVak.textContent = '';
       return;
     }
 
     lijst.innerHTML = `
-      <table style="width:100%;border-collapse:collapse;font-size:13px">
-        <thead><tr style="text-align:left;color:var(--text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:.04em">
+      <table style="width:100%;border-collapse:collapse;font-size:14px">
+        <thead><tr style="text-align:left;color:var(--text-secondary);font-size:12px;text-transform:uppercase;letter-spacing:.04em">
           <th style="padding:6px 8px 6px 0;width:78px">Datum</th>
           <th style="padding:6px 8px 6px 0">Omschrijving</th>
           <th style="padding:6px 8px;text-align:right;width:92px">Bedrag</th>
@@ -1566,7 +1566,7 @@ export function openPercentages(startGb = '4235') {
             <td style="padding:7px 8px;text-align:right">${fmt(t.bedrag)}</td>
             <td style="padding:7px 8px;text-align:right">
               <input class="pc-pct" type="number" min="0" max="100" step="1" value="${percentageVan(t, kaart)}"
-                     style="width:62px;padding:5px 6px;font:inherit;font-size:13px;text-align:right;color:var(--text-primary);background:var(--bg-card);border:1px solid var(--border-default);border-radius:var(--radius-sm)">
+                     style="width:62px;padding:5px 6px;font:inherit;font-size:14px;text-align:right;color:var(--text-primary);background:var(--bg-card);border:1px solid var(--border-default);border-radius:var(--radius-sm)">
             </td>
             <td class="pc-uit" style="padding:7px 0 7px 8px;text-align:right;color:var(--text-secondary)">${fmt(aftrekbaarBedrag(t, kaart))}</td>
           </tr>`).join('')}</tbody>

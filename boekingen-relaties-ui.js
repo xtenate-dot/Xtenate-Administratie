@@ -19,13 +19,13 @@
 // je moet er bewust voor kiezen welke boekingen je meeneemt, omdat de
 // suggestie zelf minder betrouwbaar is.
 
-import { esc, fmt, ddmm } from './helpers.js?v=20261109f';
-import { zoekRelaties, maakRelatie } from './relaties.js?v=20261109f';
+import { esc, fmt, ddmm } from './helpers.js?v=20261109g';
+import { zoekRelaties, maakRelatie } from './relaties.js?v=20261109g';
 import {
   berekenIbanClusters, afwijsIbanCluster, afgewezenIbanClusters, herstelIbanCluster,
   berekenTekstClusters, afwijsTekstCluster, afgewezenTekstClusters, herstelTekstCluster,
   bevestigCluster
-} from './boekingen-relaties.js?v=20261109f';
+} from './boekingen-relaties.js?v=20261109g';
 
 let sluitHuidige = null;
 
@@ -115,14 +115,14 @@ function inhoudHtml() {
     </header>
     <div class="pm-inhoud" style="padding:4px 20px 16px">
       <section>
-        <h4 style="margin:10px 0 2px;font-size:13px">Zeker — gelijke IBAN</h4>
-        <p class="muted" style="font-size:12px;margin:0 0 6px">Boekingen waarvan de naam exact dezelfde IBAN is.</p>
+        <h4 style="margin:10px 0 2px;font-size:14px">Zeker — gelijke IBAN</h4>
+        <p class="muted" style="font-size:13px;margin:0 0 6px">Boekingen waarvan de naam exact dezelfde IBAN is.</p>
         ${ibanLijst}
         ${afgewezenTellerHtml('iban')}
       </section>
       <section style="margin-top:22px;padding-top:16px;border-top:1px solid var(--border-default)">
-        <h4 style="margin:0 0 2px;font-size:13px">Minder zeker — gelijkende naam</h4>
-        <p class="muted" style="font-size:12px;margin:0 0 6px">Boekingen waarvan de naam een woord deelt met een andere naam (bijv. "postnl" in "Koninklijke PostNL B.V."). Niets staat hier standaard aangevinkt — controleer per cluster welke boekingen echt bij elkaar horen.</p>
+        <h4 style="margin:0 0 2px;font-size:14px">Minder zeker — gelijkende naam</h4>
+        <p class="muted" style="font-size:13px;margin:0 0 6px">Boekingen waarvan de naam een woord deelt met een andere naam (bijv. "postnl" in "Koninklijke PostNL B.V."). Niets staat hier standaard aangevinkt — controleer per cluster welke boekingen echt bij elkaar horen.</p>
         ${tekstLijst}
         ${afgewezenTellerHtml('tekst')}
       </section>
@@ -161,13 +161,13 @@ function clusterHtml(c, tier) {
 
   const titel = tier === 'iban'
     ? esc(c.iban)
-    : `“${esc(c.matchwoord)}” <span class="muted" style="font-weight:400;font-size:11px">— minder zeker</span>`;
+    : `“${esc(c.matchwoord)}” <span class="muted" style="font-weight:400;font-size:12px">— minder zeker</span>`;
 
   return `
     <div class="groep-rij" style="flex-wrap:wrap;align-items:flex-start;padding:10px 0;border-top:1px solid var(--border-default)">
       <div style="flex:1;min-width:220px;cursor:pointer" data-toggle="${esc(key)}">
-        <div style="font-weight:600;font-size:13px">${titel} <span class="muted" style="font-weight:400">${open ? '▾' : '▸'}</span></div>
-        <div class="muted" style="font-size:12px">${c.aantal} boeking${c.aantal === 1 ? '' : 'en'} &middot; ${fmt(c.totaal)} &middot; ${esc(ddmm(c.vanDatum))}&ndash;${esc(ddmm(c.totDatum))}</div>
+        <div style="font-weight:600;font-size:14px">${titel} <span class="muted" style="font-weight:400">${open ? '▾' : '▸'}</span></div>
+        <div class="muted" style="font-size:13px">${c.aantal} boeking${c.aantal === 1 ? '' : 'en'} &middot; ${fmt(c.totaal)} &middot; ${esc(ddmm(c.vanDatum))}&ndash;${esc(ddmm(c.totDatum))}</div>
       </div>
       <button type="button" class="btn btn-primary btn-sm" data-bevestig="${esc(key)}" data-tier="${tier}">Bevestigen</button>
       <button type="button" class="btn btn-ghost btn-sm" data-aanpassen="${esc(key)}">Aanpassen</button>
@@ -187,14 +187,14 @@ function bevestigBlokHtml(c, tier, meegenomen) {
   const key = clusterSleutel(c, tier);
 
   if (!meegenomen.length) {
-    return `<div class="muted" style="width:100%;padding:8px 0;font-size:12px">Er zijn nog geen boekingen aangevinkt om te koppelen. Klap het cluster uit en vink de boekingen aan die je wilt meenemen.
+    return `<div class="muted" style="width:100%;padding:8px 0;font-size:13px">Er zijn nog geen boekingen aangevinkt om te koppelen. Klap het cluster uit en vink de boekingen aan die je wilt meenemen.
       <button type="button" class="btn btn-ghost btn-sm" data-bevestig-annuleer="${esc(key)}">Annuleren</button></div>`;
   }
 
   if (bevestigGekozen) {
     return `
     <div style="width:100%;margin-top:10px;padding:10px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:var(--bg-card-hover)">
-      <div class="muted" style="font-size:12px;margin-bottom:6px">Koppelen aan relatie voor ${meegenomen.length} boeking${meegenomen.length === 1 ? '' : 'en'}:</div>
+      <div class="muted" style="font-size:13px;margin-bottom:6px">Koppelen aan relatie voor ${meegenomen.length} boeking${meegenomen.length === 1 ? '' : 'en'}:</div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <strong>${esc(bevestigGekozen.naam)}</strong>
         <button type="button" class="btn-details" data-bevestig-anders="${esc(key)}">Andere relatie kiezen</button>
@@ -206,7 +206,7 @@ function bevestigBlokHtml(c, tier, meegenomen) {
 
   return `
     <div style="width:100%;margin-top:10px;padding:10px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:var(--bg-card-hover)">
-      <div class="muted" style="font-size:12px;margin-bottom:6px">Koppelen aan relatie voor ${meegenomen.length} boeking${meegenomen.length === 1 ? '' : 'en'} — zoek een bestaande relatie of maak een nieuwe:</div>
+      <div class="muted" style="font-size:13px;margin-bottom:6px">Koppelen aan relatie voor ${meegenomen.length} boeking${meegenomen.length === 1 ? '' : 'en'} — zoek een bestaande relatie of maak een nieuwe:</div>
       <div style="position:relative;max-width:340px">
         <input type="text" data-bevestig-zoek="${esc(key)}" placeholder="Naam relatie…" autocomplete="off">
         <div class="search-results" data-bevestig-sugg="${esc(key)}"></div>

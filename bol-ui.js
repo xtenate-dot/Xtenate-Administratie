@@ -2,11 +2,11 @@
 // verkocht per artikel, en een vergelijking met wat Bol op je bankrekening heeft gestort.
 // Alleen kijken: er wordt niets geboekt en de voorraad verandert niet.
 
-import { esc, fmt, ddmm } from './helpers.js?v=20261109f';
-import { bolArtikelenHtml } from './bolartikelen.js?v=20261109f';
-import { lopendJaar } from './jaren.js?v=20261109f';
-import { state } from './storage.js?v=20261109f';
-import { leesBestellingen, leesRetouren, retourSamenvatting, haalBijBol, samenvatting, bolUitbetalingen, standaardPeriodes, leesBolAccounts } from './bol.js?v=20261109f';
+import { esc, fmt, ddmm } from './helpers.js?v=20261109g';
+import { bolArtikelenHtml } from './bolartikelen.js?v=20261109g';
+import { lopendJaar } from './jaren.js?v=20261109g';
+import { state } from './storage.js?v=20261109g';
+import { leesBestellingen, leesRetouren, retourSamenvatting, haalBijBol, samenvatting, bolUitbetalingen, standaardPeriodes, leesBolAccounts } from './bol.js?v=20261109g';
 
 const el = id => document.getElementById(id);
 const MAAND = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
@@ -109,21 +109,21 @@ function teken() {
   const geenData = !bestellingen.length;
   const eerste = (bestellingen || []).reduce((m, b) => (b.datum && (!m || b.datum < m) ? b.datum : m), '');
   const kop = `<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:var(--spacing-4)">
-      <select onchange="zetBolPeriode(this.value)" aria-label="Periode" style="font-size:13px">${opties.map(([w, l]) => `<option value="${esc(w)}"${w === periode ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select>
-      ${meer ? `<select onchange="zetBolAccount(this.value)" aria-label="Account" style="font-size:13px"><option value="alle">Alle accounts</option>${accs.map(a => `<option value="${esc(a.nummer)}"${a.nummer === accountFilter ? ' selected' : ''}>${esc(a.naam)}</option>`).join('')}</select>` : ''}
+      <select onchange="zetBolPeriode(this.value)" aria-label="Periode" style="font-size:14px">${opties.map(([w, l]) => `<option value="${esc(w)}"${w === periode ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select>
+      ${meer ? `<select onchange="zetBolAccount(this.value)" aria-label="Account" style="font-size:14px"><option value="alle">Alle accounts</option>${accs.map(a => `<option value="${esc(a.nummer)}"${a.nummer === accountFilter ? ' selected' : ''}>${esc(a.naam)}</option>`).join('')}</select>` : ''}
       <span style="flex:1"></span>
-      ${meer ? `<select onchange="zetBolOphaalAccount(this.value)" aria-label="Welk account ophalen" style="font-size:13px"><option value="alle">Ophalen: alle accounts</option>${accs.map(a => `<option value="${esc(a.nummer)}"${a.nummer === ophaalAccount ? ' selected' : ''}>Ophalen: ${esc(a.naam)}</option>`).join('')}</select>` : ''}
-      <select onchange="zetBolOphalen(this.value)" aria-label="Wat ophalen" style="font-size:13px">
+      ${meer ? `<select onchange="zetBolOphaalAccount(this.value)" aria-label="Welk account ophalen" style="font-size:14px"><option value="alle">Ophalen: alle accounts</option>${accs.map(a => `<option value="${esc(a.nummer)}"${a.nummer === ophaalAccount ? ' selected' : ''}>Ophalen: ${esc(a.naam)}</option>`).join('')}</select>` : ''}
+      <select onchange="zetBolOphalen(this.value)" aria-label="Wat ophalen" style="font-size:14px">
         <option value="laatste7"${ophaal === 'laatste7' ? ' selected' : ''}>Laatste 7 dagen</option>
         <option value="laatste31"${ophaal === 'laatste31' ? ' selected' : ''}>Laatste 31 dagen</option>
         <option value="laatste90"${ophaal === 'laatste90' ? ' selected' : ''}>Laatste 3 maanden</option></select>
       <button class="btn btn-primary" onclick="haalBolBestellingenOp()"${bezig ? ' disabled' : ''}>${bezig ? 'Bezig…' : 'Ophalen bij Bol.com'}</button>
     </div>
-    ${melding ? `<div class="card" style="margin-bottom:var(--spacing-4)"><div style="font-size:13px;white-space:pre-line">${esc(melding)}</div></div>` : ''}`;
+    ${melding ? `<div class="card" style="margin-bottom:var(--spacing-4)"><div style="font-size:14px;white-space:pre-line">${esc(melding)}</div></div>` : ''}`;
 
   if (geenData) {
     doel.innerHTML = kop + `<div class="card"><p>Er zijn nog geen Bol-bestellingen opgeslagen. Klik op <b>Ophalen bij Bol.com</b>.</p>
-      <p class="muted" style="font-size:12px">Voor het eerst: maak in Bol Partner Platform (Instellingen → API-instellingen) een Client ID en Secret en zet die in Supabase bij Edge Functions → Secrets als <code>BOL_CLIENT_ID</code> en <code>BOL_CLIENT_SECRET</code>.</p></div>`;
+      <p class="muted" style="font-size:13px">Voor het eerst: maak in Bol Partner Platform (Instellingen → API-instellingen) een Client ID en Secret en zet die in Supabase bij Edge Functions → Secrets als <code>BOL_CLIENT_ID</code> en <code>BOL_CLIENT_SECRET</code>.</p></div>`;
     return;
   }
 
@@ -141,31 +141,31 @@ function teken() {
       tb += ub.totaal; tbn += ub.aantal; if (heeft) { tn += sj.netto; ts += sj.stuks; }
       const actief = periode === `jaar:${j}`;
       return `<tr${actief ? ' style="font-weight:600"' : ''}><td><a href="#" onclick="zetBolPeriode('jaar:${j}');return false">${j}</a></td>
-        <td style="text-align:right">${heeft ? sj.stuks : '—'}</td><td style="text-align:right">${heeft ? fmt(sj.netto) : '—'}${gedeeltelijk ? `<div class="muted" style="font-size:11px">vanaf ${esc(ddmm(eersteBestelling))}</div>` : ''}</td>
+        <td style="text-align:right">${heeft ? sj.stuks : '—'}</td><td style="text-align:right">${heeft ? fmt(sj.netto) : '—'}${gedeeltelijk ? `<div class="muted" style="font-size:12px">vanaf ${esc(ddmm(eersteBestelling))}</div>` : ''}</td>
         <td style="text-align:right">${ub.aantal}</td><td style="text-align:right">${fmt(ub.totaal)}</td></tr>`;
     }).join('');
     return `${rijen}<tr style="border-top:1px solid var(--border-default)"><td><b>Totaal</b></td><td style="text-align:right"><b>${ts}</b></td><td style="text-align:right"><b>${fmt(r2(tn))}</b></td><td style="text-align:right"><b>${tbn}</b></td><td style="text-align:right"><b>${fmt(r2(tb))}</b></td></tr>`;
   })();
   const jarenKaart = `<div class="card card-flush" style="margin-bottom:var(--spacing-4)"><div style="padding:14px 16px 4px"><div class="section-titel">Per jaar</div></div>
       <div class="table-wrap"><table class="tbl-compact"><thead><tr><th>Jaar</th><th style="text-align:right">Stuks (Bol)</th><th style="text-align:right">Netto volgens Bol</th><th style="text-align:right">Stortingen</th><th style="text-align:right">Door Bol gestort op de bank</th></tr></thead><tbody>${jaarRijen}</tbody></table></div>
-      <p class="muted" style="font-size:12px;padding:8px 16px 14px;margin:0">Bol geeft zelf maar ongeveer 3 maanden aan bestellingen terug, daarom staan de bestellingen pas vanaf ${esc(eerste ? ddmm(eerste) + '-' + eerste.slice(0, 4) : '—')}. Wat Bol aan je heeft overgemaakt zie je wel over alle jaren, want dat staat in je bank. Voor oudere jaren zijn dat dus de betrouwbare cijfers.</p></div>`;
-  const vergelijk = periodeVoorData ? `<p class="muted" style="font-size:12px;margin-bottom:var(--spacing-4)">Voor ${esc(label)} zijn geen Bol-bestellingen opgeslagen. In het overzicht per jaar hierboven staat wat Bol in die periode aan je heeft overgemaakt: ${fmt(bolUitbetalingen(van, tot).totaal)} in ${bolUitbetalingen(van, tot).aantal} stortingen.</p>` : accountFilter !== 'alle' ? `<p class="muted" style="font-size:12px;margin-bottom:var(--spacing-4)">De vergelijking met de bank staat alleen bij "Alle accounts", omdat de stortingen op de bank niet per Bol-account te scheiden zijn.</p>` : `<div class="card" style="margin-bottom:var(--spacing-4)">
+      <p class="muted" style="font-size:13px;padding:8px 16px 14px;margin:0">Bol geeft zelf maar ongeveer 3 maanden aan bestellingen terug, daarom staan de bestellingen pas vanaf ${esc(eerste ? ddmm(eerste) + '-' + eerste.slice(0, 4) : '—')}. Wat Bol aan je heeft overgemaakt zie je wel over alle jaren, want dat staat in je bank. Voor oudere jaren zijn dat dus de betrouwbare cijfers.</p></div>`;
+  const vergelijk = periodeVoorData ? `<p class="muted" style="font-size:13px;margin-bottom:var(--spacing-4)">Voor ${esc(label)} zijn geen Bol-bestellingen opgeslagen. In het overzicht per jaar hierboven staat wat Bol in die periode aan je heeft overgemaakt: ${fmt(bolUitbetalingen(van, tot).totaal)} in ${bolUitbetalingen(van, tot).aantal} stortingen.</p>` : accountFilter !== 'alle' ? `<p class="muted" style="font-size:13px;margin-bottom:var(--spacing-4)">De vergelijking met de bank staat alleen bij "Alle accounts", omdat de stortingen op de bank niet per Bol-account te scheiden zijn.</p>` : `<div class="card" style="margin-bottom:var(--spacing-4)">
       <div class="section-titel" style="margin-bottom:6px">Vergelijking met je bank (${esc(label)})</div>
-      ${bankBeperkt ? `<p class="muted" style="font-size:12px;margin:0 0 6px">Bol geeft bestellingen maar ongeveer 3 maanden terug. Daarom tellen alleen de stortingen vanaf ${esc(ddmm ? ddmm(bankVan) : bankVan)} mee; eerdere stortingen horen bij bestellingen die hier niet in staan.</p>` : ''}
+      ${bankBeperkt ? `<p class="muted" style="font-size:13px;margin:0 0 6px">Bol geeft bestellingen maar ongeveer 3 maanden terug. Daarom tellen alleen de stortingen vanaf ${esc(ddmm ? ddmm(bankVan) : bankVan)} mee; eerdere stortingen horen bij bestellingen die hier niet in staan.</p>` : ''}
       <table class="tbl-compact" style="max-width:520px"><tbody>
         <tr><td>Verkocht volgens Bol (netto na commissie)</td><td style="text-align:right">${fmt(s.netto)}</td></tr>
         ${retouren ? `<tr><td>Retouren (${rsV.stuks} ${rsV.stuks === 1 ? 'stuk' : 'stuks'} terugbetaald, min teruggekregen commissie)</td><td style="text-align:right">${fmt(-(rsV.bedrag - rsV.commissie))}</td></tr>
         <tr><td>Netto na retouren</td><td style="text-align:right">${fmt(nettoNaRetour)}</td></tr>` : ''}
         <tr><td>Door Bol gestort op de bank (${bank.aantal} ${bank.aantal === 1 ? 'storting' : 'stortingen'})</td><td style="text-align:right">${fmt(bank.totaal)}</td></tr>
         <tr><td><b>Verschil</b></td><td style="text-align:right"><b>${fmt(verschil)}</b></td></tr></tbody></table>
-      <p class="muted" style="font-size:12px;margin-top:6px">Een verschil is normaal: Bol betaalt uit na de levering, trekt ook verzendkosten af, en een storting kan in een andere maand vallen dan de verkoop. De eerste weken na het begin van de gegevens liggen de stortingen hoger, omdat ze nog bij oudere bestellingen horen. Over een langere periode horen de twee dicht bij elkaar te liggen.</p></div>`;
+      <p class="muted" style="font-size:13px;margin-top:6px">Een verschil is normaal: Bol betaalt uit na de levering, trekt ook verzendkosten af, en een storting kan in een andere maand vallen dan de verkoop. De eerste weken na het begin van de gegevens liggen de stortingen hoger, omdat ze nog bij oudere bestellingen horen. Over een langere periode horen de twee dicht bij elkaar te liggen.</p></div>`;
 
   const orders = lijst.map(b => {
     const regels = (b.items || []).filter(i => (i.aantal - (i.geannuleerd || 0)) > 0 || i.geannuleerd);
     const effect = (b.items || []).reduce((t, i) => t + Math.max(0, i.aantal - (i.geannuleerd || 0)) * (i.prijs || 0), 0);
     const comm = (b.items || []).reduce((t, i) => t + (Math.max(0, i.aantal - (i.geannuleerd || 0)) ? (i.commissie || 0) * (Math.max(0, i.aantal - (i.geannuleerd || 0)) / Math.max(1, i.aantal)) : 0), 0);
     const alleGeannuleerd = !regels.some(i => (i.aantal - (i.geannuleerd || 0)) > 0);
-    return `<tr${alleGeannuleerd ? ' style="opacity:.5"' : ''}><td>${esc(ddmm(b.datum))}</td><td>${esc(b.order_id)}${meer ? `<div class="muted" style="font-size:11px">${esc(accountNaam(b.account || '1'))}</div>` : ''}</td>
+    return `<tr${alleGeannuleerd ? ' style="opacity:.5"' : ''}><td>${esc(ddmm(b.datum))}</td><td>${esc(b.order_id)}${meer ? `<div class="muted" style="font-size:12px">${esc(accountNaam(b.account || '1'))}</div>` : ''}</td>
       <td>${(b.items || []).map(i => `${esc(i.titel || i.ean)} <span class="muted">×${i.aantal - (i.geannuleerd || 0)}${i.geannuleerd ? ' (geannuleerd: ' + i.geannuleerd + ')' : ''}</span>`).join('<br>')}</td>
       <td style="text-align:right">${fmt(effect)}</td><td style="text-align:right">${fmt(comm)}</td></tr>`;
   }).join('');
@@ -181,7 +181,7 @@ function teken() {
       <div class="kpi kpi--secondary"><div class="kpi-lbl">Commissie van Bol</div><div class="kpi-val">${fmt(s.commissie)}</div><div class="kpi-sub">netto ${fmt(s.netto)}</div></div>
       ${retouren ? `<div class="kpi kpi--secondary"><div class="kpi-lbl">Retouren</div><div class="kpi-val">${rs.stuks}</div><div class="kpi-sub">${fmt(rs.bedrag)} terugbetaald${rs.inBehandeling ? ` · ${rs.inBehandeling} nog in behandeling` : ''}${rs.onbekend ? ` · van ${rs.onbekend} stuks is het bedrag onbekend (bestelling van vóór de opgeslagen periode)` : ''}</div></div>` : ''}
     </div>
-    ${retouren === null ? `<p class="muted" style="font-size:12px;margin-bottom:var(--spacing-4)">Retouren staan hier nog niet in: de tabel <code>bol_retouren</code> bestaat nog niet in Supabase.</p>` : ''}
+    ${retouren === null ? `<p class="muted" style="font-size:13px;margin-bottom:var(--spacing-4)">Retouren staan hier nog niet in: de tabel <code>bol_retouren</code> bestaat nog niet in Supabase.</p>` : ''}
     ${jarenKaart}
     ${vergelijk}
     <div class="section-head"><div class="section-titel">Verkocht per artikel</div></div>
@@ -192,14 +192,14 @@ function teken() {
     ${retouren && retourLijst.length ? `<div class="section-head"><div class="section-titel">Retouren (${retourLijst.length})</div></div>
     <div class="card card-flush" style="margin-bottom:var(--spacing-4)"><div class="table-wrap"><table class="tbl-compact">
       <thead><tr><th>Datum</th><th>Bestelnr</th><th>Artikel</th><th style="text-align:right">Stuks</th><th>Uitkomst</th><th style="text-align:right">Terugbetaald</th></tr></thead>
-      <tbody>${rs.rijen.map(r => `<tr><td>${esc(ddmm(r.datum))}</td><td>${esc(r.order_id)}${meer ? `<div class="muted" style="font-size:11px">${esc(accountNaam(r.account || '1'))}</div>` : ''}</td>
-        <td>${esc(r.titel || r.ean)}${r.reden ? `<div class="muted" style="font-size:11px">${esc(r.reden)}</div>` : ''}</td><td style="text-align:right">${r.aantal}</td>
+      <tbody>${rs.rijen.map(r => `<tr><td>${esc(ddmm(r.datum))}</td><td>${esc(r.order_id)}${meer ? `<div class="muted" style="font-size:12px">${esc(accountNaam(r.account || '1'))}</div>` : ''}</td>
+        <td>${esc(r.titel || r.ean)}${r.reden ? `<div class="muted" style="font-size:12px">${esc(r.reden)}</div>` : ''}</td><td style="text-align:right">${r.aantal}</td>
         <td>${r.afgehandeld ? (r.geaccepteerd ? 'Geaccepteerd' : r.afgewezen ? 'Afgewezen' : 'Afgehandeld') : 'In behandeling'}</td><td style="text-align:right">${fmt(r.terug)}</td></tr>`).join('')}</tbody></table></div></div>` : ''}
     <div class="section-head"><div class="section-titel">Bestellingen (${lijst.length})</div></div>
     <div class="card card-flush"><div class="table-wrap"><table class="tbl-compact">
       <thead><tr><th>Datum</th><th>Bestelnr</th><th>Artikelen</th><th style="text-align:right">Bedrag</th><th style="text-align:right">Commissie</th></tr></thead>
       <tbody>${orders || '<tr><td colspan="5" class="muted">Geen bestellingen in deze periode.</td></tr>'}</tbody></table></div></div>
-    <p class="muted" style="font-size:12px;margin-top:8px">Bol bewaart zelf maar ongeveer 3 maanden aan bestellingen; wat hier staat blijft bewaard. Eerste bestelling in deze lijst: ${esc(eerste ? ddmm(eerste) + '-' + eerste.slice(0, 4) : '—')}. Oudere bestellingen zie je in het Bol Partner Platform.</p>`;
+    <p class="muted" style="font-size:13px;margin-top:8px">Bol bewaart zelf maar ongeveer 3 maanden aan bestellingen; wat hier staat blijft bewaard. Eerste bestelling in deze lijst: ${esc(eerste ? ddmm(eerste) + '-' + eerste.slice(0, 4) : '—')}. Oudere bestellingen zie je in het Bol Partner Platform.</p>`;
 }
 const r2 = n => Math.round(n * 100) / 100;
 

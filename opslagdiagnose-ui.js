@@ -6,7 +6,7 @@
 import { opslagDiagnose, opslagDiagnoseAlsTekst, opslagSnapshot, opslagSnapshotAlsTekst,
   overrideDetail, overrideDetailAlsTekst, negeerDetail, backupBestand,
   negeerAnalyse, downloadNegeerlijst }
-  from './opslagdiagnose.js?v=20261109f';
+  from './opslagdiagnose.js?v=20261109g';
 
 const el = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
@@ -53,7 +53,7 @@ function render(d) {
     <tr>
       <td style="padding-left:16px"><code>${esc(naam)}</code></td>
       <td style="text-align:right;font-weight:600">${b.aantal}</td>
-      <td class="muted" style="padding-right:16px;font-size:11px">
+      <td class="muted" style="padding-right:16px;font-size:12px">
         ${esc(Object.entries(b.perJaar).sort().map(([j, n]) => `${j}: ${n}`).join(' · ') || '—')}
         ${b.aanwezig === false ? ' <span class="neg">(sleutel bestaat niet)</span>' : ''}
         ${b.fout ? ` <span class="neg">(${esc(b.fout)})</span>` : ''}
@@ -120,7 +120,7 @@ function render(d) {
           <td>${v.jaar}</td><td>${esc(v.mijn.datum)}</td><td>${esc(v.code.datum)}</td>
           <td style="text-align:right" class="neg">${v.dagen > 0 ? '+' : ''}${v.dagen}</td>
           <td style="text-align:right">${Number(v.mijn.bedrag).toFixed(2)}</td>
-          <td class="muted" style="font-size:11px">${esc(String(v.mijn.naam || '').slice(0, 44))}</td>
+          <td class="muted" style="font-size:12px">${esc(String(v.mijn.naam || '').slice(0, 44))}</td>
         </tr>`).join('')}</tbody>
       </table></div>` : ''}
     </div>
@@ -146,7 +146,7 @@ function render(d) {
       <button class="btn btn-primary" id="diag-kopieer" onclick="kopieerOpslagDiagnose()">Resultaten kopiëren</button>
     </div>
     <textarea id="diag-tekst" readonly style="width:100%;height:340px;margin-top:var(--spacing-3);
-      font-family:ui-monospace,monospace;font-size:11px;padding:10px;border:1px solid var(--border-strong);
+      font-family:ui-monospace,monospace;font-size:12px;padding:10px;border:1px solid var(--border-strong);
       border-radius:var(--radius-sm);background:var(--bg-subtle-layer);color:var(--text-primary)">${esc(laatsteTekst)}</textarea>`;
 }
 
@@ -178,7 +178,7 @@ export async function maakOpslagSnapshot() {
           <td style="text-align:right" class="muted">${x.bytes}</td>
           <td class="muted">${esc(x.eerste ?? '—')}</td>
           <td class="muted">${esc(x.laatste ?? '—')}</td>
-          <td class="muted" style="font-size:10px;padding-right:16px">${esc(x.som)}</td>
+          <td class="muted" style="font-size:11px;padding-right:16px">${esc(x.som)}</td>
         </tr>`).join('')}</tbody>
       </table></div></div>
       <p class="ctrl-uitleg">De checksum verandert zodra ook maar één teken in die sleutel wijzigt.
@@ -199,7 +199,7 @@ export async function maakOpslagSnapshot() {
         <button class="btn btn-primary" id="diag-kopieer" onclick="kopieerOpslagDiagnose()">Resultaten kopiëren</button>
       </div>
       <textarea id="diag-tekst" readonly style="width:100%;height:340px;margin-top:var(--spacing-3);
-        font-family:ui-monospace,monospace;font-size:11px;padding:10px;border:1px solid var(--border-strong);
+        font-family:ui-monospace,monospace;font-size:12px;padding:10px;border:1px solid var(--border-strong);
         border-radius:var(--radius-sm);background:var(--bg-subtle-layer);color:var(--text-primary)">${esc(laatsteTekst)}</textarea>`;
   } catch (e) {
     el('diag-inhoud').innerHTML =
@@ -231,8 +231,8 @@ export async function toonOverrides() {
           <th style="padding-right:16px">Uitkomst</th></tr></thead>
         <tbody>${d.controle.map(c => `<tr>
           <td style="padding-left:16px"><code>${esc(c.sleutel)}</code></td>
-          <td class="muted" style="font-size:10px">${esc(c.verwacht)}</td>
-          <td class="muted" style="font-size:10px">${esc(c.nu)}</td>
+          <td class="muted" style="font-size:11px">${esc(c.verwacht)}</td>
+          <td class="muted" style="font-size:11px">${esc(c.nu)}</td>
           <td class="${c.gelijk ? 'pos' : 'neg'}" style="padding-right:16px">${c.gelijk ? 'gelijk' : 'AFWIJKEND'}</td>
         </tr>`).join('')}</tbody>
       </table></div></div>
@@ -241,7 +241,7 @@ export async function toonOverrides() {
       <div class="card">
         <p class="ctrl-uitleg" style="margin:0 0 var(--spacing-2)">
           ${d.ht.aanwezig ? `${d.ht.tekens} tekens · checksum <code>${esc(d.ht.som)}</code>` : 'staat niet in de opslag'}</p>
-        <textarea readonly style="width:100%;height:90px;font-family:ui-monospace,monospace;font-size:10px;
+        <textarea readonly style="width:100%;height:90px;font-family:ui-monospace,monospace;font-size:11px;
           padding:8px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);
           background:var(--bg-subtle-layer);color:var(--text-primary)">${esc(d.ht.ruw)}</textarea>
       </div>
@@ -252,8 +252,8 @@ export async function toonOverrides() {
           <tr>
             <td style="padding-left:16px">${x.jaar}</td>
             ${velden.map(v => `<td style="text-align:right" class="${x.afwijkend.includes(v) ? 'neg' : ''}">${
-              g(x.mijn?.[v])}${x.afwijkend.includes(v) ? `<br><span class="muted" style="font-size:10px">code ${g(x.std?.[v])}</span>` : ''}</td>`).join('')}
-            <td class="muted" style="padding-right:16px;font-size:11px">${
+              g(x.mijn?.[v])}${x.afwijkend.includes(v) ? `<br><span class="muted" style="font-size:11px">code ${g(x.std?.[v])}</span>` : ''}</td>`).join('')}
+            <td class="muted" style="padding-right:16px;font-size:12px">${
               x.alleenBijMij ? 'alleen bij jou' : x.alleenInCode ? 'alleen in code' :
               x.afwijkend.length ? x.afwijkend.length + ' velden anders' : 'gelijk aan code'}</td>
           </tr>`).join('')}</tbody>
@@ -264,7 +264,7 @@ export async function toonOverrides() {
         <p class="ctrl-uitleg" style="margin:0 0 var(--spacing-2)">
           ${d.ms.aanwezig ? `${d.ms.tekens} tekens · checksum <code>${esc(d.ms.som)}</code>` : 'staat niet in de opslag'}
           ${d.gaten.length ? `<br>Ontbrekende maanden binnen de reeks: <span class="neg">${esc(d.gaten.join(', '))}</span>` : '<br>Geen gaten binnen de reeks.'}</p>
-        <textarea readonly style="width:100%;height:90px;font-family:ui-monospace,monospace;font-size:10px;
+        <textarea readonly style="width:100%;height:90px;font-family:ui-monospace,monospace;font-size:11px;
           padding:8px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);
           background:var(--bg-subtle-layer);color:var(--text-primary)">${esc(d.ms.ruw)}</textarea>
       </div>
@@ -279,7 +279,7 @@ export async function toonOverrides() {
           <td style="text-align:right" class="${x.afwijkend.includes('eind') ? 'neg' : ''}">${g(x.mijn?.eind)}</td>
           <td style="text-align:right" class="muted">${g(x.std?.begin)}</td>
           <td style="text-align:right" class="muted">${g(x.std?.eind)}</td>
-          <td class="muted" style="padding-right:16px;font-size:11px">${
+          <td class="muted" style="padding-right:16px;font-size:12px">${
             x.alleenBijMij ? 'alleen bij jou' : x.alleenInCode ? 'alleen in code' :
             x.afwijkend.length ? 'anders' : 'gelijk'}</td>
         </tr>`).join('')}</tbody>
@@ -290,7 +290,7 @@ export async function toonOverrides() {
         <button class="btn btn-primary" id="diag-kopieer" onclick="kopieerOpslagDiagnose()">Resultaten kopiëren</button>
       </div>
       <textarea id="diag-tekst" readonly style="width:100%;height:300px;margin-top:var(--spacing-3);
-        font-family:ui-monospace,monospace;font-size:11px;padding:10px;border:1px solid var(--border-strong);
+        font-family:ui-monospace,monospace;font-size:12px;padding:10px;border:1px solid var(--border-strong);
         border-radius:var(--radius-sm);background:var(--bg-subtle-layer);color:var(--text-primary)">${esc(laatsteTekst)}</textarea>`;
   } catch (e) {
     el('diag-inhoud').innerHTML =
@@ -343,13 +343,13 @@ export async function toonNegeerlijst() {
         <tbody>${a.regels.map(r => `<tr>
           <td style="padding-left:16px"><code>${esc(r.huidigId)}</code></td>
           <td class="muted">${esc(r.soort)}</td>
-          <td class="muted" style="font-size:10px">${esc(String(r.vinger || '—').slice(0, 28))}</td>
-          <td class="muted" style="font-size:11px">${esc(r.entiteit)}${
-            r.wijstNaar ? '<br><span style="font-size:10px">' + esc(String(r.wijstNaar).slice(0, 44)) + '</span>' : ''}</td>
+          <td class="muted" style="font-size:11px">${esc(String(r.vinger || '—').slice(0, 28))}</td>
+          <td class="muted" style="font-size:12px">${esc(r.entiteit)}${
+            r.wijstNaar ? '<br><span style="font-size:11px">' + esc(String(r.wijstNaar).slice(0, 44)) + '</span>' : ''}</td>
           <td class="${r.d1 === 'JA' ? 'neg' : 'muted'}">${esc(r.d1)}</td>
           <td>${r.nieuwId ? '<code>' + esc(r.huidigId) + ' → ' + esc(r.nieuwId) + '</code>' : '—'}</td>
           <td style="padding-right:16px"><span class="${kleur(r.oordeel)}" style="font-weight:600">${esc(r.oordeel)}</span>
-            <br><span class="muted" style="font-size:10px">${esc(String(r.toelichting).slice(0, 46))}</span></td>
+            <br><span class="muted" style="font-size:11px">${esc(String(r.toelichting).slice(0, 46))}</span></td>
         </tr>`).join('')}</tbody>
       </table></div></div>`
       : '<div class="card"><p class="ctrl-uitleg" style="margin:0">De negeerlijst is leeg. Er is niets dat D1 kan raken.</p></div>'}
@@ -360,7 +360,7 @@ export async function toonNegeerlijst() {
         <button class="btn btn-primary" onclick="downloadNegeerBestanden()">Negeerlijst downloaden (JSON + CSV)</button>
       </div>
       <textarea id="diag-tekst" readonly style="width:100%;height:240px;margin-top:var(--spacing-3);
-        font-family:ui-monospace,monospace;font-size:11px;padding:10px;border:1px solid var(--border-strong);
+        font-family:ui-monospace,monospace;font-size:12px;padding:10px;border:1px solid var(--border-strong);
         border-radius:var(--radius-sm);background:var(--bg-subtle-layer);color:var(--text-primary)">${esc(laatsteTekst)}</textarea>`;
   } catch (e) {
     el('diag-inhoud').innerHTML = `<div class="alert alert-error">Uitlezen mislukt: ${esc(e.message)}. Er is niets gewijzigd.</div>`;
@@ -415,7 +415,7 @@ export async function downloadBackup() {
           <td class="muted">${esc(x.vorm)}</td>
           <td style="text-align:right">${x.records ?? '—'}</td>
           <td style="text-align:right" class="muted">${x.tekens}</td>
-          <td class="muted" style="font-size:10px;padding-right:16px">${esc(x.som)}</td>
+          <td class="muted" style="font-size:11px;padding-right:16px">${esc(x.som)}</td>
         </tr>`).join('')}</tbody>
       </table></div></div>
       <div class="modal-actions">
@@ -423,7 +423,7 @@ export async function downloadBackup() {
         <button class="btn btn-primary" id="diag-kopieer" onclick="kopieerOpslagDiagnose()">Overzicht kopiëren</button>
       </div>
       <textarea id="diag-tekst" readonly style="width:100%;height:260px;margin-top:var(--spacing-3);
-        font-family:ui-monospace,monospace;font-size:11px;padding:10px;border:1px solid var(--border-strong);
+        font-family:ui-monospace,monospace;font-size:12px;padding:10px;border:1px solid var(--border-strong);
         border-radius:var(--radius-sm);background:var(--bg-subtle-layer);color:var(--text-primary)">${esc(laatsteTekst)}</textarea>`;
   } catch (e) {
     el('diag-inhoud').innerHTML = `<div class="alert alert-error">De reservekopie kon niet worden gemaakt: ${esc(e.message)}. Er is niets gewijzigd.</div>`;

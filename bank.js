@@ -3,15 +3,15 @@
 import {
   bedragUit, ddmm, esc, fmt, isInkomst, isUitgave, leegVlak, maandLabel, MND_KORT, rekBadge,
   typeBadge, vulMaandSelect, weergaveNaam
-} from './helpers.js?v=20261109f';
+} from './helpers.js?v=20261109g';
 import {
   MAAND_SALDOS, saveHistTxData, saveTxData, state, isBtwPlichtig,
   grootboekNamen, rekeningNamen, grootboekOptgroepen, rekeningenLijst
-, jaarIsVergrendeld} from './storage.js?v=20261109f';
-import { maakSorteerbaar } from './tables.js?v=20261109f';
-import { EERSTE_TX_JAAR, isTxJaar, lopendJaar, txVanJaar, banksaldoTot, jaarVan } from './jaren.js?v=20261109f';
-import { heeftBonnetje, startModalBonnetjes, sluitModalBonnetjes, bewaarWachtende } from './bonnetjes.js?v=20261109f';
-import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking } from './facturen.js?v=20261109f';
+, jaarIsVergrendeld} from './storage.js?v=20261109g';
+import { maakSorteerbaar } from './tables.js?v=20261109g';
+import { EERSTE_TX_JAAR, isTxJaar, lopendJaar, txVanJaar, banksaldoTot, jaarVan } from './jaren.js?v=20261109g';
+import { heeftBonnetje, startModalBonnetjes, sluitModalBonnetjes, bewaarWachtende } from './bonnetjes.js?v=20261109g';
+import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking } from './facturen.js?v=20261109g';
 
 // Fase 3A: Supabase pending queue
 import {
@@ -19,7 +19,7 @@ import {
   syncPendingQueue,
   pendingQueue,
   isSupabaseReady
-} from './supabase-client-v2.js?v=20261109f';
+} from './supabase-client-v2.js?v=20261109g';
 
 const el = id => document.getElementById(id);
 
@@ -138,7 +138,7 @@ function tekenMaandNavigatie(bron, maand) {
         <th style="text-align:right">Uitgaven</th><th style="text-align:right">Resultaat</th><th style="text-align:right;padding-right:16px">Privé (netto)</th></tr></thead>
       <tbody>${maanden.map(m => rij(maandLabel(m), perMaand.get(m), m)).join('')}${rij('Totaal', tot, '')}</tbody></table></div></div>
       ${toonAlleBoekingen ? '' : `<div style="margin-bottom:var(--spacing-4)"><button class="btn" onclick="toonAlleBankBoekingen()">Alle ${tot.n} boekingen tonen</button>
-      <span class="muted" style="font-size:12px;margin-left:8px">Of klik op een maand.</span></div>`}`;
+      <span class="muted" style="font-size:13px;margin-left:8px">Of klik op een maand.</span></div>`}`;
     if (kaart) kaart.style.display = toonAlleBoekingen ? '' : 'none';
   } else {
     ov.innerHTML = '';
@@ -235,7 +235,7 @@ export function renderBank() {
     ? lijst.map(t => `<tr class="row-click" data-id="${esc(t.id)}">
         <td class="muted" style="padding-left:16px" data-v="${t.datum}">${ddmm(t.datum)}</td>
         <td class="td-trunc">${esc(weergaveNaam(t))}${heeftBonnetje(t.id) ? ' <span title="Heeft een bijlage" aria-label="Heeft een bijlage">📎</span>' : ''}${t.omschr && t.omschr !== t.naam
-          ? ` <span style="color:var(--text-muted);font-size:10px">· ${esc(t.omschr)}</span>` : ''}</td>
+          ? ` <span style="color:var(--text-muted);font-size:11px">· ${esc(t.omschr)}</span>` : ''}</td>
         <td data-v="${esc(t.gb)}"><span class="gbnr">${esc(t.gb)}</span> ${esc(GBNM[t.gb] || '')}</td>
         <td data-v="${esc(t.rek)}">${rekBadge(t.rek, REKNM[t.rek])}</td>
         <td style="text-align:right;padding-right:16px" data-v="${t.bedrag}">${typeBadge(t.type, t.bedrag)}</td>

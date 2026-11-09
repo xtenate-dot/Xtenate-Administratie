@@ -4,11 +4,11 @@
 // Alleen kijken en importeren. Er wordt niets in HNVI, Voorraad of de
 // boekingen aangepast; de Excel blijft de bron.
 
-import { state, saveVeiling } from './storage.js?v=20261109f';
-import { esc, fmt } from './helpers.js?v=20261109f';
+import { state, saveVeiling } from './storage.js?v=20261109g';
+import { esc, fmt } from './helpers.js?v=20261109g';
 import {
   leesVeilingWerkboek, voorraadRegels
-} from './veiling.js?v=20261109f';
+} from './veiling.js?v=20261109g';
 
 const el = id => document.getElementById(id);
 let melding = '';
@@ -108,10 +108,10 @@ export function renderVeiling() {
 
   const knop = `<div style="display:flex;align-items:center;gap:var(--spacing-3);margin-bottom:var(--spacing-4);flex-wrap:wrap">
     <button class="btn btn-primary" onclick="kiesVeilingBestand()">${data ? 'Excel opnieuw inlezen' : 'Excel inlezen'}</button>
-    <span class="muted" style="font-size:12px">${data
+    <span class="muted" style="font-size:13px">${data
       ? `Laatst ingelezen ${esc(datum(String(data.geimporteerd).slice(0, 10)))} uit ${esc(data.bestand || 'onbekend bestand')}`
       : 'Nog niets ingelezen.'}</span>
-    ${melding ? `<span style="font-size:13px">${esc(melding)}</span>` : ''}
+    ${melding ? `<span style="font-size:14px">${esc(melding)}</span>` : ''}
   </div>`;
 
   if (!data || !data.voorraad) {

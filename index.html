@@ -21,10 +21,10 @@
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<link rel="stylesheet" href="theme.css?v=20261109f">
-<link rel="stylesheet" href="layout.css?v=20261109f">
-<link rel="stylesheet" href="components.css?v=20261109f">
-<link rel="stylesheet" href="responsive.css?v=20261109f">
+<link rel="stylesheet" href="theme.css?v=20261109g">
+<link rel="stylesheet" href="layout.css?v=20261109g">
+<link rel="stylesheet" href="components.css?v=20261109g">
+<link rel="stylesheet" href="responsive.css?v=20261109g">
 </head>
 <body>
 
@@ -332,7 +332,7 @@
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0115-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 01-15 6.7L3 16"/></svg>
   </button>
 
-  <select id="jaar-selector" onchange="wisselJaar()" aria-label="Boekjaar" style="font-size:12px">
+  <select id="jaar-selector" onchange="wisselJaar()" aria-label="Boekjaar" style="font-size:13px">
     <!-- Deze lijst wordt bij het opstarten vervangen door vulJaarSelector() in
          app.js, die hem opbouwt vanaf het lopende kalenderjaar. Wat hier staat
          is alleen de terugval als die code niet draait. -->
@@ -433,7 +433,7 @@
   </div>
   <input type="file" id="bankimport-bestand" accept=".csv,text/csv" style="display:none" onchange="leesRevolutBestand(event)">
   <details id="bank-verwerken" class="card" style="padding:var(--spacing-3) var(--spacing-4);margin-bottom:var(--spacing-3)">
-    <summary style="cursor:pointer;font-weight:600">Bank verwerken <span class="muted" style="font-weight:400;font-size:12px">— ophalen bij de bank of een Revolut-afschrift (CSV) inlezen</span></summary>
+    <summary style="cursor:pointer;font-weight:600">Bank verwerken <span class="muted" style="font-weight:400;font-size:13px">— ophalen bij de bank of een Revolut-afschrift (CSV) inlezen</span></summary>
     <div id="bankimport-inhoud" style="margin-top:var(--spacing-3)"></div>
   </details>
   <div class="vtabs" id="bank-maandtabs" role="tablist" aria-label="Maand"></div>
@@ -489,7 +489,7 @@
 
   </div>
   <div class="card">
-    <div style="padding: 16px; font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase;">
+    <div style="padding: 16px; font-weight: 600; color: var(--text-secondary); font-size: 13px; text-transform: uppercase;">
       Totaal kosten: <span id="crediteuren-totaal" style="color: var(--text-primary); font-weight: 700;">€0,00</span>
     </div>
     <div id="crediteuren-list"></div>
@@ -508,7 +508,7 @@
 
   </div>
   <div class="card">
-    <div style="padding: 16px; font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase;">
+    <div style="padding: 16px; font-weight: 600; color: var(--text-secondary); font-size: 13px; text-transform: uppercase;">
       Totaal omzet: <span id="debiteuren-totaal" style="color: var(--text-primary); font-weight: 700;">€0,00</span>
     </div>
     <div id="debiteuren-list"></div>
@@ -540,7 +540,7 @@
     <div class="search-field" id="gb-zoek-wrap" style="flex:1;min-width:180px;max-width:300px">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
       <input type="search" id="gb-zoek" placeholder="Zoek op code of omschrijving" oninput="zoekGrootboekVertraagd()"
-             style="flex:1;border:none;background:none;padding:8px 0;font-size:12.5px;color:var(--text-primary);outline:none;min-width:0">
+             style="flex:1;border:none;background:none;padding:8px 0;font-size:13px;color:var(--text-primary);outline:none;min-width:0">
     </div>
     
     <select id="f-maand-gb" onchange="renderGrootboek()" aria-label="Maand">
@@ -610,15 +610,15 @@
     <div style="display:flex;flex-direction:column;gap:var(--spacing-4)">
       <div class="card"><div class="card-title">Omzet per kanaal</div>
         <div style="position:relative;height:220px"><canvas id="c-bel" role="img" aria-label="Omzet per kanaal"></canvas></div>
-        <div id="bel-legend" style="display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:12px;font-size:11px;color:var(--text-secondary)"></div>
+        <div id="bel-legend" style="display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:12px;font-size:12px;color:var(--text-secondary)"></div>
       </div>
       <div class="card"><div class="card-title">Bedrijfskosten per grootboek</div>
         <div style="position:relative;height:220px"><canvas id="c-bel-kosten" role="img" aria-label="Bedrijfskosten per grootboek"></canvas></div>
-        <div id="bel-legend-kosten" style="display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:12px;font-size:11px;color:var(--text-secondary)"></div>
+        <div id="bel-legend-kosten" style="display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:12px;font-size:12px;color:var(--text-secondary)"></div>
       </div>
       <div class="card"><div class="card-title">Inkoop per grootboek</div>
         <div style="position:relative;height:220px"><canvas id="c-bel-inkoop" role="img" aria-label="Inkoop per grootboek"></canvas></div>
-        <div id="bel-legend-inkoop" style="display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:12px;font-size:11px;color:var(--text-secondary)"></div>
+        <div id="bel-legend-inkoop" style="display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:12px;font-size:12px;color:var(--text-secondary)"></div>
       </div>
     </div>
   </div>
@@ -822,7 +822,7 @@
     <div class="search-field" style="flex:1;min-width:180px;max-width:280px">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
       <input type="search" id="voorraad-zoek" placeholder="Zoek op artikelnaam" oninput="zoekVoorraadVertraagd()"
-             style="flex:1;border:none;background:none;padding:8px 0;font-size:12.5px;color:var(--text-primary);outline:none;min-width:0">
+             style="flex:1;border:none;background:none;padding:8px 0;font-size:13px;color:var(--text-primary);outline:none;min-width:0">
     </div>
     <select id="f-voorraad-jaar" onchange="kiesVoorraadJaar()" aria-label="Periode"></select>
     <select id="f-covers-status" onchange="renderCovers()" aria-label="Status">
@@ -850,12 +850,12 @@
 
   <div class="meldbar" id="voorraad-melding" style="display:none"></div>
 
-  <div id="voorraad-diagnose" style="display:none;margin:0 0 12px;padding:11px 14px;border:1px solid var(--border-default);border-left:3px solid var(--semantic-warning-bright);border-radius:6px;font-size:12px;color:var(--text-secondary);background:transparent"></div>
+  <div id="voorraad-diagnose" style="display:none;margin:0 0 12px;padding:11px 14px;border:1px solid var(--border-default);border-left:3px solid var(--semantic-warning-bright);border-radius:6px;font-size:13px;color:var(--text-secondary);background:transparent"></div>
 
   <div class="bulkbar" id="voorraad-bulk" style="display:none">
     <span id="bulk-aantal"></span>
     <span style="flex:1"></span>
-    <label style="font-size:11.5px">Verplaats naar</label>
+    <label style="font-size:12.5px">Verplaats naar</label>
     <select id="bulk-cat" aria-label="Doelgroep"></select>
     <button class="btn btn-primary btn-sm" onclick="verplaatsVoorraadSelectie()">Verplaatsen</button>
     <button class="btn btn-sm" onclick="zetHandelsvoorraadSelectie(true)" title="Zet deze artikelen op handelsvoorraad, zodat de inkoopprijs uit de bank wordt afgeleid">Handelsvoorraad: Ja</button>
@@ -947,7 +947,7 @@
       <button class="btn-close" onclick="sluitImportModal()"></button>
     </div>
     <div class="modal-body" style="padding:1.5rem">
-      <p style="margin-bottom:1rem;color:var(--text-secondary);font-size:13px">
+      <p style="margin-bottom:1rem;color:var(--text-secondary);font-size:14px">
         Laad één of meer Excel-bestanden (Administratie_2022.xlsx t/m 2026.xlsx). 
         De app leest de "Voorraad & Mutaties" sheet en voegt alle artikelen toe.
       </p>
@@ -955,7 +955,7 @@
       <button class="btn btn-primary" onclick="document.getElementById('import-file-input').click()" style="width:100%;margin-bottom:1rem">
         📁 Kies Excel-bestanden
       </button>
-      <div id="import-status" style="margin-top:1rem;font-size:12px;color:var(--text-secondary)"></div>
+      <div id="import-status" style="margin-top:1rem;font-size:13px;color:var(--text-secondary)"></div>
     </div>
   </div>
 </div>
@@ -963,7 +963,7 @@
 <div class="modal-overlay" id="modal-groepen">
 <div class="modal">
   <h3>Productgroepen</h3>
-  <p style="font-size:12.5px;color:var(--text-secondary);margin-bottom:var(--spacing-4)">Hernoem een groep door de naam aan te passen. Verwijder je een groep, dan verhuizen de artikelen naar de eerste andere groep.</p>
+  <p style="font-size:13px;color:var(--text-secondary);margin-bottom:var(--spacing-4)">Hernoem een groep door de naam aan te passen. Verwijder je een groep, dan verhuizen de artikelen naar de eerste andere groep.</p>
   <div id="groepen-lijst" style="display:flex;flex-direction:column;gap:6px;margin-bottom:var(--spacing-4)"></div>
   <div class="form-group full" style="margin-bottom:var(--spacing-2)">
     <label>Nieuwe groep</label>
@@ -972,7 +972,7 @@
       <button class="btn" onclick="voegGroepToe()">Toevoegen</button>
     </div>
   </div>
-  <div id="groep-fout" style="font-size:12px;color:var(--semantic-danger-bright);min-height:16px"></div>
+  <div id="groep-fout" style="font-size:13px;color:var(--semantic-danger-bright);min-height:16px"></div>
   <div class="modal-actions">
     <button class="btn" onclick="sluitGroepenModal()">Annuleren</button>
     <button class="btn btn-primary" onclick="bewaarGroepen()">Opslaan</button>
@@ -984,7 +984,7 @@
 <div class="modal-overlay" id="modal-grootboek-beheer">
 <div class="modal" style="width:560px">
   <h3>Grootboek en rekeningen</h3>
-  <p style="font-size:12.5px;color:var(--text-secondary);margin-bottom:var(--spacing-4)">
+  <p style="font-size:13px;color:var(--text-secondary);margin-bottom:var(--spacing-4)">
     Hernoem een rekening door de naam aan te passen. Het nummer zelf staat vast — dat gebruiken je boekingen als verwijzing.
   </p>
 
@@ -997,7 +997,7 @@
       <input type="text" id="gbb-nieuw-naam" placeholder="naam" style="flex:1">
       <button class="btn" onclick="voegGrootboekToe()">Toevoegen</button>
     </div>
-    <div id="gbb-grootboek-fout" style="font-size:12px;color:var(--semantic-danger-bright);min-height:16px"></div>
+    <div id="gbb-grootboek-fout" style="font-size:13px;color:var(--semantic-danger-bright);min-height:16px"></div>
   </div>
 
   <div class="section-head"><div class="eyebrow">Bankrekeningen</div></div>
@@ -1009,7 +1009,7 @@
       <input type="text" id="gbb-nieuw-rek-naam" placeholder="naam" style="flex:1">
       <button class="btn" onclick="voegRekeningToe()">Toevoegen</button>
     </div>
-    <div id="gbb-rekening-fout" style="font-size:12px;color:var(--semantic-danger-bright);min-height:16px"></div>
+    <div id="gbb-rekening-fout" style="font-size:13px;color:var(--semantic-danger-bright);min-height:16px"></div>
   </div>
 
   <div class="modal-actions">
@@ -1033,7 +1033,7 @@
 <!-- MODAL: GEGEVENSCONTROLE -->
 <div class="modal-overlay" id="modal-gegevenscontrole">
 <div class="modal" style="width:900px">
-  <h3>Gegevenscontrole <span style="font-size:11px;font-weight:500;color:var(--text-secondary)">— keuze per afwijking, wijzigt niets</span></h3>
+  <h3>Gegevenscontrole <span style="font-size:12px;font-weight:500;color:var(--text-secondary)">— keuze per afwijking, wijzigt niets</span></h3>
   <div id="gc-inhoud"></div>
   <div style="text-align:right;margin-top:var(--spacing-3)">
     <button class="btn btn-ghost btn-sm" onclick="herlaadGegevenscontrole()">Opnieuw controleren</button>
@@ -1045,7 +1045,7 @@
 <!-- MODAL: OPSLAGDIAGNOSE (tijdelijk, alleen lezen) -->
 <div class="modal-overlay" id="modal-opslagdiagnose">
 <div class="modal" style="width:820px">
-  <h3>Opslagdiagnose <span style="font-size:11px;font-weight:500;color:var(--text-secondary)">— tijdelijk, leest alleen</span></h3>
+  <h3>Opslagdiagnose <span style="font-size:12px;font-weight:500;color:var(--text-secondary)">— tijdelijk, leest alleen</span></h3>
   <div id="diag-inhoud"></div>
   <div style="text-align:right;margin-top:var(--spacing-3)">
     <button class="btn btn-ghost btn-sm" onclick="sluitOpslagDiagnose()">Venster sluiten</button>
@@ -1057,7 +1057,7 @@
 <div class="modal-overlay" id="modal-zelftest">
 <div class="modal" style="width:540px">
   <h3>Supabase testen</h3>
-  <p style="font-size:12.5px;color:var(--text-secondary);line-height:1.55;margin-bottom:var(--spacing-4)">
+  <p style="font-size:13px;color:var(--text-secondary);line-height:1.55;margin-bottom:var(--spacing-4)">
     Controleert of toevoegen, lezen, wijzigen en verwijderen werken tegen je eigen database. De test maakt regels aan met de naam "Zelftest", verwijdert ze daarna weer, en telt of er niets is blijven staan. Je administratie wordt niet aangeraakt.
   </p>
   <div id="zelftest-samenvatting"></div>
@@ -1073,7 +1073,7 @@
 <div class="modal-overlay" id="modal-export">
 <div class="modal">
   <h3>Exporteer naar Excel</h3>
-  <p style="font-size:12.5px;color:var(--text-secondary);line-height:1.55;margin-bottom:var(--spacing-4)">
+  <p style="font-size:13px;color:var(--text-secondary);line-height:1.55;margin-bottom:var(--spacing-4)">
     Je krijgt een bestand met dezelfde werkbladen en kolommen als je eigen administratiebestand: een blad per maand, Creditkaart Prive, Per Periode en Voorraad &amp; Mutaties. De app kan het bestand ook weer inlezen, dus het werkt als volwaardige reservekopie.
   </p>
   <div class="form-group full">
@@ -1092,17 +1092,17 @@
 <div class="modal-overlay" id="modal-sync">
 <div class="modal" style="width:460px">
   <h3>Cloud sync instellen</h3>
-  <p style="font-size:12.5px;color:var(--text-secondary);margin-bottom:1rem">Synchroniseer je gegevens tussen apparaten via een Google Sheet. Zie het meegeleverde "AppsScript-Code.gs" bestand voor de installatie-instructies.</p>
+  <p style="font-size:13px;color:var(--text-secondary);margin-bottom:1rem">Synchroniseer je gegevens tussen apparaten via een Google Sheet. Zie het meegeleverde "AppsScript-Code.gs" bestand voor de installatie-instructies.</p>
   <div class="form-group" style="margin-bottom:1rem">
-    <label style="font-size:11px;font-weight:500;color:var(--text-secondary);display:block;margin-bottom:4px">Web app URL (eindigt op /exec)</label>
-    <input type="text" id="sync-url-input" placeholder="https://script.google.com/macros/s/.../exec" style="width:100%;font-size:12px;padding:6px 10px">
+    <label style="font-size:12px;font-weight:500;color:var(--text-secondary);display:block;margin-bottom:4px">Web app URL (eindigt op /exec)</label>
+    <input type="text" id="sync-url-input" placeholder="https://script.google.com/macros/s/.../exec" style="width:100%;font-size:13px;padding:6px 10px">
   </div>
-  <div id="sync-modal-status" style="font-size:12px;color:var(--text-secondary);margin-bottom:1rem"></div>
+  <div id="sync-modal-status" style="font-size:13px;color:var(--text-secondary);margin-bottom:1rem"></div>
   <div style="display:flex;gap:8px;margin-bottom:.5rem">
     <button class="btn" onclick="syncUpload()" style="flex:1">⬆ Upload naar cloud</button>
     <button class="btn" onclick="syncDownload()" style="flex:1">⬇ Download van cloud</button>
   </div>
-  <div style="font-size:11px;color:var(--text-muted)">Upload stuurt jouw lokale data naar de cloud (overschrijft cloud data). Download haalt cloud data op (overschrijft lokale data).</div>
+  <div style="font-size:12px;color:var(--text-muted)">Upload stuurt jouw lokale data naar de cloud (overschrijft cloud data). Download haalt cloud data op (overschrijft lokale data).</div>
   <div class="modal-actions">
     <button class="btn" onclick="document.getElementById('modal-sync').classList.remove('open')">Sluiten</button>
     <button class="btn btn-primary" onclick="saveSyncUrl()">URL opslaan</button>
@@ -1114,12 +1114,12 @@
 <div class="modal-overlay" id="modal-apikey">
 <div class="modal">
   <h3>Anthropic API sleutel</h3>
-  <p style="font-size:12.5px;color:var(--text-secondary);margin-bottom:1rem">Vereist voor het importeren van HNVI facturen via AI. De sleutel wordt alleen lokaal in je browser opgeslagen.</p>
+  <p style="font-size:13px;color:var(--text-secondary);margin-bottom:1rem">Vereist voor het importeren van HNVI facturen via AI. De sleutel wordt alleen lokaal in je browser opgeslagen.</p>
   <div class="form-group" style="margin-bottom:1rem">
-    <label style="font-size:11px;font-weight:500;color:var(--text-secondary);display:block;margin-bottom:4px">API sleutel</label>
-    <input type="password" id="apikey-input" placeholder="sk-ant-..." style="width:100%;font-size:12px;padding:6px 10px">
+    <label style="font-size:12px;font-weight:500;color:var(--text-secondary);display:block;margin-bottom:4px">API sleutel</label>
+    <input type="password" id="apikey-input" placeholder="sk-ant-..." style="width:100%;font-size:13px;padding:6px 10px">
   </div>
-  <div style="font-size:11px;color:var(--text-secondary)">Haal je sleutel op via <a href="https://console.anthropic.com" target="_blank" style="color:var(--semantic-info-bright)">console.anthropic.com</a></div>
+  <div style="font-size:12px;color:var(--text-secondary)">Haal je sleutel op via <a href="https://console.anthropic.com" target="_blank" style="color:var(--semantic-info-bright)">console.anthropic.com</a></div>
   <div class="modal-actions">
     <button class="btn" onclick="document.getElementById('modal-apikey').classList.remove('open')">Annuleren</button>
     <button class="btn btn-primary" onclick="saveApiKey()">Opslaan</button>
@@ -1131,7 +1131,7 @@
 <div class="modal-overlay" id="modal-hnvi-factuur">
 <div class="modal" style="width:520px">
   <h3>HNVI factuur importeren</h3>
-  <div id="hnvi-factuur-status" style="font-size:13px;color:var(--text-secondary);margin-bottom:1rem">Factuur wordt uitgelezen...</div>
+  <div id="hnvi-factuur-status" style="font-size:14px;color:var(--text-secondary);margin-bottom:1rem">Factuur wordt uitgelezen...</div>
   <div id="hnvi-factuur-preview"></div>
   <div class="modal-actions">
     <button class="btn" onclick="document.getElementById('modal-hnvi-factuur').classList.remove('open')">Annuleren</button>
@@ -1158,7 +1158,7 @@
           <option value="9">9%</option>
           <option value="0">0%</option>
         </select>
-        <span class="muted" style="font-size:12px">BTW in het bedrag hierboven: <strong id="tx-btw-bedrag">€ 0,00</strong></span>
+        <span class="muted" style="font-size:13px">BTW in het bedrag hierboven: <strong id="tx-btw-bedrag">€ 0,00</strong></span>
       </div>
     </div>
     <div class="form-group full"><label>Naam / tegenpartij</label><input type="text" id="tx-n" placeholder="bijv. HNVI, Bol.com..."></div>
@@ -1179,7 +1179,7 @@
     <div class="form-group full"><label>Omschrijving (optioneel)</label><input type="text" id="tx-o" placeholder="extra toelichting"></div>
     <div class="form-group full"><label>Bonnetjes en facturen</label><div id="tx-bonnetjes"></div></div>
   </div>
-  <div id="tx-fout" style="font-size:12px;color:var(--semantic-danger-bright);min-height:16px;margin-top:8px"></div>
+  <div id="tx-fout" style="font-size:13px;color:var(--semantic-danger-bright);min-height:16px;margin-top:8px"></div>
   <div class="modal-actions">
     <button class="btn" onclick="closeTx()">Annuleren</button>
     <button class="btn btn-danger" id="tx-delete-btn" onclick="deleteTx()" style="display:none">Verwijderen</button>
@@ -1200,7 +1200,7 @@
   <div class="fact-formkolom">
   <div class="fact-upload-rij">
     <button type="button" class="btn btn-sm" onclick="kiesFactuurUpload()">📎 Factuur uploaden (foto of pdf)</button>
-    <span id="fact-upload-naam" class="muted" style="font-size:12px"></span>
+    <span id="fact-upload-naam" class="muted" style="font-size:13px"></span>
   </div>
   <div id="fact-lees-hint" class="fact-hint"></div>
   <div class="form-grid">
@@ -1222,14 +1222,14 @@
         <option value="betaald">Betaald</option>
         <option value="oninbaar">Oninbaar</option>
       </select>
-      <div class="muted" style="font-size:11.5px;margin-top:4px" id="fact-status-hint">Betaald hier handmatig zetten koppelt geen boeking — gebruik daarvoor de knop "Koppelen".</div>
+      <div class="muted" style="font-size:12.5px;margin-top:4px" id="fact-status-hint">Betaald hier handmatig zetten koppelt geen boeking — gebruik daarvoor de knop "Koppelen".</div>
     </div>
     <div class="form-group full"><label>Grootboek (optioneel)</label>
       <select id="fact-gb" aria-label="Grootboekrekening"></select>
     </div>
     <div class="form-group full"><label>Omschrijving (optioneel)</label><input type="text" id="fact-omschr" placeholder="extra toelichting"></div>
   </div>
-  <div id="fact-fout" style="font-size:12px;color:var(--semantic-danger-bright);min-height:16px;margin-top:8px"></div>
+  <div id="fact-fout" style="font-size:13px;color:var(--semantic-danger-bright);min-height:16px;margin-top:8px"></div>
   <div class="modal-actions">
     <button class="btn" onclick="sluitFactuurModal()">Annuleren</button>
     <button class="btn btn-danger" id="fact-delete-btn" onclick="verwijderFactuurUitModal()" style="display:none">Verwijderen</button>
@@ -1253,7 +1253,7 @@
     <div class="form-group"><label>Kilometers</label><input type="number" step="1" min="0" id="rit-km" placeholder="0"></div>
     <div class="form-group full"><label>Van/naar of doel</label><input type="text" id="rit-doel" placeholder="bijv. Rotterdam — klantbezoek"></div>
   </div>
-  <div id="rit-fout" style="font-size:12px;color:var(--semantic-danger-bright);min-height:16px;margin-top:8px"></div>
+  <div id="rit-fout" style="font-size:13px;color:var(--semantic-danger-bright);min-height:16px;margin-top:8px"></div>
   <div class="modal-actions">
     <button class="btn" onclick="sluitRitModal()">Annuleren</button>
     <button class="btn btn-danger" id="rit-delete-btn" onclick="verwijderRitUitModal()" style="display:none">Verwijderen</button>
@@ -1276,7 +1276,7 @@
     <div class="form-group"><label>Restwaarde (€)</label><input type="number" step="0.01" min="0" id="activum-restwaarde" placeholder="0,00"></div>
     <div class="form-group"><label>Gebruiksduur (jaren)</label><input type="number" step="0.5" min="0" id="activum-gebruiksduur" placeholder="5"></div>
   </div>
-  <div id="activum-fout" style="font-size:12px;color:var(--semantic-danger-bright);min-height:16px;margin-top:8px"></div>
+  <div id="activum-fout" style="font-size:13px;color:var(--semantic-danger-bright);min-height:16px;margin-top:8px"></div>
   <div class="modal-actions">
     <button class="btn" onclick="sluitActivumModal()">Annuleren</button>
     <button class="btn btn-danger" id="activum-delete-btn" onclick="verwijderActivumUitModal()" style="display:none">Verwijderen</button>
@@ -1292,7 +1292,7 @@
     <h3 style="margin: 0;">Boeking koppelen</h3>
     <button onclick="sluitKoppelModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-secondary); padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" title="Sluiten (ESC)">×</button>
   </div>
-  <p class="muted" style="font-size:12.5px;margin:0 0 8px" id="fact-koppel-context"></p>
+  <p class="muted" style="font-size:13px;margin:0 0 8px" id="fact-koppel-context"></p>
   <div id="fact-koppel-afronden" style="margin-bottom:12px"></div>
 
   <div class="section-head"><div class="eyebrow">Gekoppelde boeking(en)</div></div>
@@ -1312,7 +1312,7 @@
 <div class="modal-overlay" id="modal-relaties-beheer">
 <div class="modal" style="width:640px">
   <h3>Relaties</h3>
-  <p style="font-size:12.5px;color:var(--text-secondary);margin-bottom:var(--spacing-4)">
+  <p style="font-size:13px;color:var(--text-secondary);margin-bottom:var(--spacing-4)">
     Hernoem een relatie door de naam aan te passen. Voeg twee relaties samen om dubbele schrijfwijzen te bundelen — de oude naam blijft dan als alias herkenbaar staan.
   </p>
   <div id="relaties-beheer-lijst" style="display:flex;flex-direction:column;gap:10px;margin-bottom:var(--spacing-4)"></div>
@@ -1323,7 +1323,7 @@
       <button class="btn" onclick="voegNieuweRelatieToe()">Toevoegen</button>
     </div>
   </div>
-  <div id="relatie-fout" style="font-size:12px;color:var(--semantic-danger-bright);min-height:16px"></div>
+  <div id="relatie-fout" style="font-size:13px;color:var(--semantic-danger-bright);min-height:16px"></div>
   <div class="modal-actions">
     <button class="btn" onclick="sluitRelatiesBeheerModal()">Annuleren</button>
     <button class="btn btn-primary" onclick="bewaarRelatiesBeheer()">Opslaan</button>
@@ -1335,12 +1335,12 @@
 <div class="modal-overlay" id="modal-voorraad-sync">
 <div class="modal">
   <h3>Alles naar cloud</h3>
-  <p style="font-size:12px;color:var(--text-secondary);margin:-4px 0 12px;line-height:1.55">
+  <p style="font-size:13px;color:var(--text-secondary);margin:-4px 0 12px;line-height:1.55">
     Stuurt alles wat in deze browser staat naar Supabase, zodat je telefoon en computer hetzelfde zien.
     Wat er al staat wordt overschreven met deze versie.
   </p>
   <div id="voorraad-sync-groepen" style="margin-bottom:12px"></div>
-  <div id="voorraad-sync-status" style="font-size:12px;color:var(--text-secondary);min-height:34px;line-height:1.5"></div>
+  <div id="voorraad-sync-status" style="font-size:13px;color:var(--text-secondary);min-height:34px;line-height:1.5"></div>
   <div class="modal-acties">
     <button class="btn btn-ghost" onclick="sluitVoorraadSyncModal()">Annuleren</button>
     <button class="btn btn-primary" id="voorraad-sync-knop" onclick="startVoorraadSync()">Alles versturen</button>
@@ -1352,7 +1352,7 @@
 <div class="modal-overlay" id="modal-verdeling">
 <div class="modal" style="max-width:760px">
   <h3>Inkoopverdeling</h3>
-  <p style="font-size:12px;color:var(--text-secondary);margin:-4px 0 12px;line-height:1.55">
+  <p style="font-size:13px;color:var(--text-secondary);margin:-4px 0 12px;line-height:1.55">
     Het bankbedrag op de inkooprekening wordt over je artikelen verdeeld. Standaard krijgt elk artikel
     hetzelfde. Is iets goedkoper, geef het dan een lagere factor: <strong>0,5</strong> is half zo duur als
     gemiddeld, <strong>2</strong> is dubbel. De rest schuift automatisch mee, zodat het totaal het
@@ -1406,10 +1406,10 @@
       </select>
     </div>
     <div class="form-group"><label>Inkoopprijs per stuk (€)</label><input type="text" inputmode="decimal" id="cv-inkoopprijs" placeholder="leeg = uit de bank">
-      <div id="cv-inkoopprijs-hint" style="font-size:11px;line-height:1.45;margin-top:5px;color:var(--text-secondary)"></div></div>
+      <div id="cv-inkoopprijs-hint" style="font-size:12px;line-height:1.45;margin-top:5px;color:var(--text-secondary)"></div></div>
     <div class="form-group"><label>Prijsfactor <span style="color:var(--text-secondary);font-weight:400">(1 = gemiddeld)</span></label>
       <input type="text" inputmode="decimal" id="cv-factor" placeholder="1">
-      <div style="font-size:11px;line-height:1.45;margin-top:5px;color:var(--text-secondary)">Lager dan 1 maakt dit artikel goedkoper dan de rest; de andere artikelen worden dan iets duurder zodat het bankbedrag klopt.</div></div>
+      <div style="font-size:12px;line-height:1.45;margin-top:5px;color:var(--text-secondary)">Lager dan 1 maakt dit artikel goedkoper dan de rest; de andere artikelen worden dan iets duurder zodat het bankbedrag klopt.</div></div>
     <div class="form-group"><label>Verkoopprijs (€)</label><input type="text" inputmode="decimal" id="cv-prijs" placeholder="bijv. 31,95"></div>
     <div class="form-group"><label>Ingekocht totaal (stuks)</label><input type="number" id="cv-ink" placeholder="0" min="0"></div>
     <div class="form-group"><label>Verkocht totaal (stuks)</label><input type="number" id="cv-vk" placeholder="0" min="0"></div>
@@ -1435,18 +1435,18 @@
     </div>
     <div class="form-group" style="display:flex;flex-direction:column;justify-content:flex-end">
       <label style="min-height:32px;display:flex;flex-direction:column;justify-content:flex-end;margin-bottom:4px">
-        Inkoopprijs incl. (€)<br><span style="font-size:10px;color:var(--text-secondary)">×1,17 ×1,21 · aanpasbaar</span>
+        Inkoopprijs incl. (€)<br><span style="font-size:11px;color:var(--text-secondary)">×1,17 ×1,21 · aanpasbaar</span>
       </label>
       <input type="text" inputmode="decimal" id="hn-ik" placeholder="automatisch">
     </div>
     <div class="form-group full"><label>Omschrijving</label><input type="text" id="hn-o" placeholder="bijv. HNVI lot 482 — sieradenset"></div>
     <div class="form-group"><label>Datum</label><input type="date" id="hn-d"></div>
-    <div class="form-group full"><label>Notitie <span style="font-size:10px;color:var(--text-secondary)">(optioneel)</span></label><input type="text" id="hn-noot" placeholder="bijv. defect, ophalen dinsdag..."></div>
-    <div class="form-group" id="hn-vk-wrap"><label>Verkoopprijs (€) <span style="font-size:10px;color:var(--text-secondary)">leeg = nog niet verkocht</span></label><input type="text" inputmode="decimal" id="hn-vk" placeholder="0,00"></div>
+    <div class="form-group full"><label>Notitie <span style="font-size:11px;color:var(--text-secondary)">(optioneel)</span></label><input type="text" id="hn-noot" placeholder="bijv. defect, ophalen dinsdag..."></div>
+    <div class="form-group" id="hn-vk-wrap"><label>Verkoopprijs (€) <span style="font-size:11px;color:var(--text-secondary)">leeg = nog niet verkocht</span></label><input type="text" inputmode="decimal" id="hn-vk" placeholder="0,00"></div>
     <div class="form-group" id="hn-vd-wrap"><label>Verkoopdatum</label><input type="date" id="hn-vd"></div>
     <div class="form-group"><label>Aantal stuks in dit lot</label><input type="number" min="1" step="1" id="hn-aantal" value="1"></div>
-    <div class="form-group"><label>Hiervan verkocht <span style="font-size:10px;color:var(--text-secondary)">leeg = alles</span></label><input type="number" min="0" step="1" id="hn-vaantal"></div>
-    <div class="form-group full"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="hn-inbank"> Opbrengst staat al in de bank <span style="font-size:10px;color:var(--text-secondary)">(bijv. in meerdere betalingen of na aftrek van kosten)</span></label></div>
+    <div class="form-group"><label>Hiervan verkocht <span style="font-size:11px;color:var(--text-secondary)">leeg = alles</span></label><input type="number" min="0" step="1" id="hn-vaantal"></div>
+    <div class="form-group full"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="hn-inbank"> Opbrengst staat al in de bank <span style="font-size:11px;color:var(--text-secondary)">(bijv. in meerdere betalingen of na aftrek van kosten)</span></label></div>
   </div>
   <div class="modal-actions">
     <button class="btn" onclick="closeHNVIModal()">Annuleren</button>
@@ -1461,7 +1461,7 @@
 <div class="modal-overlay" id="modal-import">
 <div class="modal">
   <h3 id="import-title">Importeren...</h3>
-  <div id="import-body" style="font-size:13px;line-height:1.8;color:var(--text-secondary)"></div>
+  <div id="import-body" style="font-size:14px;line-height:1.8;color:var(--text-secondary)"></div>
   <div class="modal-actions" id="import-actions" style="display:none">
     <button class="btn btn-primary" onclick="document.getElementById('modal-import').classList.remove('open')">Sluiten</button>
   </div>
@@ -1472,26 +1472,26 @@
 <div class="modal-overlay" id="modal-wis">
 <div class="modal">
   <h3>Data wissen</h3>
-  <p style="font-size:12.5px;color:var(--text-secondary);margin-bottom:1rem">Kies wat je wilt wissen. Dit kan niet ongedaan worden gemaakt.</p>
+  <p style="font-size:13px;color:var(--text-secondary);margin-bottom:1rem">Kies wat je wilt wissen. Dit kan niet ongedaan worden gemaakt.</p>
   <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:1rem">
-    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+    <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
       <input type="checkbox" id="wis-2026" checked> 2026 (huidige data: transacties, én <strong>alle</strong> voorraadartikelen inclusief hun volledige geschiedenis — HNVI/Xtenate-loten blijven altijd bewaard)
     </label>
-    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+    <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
       <input type="checkbox" id="wis-2025"> 2025 (historisch)
     </label>
-    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+    <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
       <input type="checkbox" id="wis-2024"> 2024 (historisch)
     </label>
-    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+    <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
       <input type="checkbox" id="wis-2023"> 2023 (historisch)
     </label>
-    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+    <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
       <input type="checkbox" id="wis-2022"> 2022 (historisch)
     </label>
   </div>
-  <div id="wis-status" style="font-size:12px;color:var(--text-secondary);margin-bottom:.5rem"></div>
-  <div id="wis-preview" style="font-size:12px;margin-bottom:.5rem"></div>
+  <div id="wis-status" style="font-size:13px;color:var(--text-secondary);margin-bottom:.5rem"></div>
+  <div id="wis-preview" style="font-size:13px;margin-bottom:.5rem"></div>
   <div class="modal-actions">
     <button class="btn" onclick="document.getElementById('modal-wis').classList.remove('open')">Annuleren</button>
     <button class="btn" id="wis-preview-knop" onclick="toonWisPreview()">Preview (alleen tellen)</button>
@@ -1500,6 +1500,6 @@
 </div>
 </div>
 
-<script type="module" src="app.js?v=20261109f"></script>
+<script type="module" src="app.js?v=20261109g"></script>
 </body>
 </html>

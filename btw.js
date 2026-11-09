@@ -10,9 +10,9 @@
 // (een privé-boeking die per ongeluk toch een btw_bedrag zou dragen) hier
 // zonder gevolg.
 
-import { isInkomst, isUitgave, fmt } from './helpers.js?v=20261109f';
-import { state, BTW_INSTELLINGEN } from './storage.js?v=20261109f';
-import { downloadModelPdf } from './pdf.js?v=20261109f';
+import { isInkomst, isUitgave, fmt } from './helpers.js?v=20261109g';
+import { state, BTW_INSTELLINGEN } from './storage.js?v=20261109g';
+import { downloadModelPdf } from './pdf.js?v=20261109g';
 
 const el = id => document.getElementById(id);
 
@@ -107,7 +107,7 @@ function totalenKaart(titel, boekingen) {
         <div class="metric"><div class="lbl">Voorbelasting (inkopen/kosten)</div><div class="val pos">${fmt(t.voorbelasting)}</div></div>
         <div class="metric"><div class="lbl">Saldo</div><div class="val ${t.saldo > 0 ? 'neg' : 'pos'}">${fmt(t.saldo)}</div></div>
       </div>
-      <div class="muted" style="font-size:12.5px;margin-top:8px">${saldoTekst(t.saldo)} ${boekingen.length} boeking(en) meegeteld.</div>
+      <div class="muted" style="font-size:13px;margin-top:8px">${saldoTekst(t.saldo)} ${boekingen.length} boeking(en) meegeteld.</div>
     </div>`;
 }
 
@@ -148,7 +148,7 @@ export function renderBtw() {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--spacing-4);align-items:start">
         <div class="card">
           <div class="card-title">Vóór ${vanaf} — buiten de BTW-plicht</div>
-          <div class="muted" style="font-size:12.5px">
+          <div class="muted" style="font-size:13px">
             ${voor.length} boeking(en). Geen BTW van toepassing, ongeacht wat er verder op deze
             boekingen staat.
           </div>

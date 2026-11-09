@@ -8,16 +8,16 @@
 // nodig is. Alle gebruikte functies zijn alleen-lezend; deze module wijzigt
 // nooit data.
 
-import { draaiControles } from './controle.js?v=20261109f';
-import { factuurSamenvatting } from './facturen.js?v=20261109f';
-import { esc, fmt } from './helpers.js?v=20261109f';
-import { standaardMinVoorraad, state } from './storage.js?v=20261109f';
-import { telInbox } from './bankinbox.js?v=20261109f';
-import { onverwerkteInkoop } from './artikelregels.js?v=20261109f';
-import { berekenJaarMetrics, berekenBanksaldo, vorigJaarMetrics, kpi, kpiTrend } from './dashboard.js?v=20261109f';
-import { txVanJaar, lopendJaar } from './jaren.js?v=20261109f';
-import { charts, cssVar, dc, baseOpts, lijn } from './charts.js?v=20261109f';
-import { fmtKort, isInkomst, isOmzet } from './helpers.js?v=20261109f';
+import { draaiControles } from './controle.js?v=20261109g';
+import { factuurSamenvatting } from './facturen.js?v=20261109g';
+import { esc, fmt } from './helpers.js?v=20261109g';
+import { standaardMinVoorraad, state } from './storage.js?v=20261109g';
+import { telInbox } from './bankinbox.js?v=20261109g';
+import { onverwerkteInkoop } from './artikelregels.js?v=20261109g';
+import { berekenJaarMetrics, berekenBanksaldo, vorigJaarMetrics, kpi, kpiTrend } from './dashboard.js?v=20261109g';
+import { txVanJaar, lopendJaar } from './jaren.js?v=20261109g';
+import { charts, cssVar, dc, baseOpts, lijn } from './charts.js?v=20261109g';
+import { fmtKort, isInkomst, isOmzet } from './helpers.js?v=20261109g';
 
 const el = id => document.getElementById(id);
 
@@ -243,11 +243,11 @@ export function renderPortaal() {
     <div class="card" id="home-todo" style="margin-bottom:16px;padding:14px 18px">
       <div style="font-weight:600;margin-bottom:6px">Nog te doen</div>
       <ul id="home-todo-lijst" style="margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:8px">${taken.join('')}</ul>
-      <div id="home-todo-leeg" class="muted" style="font-size:13px;display:${taken.length ? 'none' : 'block'}">Alles op orde.</div>
+      <div id="home-todo-leeg" class="muted" style="font-size:14px;display:${taken.length ? 'none' : 'block'}">Alles op orde.</div>
     </div>
     <div class="card home-jaren">
       <div style="font-weight:600">Omzet, opgeteld per maand</div>
-      <div class="muted" style="font-size:12px;margin-bottom:8px">${esc(jaar)} tegenover het jaar ervoor</div>
+      <div class="muted" style="font-size:13px;margin-bottom:8px">${esc(jaar)} tegenover het jaar ervoor</div>
       <div class="chart-box"><canvas id="c-home-jaren" role="img" aria-label="Omzet opgeteld per maand, dit jaar tegenover vorig jaar"></canvas></div>
     </div>
     <div class="home-tegels">${tegels}</div>`;

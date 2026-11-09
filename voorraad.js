@@ -1,21 +1,21 @@
 // voorraad.js — Voorraad: kerncijfers, groepen per tab en voorraad per jaar.
 
-import { esc, fmt, gbCode } from './helpers.js?v=20261109f';
-import { REDENEN, legVast, logVan, verschilTekst, datumTekst } from './voorraadlog.js?v=20261109f';
+import { esc, fmt, gbCode } from './helpers.js?v=20261109g';
+import { REDENEN, legVast, logVan, verschilTekst, datumTekst } from './voorraadlog.js?v=20261109g';
 import {
   standaardMinVoorraad, groepId, groepNaam, saveCoversData, saveGroepen, standaardGroep, state,
   grootboekNamen
-} from './storage.js?v=20261109f';
-import { maakSorteerbaar } from './tables.js?v=20261109f';
-import { factorVan, heeftHandmatigePrijs, isHandelsvoorraad } from './belasting.js?v=20261109f';
+} from './storage.js?v=20261109g';
+import { maakSorteerbaar } from './tables.js?v=20261109g';
+import { factorVan, heeftHandmatigePrijs, isHandelsvoorraad } from './belasting.js?v=20261109g';
 import {
   bankPrijzenNu, inkoopprijsVan as _inkoopprijsVan, verkoopprijsVan,
   inkoopwaardeVan as _inkoopwaardeVan, verkoopwaardeVan as _verkoopwaardeVan,
   margeVan as _margeVan, omzetVan as _omzetVan, totalenVan
-} from './voorraadwaarde.js?v=20261109f';
-import { saveCoverToSupabase, deleteFromSupabase, addToPendingQueue, syncAllesNaarSupabase } from './supabase-client-v2.js?v=20261109f';
-import { downloadModelPdf } from './pdf.js?v=20261109f';
-import { lopendJaar } from './jaren.js?v=20261109f';
+} from './voorraadwaarde.js?v=20261109g';
+import { saveCoverToSupabase, deleteFromSupabase, addToPendingQueue, syncAllesNaarSupabase } from './supabase-client-v2.js?v=20261109g';
+import { downloadModelPdf } from './pdf.js?v=20261109g';
+import { lopendJaar } from './jaren.js?v=20261109g';
 
 const el = id => document.getElementById(id);
 
@@ -123,7 +123,7 @@ function renderTabs() {
   el('voorraad-tabs').innerHTML = tabs.map(t => `
     <div class="vtab${t.id === actieveTab ? ' active' : ''}" onclick="kiesVoorraadTab('${esc(t.id)}')" role="tab"
          tabindex="0" aria-selected="${t.id === actieveTab}">
-      ${esc(t.naam)} <span class="muted" style="font-size:11px">${t.aantal}</span>
+      ${esc(t.naam)} <span class="muted" style="font-size:12px">${t.aantal}</span>
     </div>`).join('')
     + `<div class="vtab vtab-actie" onclick="openGroepenModal()" title="Groepen beheren" tabindex="0">+ Groep</div>`;
 }
@@ -432,17 +432,17 @@ export function renderCovers() {
           <td class="cel-naam" style="font-weight:${stand.voorraad > 0 ? 500 : 400}">${esc(c.artikel)}</td>
           ${toonGroep ? `<td class="muted kol-detail" data-label="Groep">${esc(groepNaam(c.categorie))}</td>` : ''}
           <td style="text-align:right" data-label="Voorraad" data-v="${stand.voorraad ?? -1}">${stand.voorraad ?? '—'}</td>
-          <td style="text-align:right" data-label="Minimum" class="muted" data-v="${drempel(c)}">${drempel(c)}${c.minVoorraad == null || c.minVoorraad === '' ? '<span class="muted" style="font-size:10px"> std</span>' : ''}</td>
+          <td style="text-align:right" data-label="Minimum" class="muted" data-v="${drempel(c)}">${drempel(c)}${c.minVoorraad == null || c.minVoorraad === '' ? '<span class="muted" style="font-size:11px"> std</span>' : ''}</td>
           <td style="text-align:right" data-label="Inkoopprijs" data-v="${ip ?? -1}"${!handmatigeIp && ip != null ? ' title="Afgeleid uit de bankboekingen op de inkooprekening"' : ''}>${
             ip == null ? '<span class="muted">—</span>'
-                       : `${fmt(ip)}${handmatigeIp ? '' : '<span class="muted" style="font-size:10px"> ~</span>'}`}</td>
+                       : `${fmt(ip)}${handmatigeIp ? '' : '<span class="muted" style="font-size:11px"> ~</span>'}`}</td>
           <td style="text-align:right" data-label="Inkoopwaarde" data-v="${inkoopwaarde ?? -1}">${g(inkoopwaarde)}</td>
           <td style="text-align:right" class="kol-detail" data-label="Ingekocht" data-v="${stand.inkoop ?? -1}">${stand.inkoop || '—'}</td>
           <td style="text-align:right" class="kol-detail" data-label="Verkocht" data-v="${stand.verkocht ?? -1}">${stand.verkocht || '—'}</td>
           <td style="text-align:right" data-label="${jaarModus ? 'Retour' : 'Omzet'}" class="${!jaarModus && omzet ? 'pos' : ''}" data-v="${jaarModus ? (stand.retour || 0) : (omzet ?? 0)}">${rechts}</td>
           <td class="cel-status" data-v="${status(c, stand)}">${STATUS_BADGE[status(c, stand)]}</td>
           <td class="cel-zoek kol-detail">${c.zoekterm
-            ? `<a href="https://www.aliexpress.com/wholesale?SearchText=${encodeURIComponent(c.zoekterm)}" target="_blank" rel="noopener" style="font-size:11px;white-space:nowrap">Zoek op AliExpress</a>`
+            ? `<a href="https://www.aliexpress.com/wholesale?SearchText=${encodeURIComponent(c.zoekterm)}" target="_blank" rel="noopener" style="font-size:12px;white-space:nowrap">Zoek op AliExpress</a>`
             : ''}</td>
           <td class="cel-acties" style="padding-right:16px;white-space:nowrap">
             <button type="button" class="details-knop" onclick="wisselVoorraadDetails(this)">Meer details</button>
@@ -504,8 +504,8 @@ function renderTotaalregel(lijst, toonGroep, jaarModus) {
 
   voet.innerHTML = `<tr class="voorraad-totaalrij">
     <td></td>
-    <td data-tot="Totaal" style="font-weight:600">Totaal${noot ? `<div class="muted" style="font-weight:400;font-size:11px">${noot}</div>` : ''}</td>
-    ${toonGroep ? `<td class="muted kol-detail" style="font-size:11px">${lijst.length} artikelen</td>` : ''}
+    <td data-tot="Totaal" style="font-weight:600">Totaal${noot ? `<div class="muted" style="font-weight:400;font-size:12px">${noot}</div>` : ''}</td>
+    ${toonGroep ? `<td class="muted kol-detail" style="font-size:12px">${lijst.length} artikelen</td>` : ''}
     ${r('Stuks', stuks)}
     <td></td>
     <td></td>
@@ -711,10 +711,10 @@ function tekenVerdeling(behoudFocus) {
       <div style="margin-bottom:18px">
         <div style="display:flex;justify-content:space-between;align-items:baseline;padding:9px 11px;background:var(--bg-subtle-layer);border-radius:6px;margin-bottom:8px">
           <div><strong>${esc(gb)} — ${esc(GBNM[gb] || 'Inkoop')}</strong>
-            <span style="color:var(--text-secondary);font-size:11.5px"> · ${rijen.length} artikelen · ${totaalStuks} stuks</span></div>
+            <span style="color:var(--text-secondary);font-size:12.5px"> · ${rijen.length} artikelen · ${totaalStuks} stuks</span></div>
           <div style="text-align:right">
             <div style="font-weight:600">${fmt(bedrag)}</div>
-            <div style="font-size:11px;color:var(--text-secondary)">basisprijs ${fmt(basis)} per stuk</div>
+            <div style="font-size:12px;color:var(--text-secondary)">basisprijs ${fmt(basis)} per stuk</div>
           </div>
         </div>
         <div style="max-height:320px;overflow:auto">
@@ -735,7 +735,7 @@ function tekenVerdeling(behoudFocus) {
               <td style="text-align:right"><input type="text" inputmode="decimal" value="${f}"
                   data-factor-id="${esc(r.c.id)}"
                   oninput="wijzigFactor('${esc(r.c.id)}', this.value)"
-                  style="width:74px;text-align:right;padding:3px 6px;font-size:12px"></td>
+                  style="width:74px;text-align:right;padding:3px 6px;font-size:13px"></td>
               <td style="text-align:right${Math.abs(f - 1) > 0.001 ? ';font-weight:600' : ''}">${fmt(prijs)}</td>
               <td style="text-align:right;color:var(--text-secondary)">${fmt(prijs * r.stuks)}</td>
             </tr>`;
@@ -796,7 +796,7 @@ export function openVoorraadSyncModal() {
     <label style="display:flex;align-items:center;gap:9px;padding:8px 2px;cursor:pointer">
       <input type="checkbox" class="vs-soort" value="${sleutel}" checked${aantal ? '' : ' disabled'}>
       <span${aantal ? '' : ' style="opacity:.5"'}>${naam}</span>
-      <span style="color:var(--text-secondary);font-size:11.5px">${eenheid}</span>
+      <span style="color:var(--text-secondary);font-size:12.5px">${eenheid}</span>
     </label>`;
 
   doel.innerHTML =
@@ -998,7 +998,7 @@ function renderGroepenLijst() {
   el('groepen-lijst').innerHTML = state.GROEPEN.map(g => `
     <div class="groep-rij">
       <input type="text" value="${esc(g.naam)}" data-groep-id="${esc(g.id)}" aria-label="Naam van ${esc(g.naam)}">
-      <span class="muted" style="font-size:11px;white-space:nowrap">${tel(g.id)} artikelen</span>
+      <span class="muted" style="font-size:12px;white-space:nowrap">${tel(g.id)} artikelen</span>
       <button class="icon-btn" onclick="verwijderGroep('${esc(g.id)}')" title="Groep verwijderen" aria-label="Verwijder ${esc(g.naam)}">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
       </button>

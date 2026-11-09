@@ -14,14 +14,14 @@ import {
   facturenVan, openstaandSaldo, factuurnummerInGebruik,
   vindBoeking, koppelBetaling, ontkoppelBetaling,
   ouderdomsanalyse, OUDERDOM_VOLGORDE
-} from './facturen.js?v=20261109f';
-import { esc, fmt, ddmm, bedragUit, leegVlak, isInkomst, isUitgave, weergaveNaam } from './helpers.js?v=20261109f';
-import { downloadModelPdf } from './pdf.js?v=20261109f';
-import { state, grootboekNamen, grootboekOptgroepen, BEDRIJFSGEGEVENS } from './storage.js?v=20261109f';
-import { zoekBoekingen } from './search.js?v=20261109f';
-import { vindRelatie, zoekRelaties, maakRelatie, hernoemRelatie, voegRelatiesSamen, herlaadRelaties, bewaarRelatieAdres, relatieNummer, zorgRelatienummer } from './relaties.js?v=20261109f';
-import { bijlagenVan, voegBonnetjeToe, bonnetjesBeschikbaar } from './bonnetjes.js?v=20261109f';
-import { kiesFactuurUpload, resetFactuurUpload, wachtendFactuurBestand, toonBestaandeBijlage, kiesMeerdereFacturen, overslaanFactuur, leegRij, rij, zetRijUi, volgendeInRij } from './factuurupload.js?v=20261109f';
+} from './facturen.js?v=20261109g';
+import { esc, fmt, ddmm, bedragUit, leegVlak, isInkomst, isUitgave, weergaveNaam } from './helpers.js?v=20261109g';
+import { downloadModelPdf } from './pdf.js?v=20261109g';
+import { state, grootboekNamen, grootboekOptgroepen, BEDRIJFSGEGEVENS } from './storage.js?v=20261109g';
+import { zoekBoekingen } from './search.js?v=20261109g';
+import { vindRelatie, zoekRelaties, maakRelatie, hernoemRelatie, voegRelatiesSamen, herlaadRelaties, bewaarRelatieAdres, relatieNummer, zorgRelatienummer } from './relaties.js?v=20261109g';
+import { bijlagenVan, voegBonnetjeToe, bonnetjesBeschikbaar } from './bonnetjes.js?v=20261109g';
+import { kiesFactuurUpload, resetFactuurUpload, wachtendFactuurBestand, toonBestaandeBijlage, kiesMeerdereFacturen, overslaanFactuur, leegRij, rij, zetRijUi, volgendeInRij } from './factuurupload.js?v=20261109g';
 export { kiesFactuurUpload, kiesMeerdereFacturen, overslaanFactuur };
 
 const el = id => document.getElementById(id);
@@ -59,7 +59,7 @@ function tekenTabs() {
   balk.innerHTML = TABS.map(t => `
     <div class="vtab${t.id === actiefTab ? ' active' : ''}" onclick="kiesFactuurTab('${t.id}')"
          role="tab" tabindex="0" aria-selected="${t.id === actiefTab}">
-      ${esc(t.naam)} <span class="muted" style="font-size:11px">${fmt(openstaandSaldo(t.id))}</span>
+      ${esc(t.naam)} <span class="muted" style="font-size:12px">${fmt(openstaandSaldo(t.id))}</span>
     </div>`).join('');
 }
 
@@ -128,7 +128,7 @@ export function renderFacturen() {
       <tbody><tr>${OUDERDOM_VOLGORDE.map((g, i) => `
         <td style="text-align:right${i === 0 ? ';padding-left:16px' : ''}${i === OUDERDOM_VOLGORDE.length - 1 ? ';padding-right:16px' : ''}">
           <div>${analyse[g].aantal}</div>
-          <div class="muted" style="font-size:11px">${fmt(analyse[g].bedrag)}</div>
+          <div class="muted" style="font-size:12px">${fmt(analyse[g].bedrag)}</div>
         </td>`).join('')}</tr></tbody>
     </table></div>`;
 
@@ -145,10 +145,10 @@ export function renderFacturen() {
     return `
       <tr>
         <td class="muted" style="padding-left:16px">${ddmm(f.vervaldatum || f.datum)}</td>
-        <td class="td-trunc">${(() => { const nr = relatieNummer(vindRelatie(f.relatieId), f.soort); return nr ? `<span class="muted" style="font-size:11px">${nr}</span> ` : ''; })()}${esc(f.relatie || '(geen relatie)')}${f.omschrijving
-          ? ` <span style="color:var(--text-muted);font-size:10px">· ${esc(f.omschrijving)}</span>` : ''}</td>
-        <td class="muted" style="font-size:12px">${esc(f.factuurnummer || '—')}</td>
-        <td style="text-align:right" class="${teken}">${isDeelsBetaald(f) ? `${fmt(restBedrag(f))}<div class="muted" style="font-size:10.5px">van ${fmt(f.bedrag)}</div>` : fmt(f.bedrag)}</td>
+        <td class="td-trunc">${(() => { const nr = relatieNummer(vindRelatie(f.relatieId), f.soort); return nr ? `<span class="muted" style="font-size:12px">${nr}</span> ` : ''; })()}${esc(f.relatie || '(geen relatie)')}${f.omschrijving
+          ? ` <span style="color:var(--text-muted);font-size:11px">· ${esc(f.omschrijving)}</span>` : ''}</td>
+        <td class="muted" style="font-size:13px">${esc(f.factuurnummer || '—')}</td>
+        <td style="text-align:right" class="${teken}">${isDeelsBetaald(f) ? `${fmt(restBedrag(f))}<div class="muted" style="font-size:11.5px">van ${fmt(f.bedrag)}</div>` : fmt(f.bedrag)}</td>
         <td><span class="badge ${sw.klasse}">${esc(sw.tekst)}</span></td>
         <td style="white-space:nowrap">${bijlagenVan('F-' + f.id).map(m => `<a href="#" onclick="openBonnetje('${esc(m.bid)}');return false" title="${esc(m.naam)}">📎</a>`).join(' ')} <button type="button" class="btn-details" data-bijlage="${esc(f.id)}">+ bijlage</button></td>
         <td style="text-align:right;padding-right:16px;white-space:nowrap">
@@ -457,12 +457,12 @@ function renderRelatiesBeheerLijst() {
         </select>
         <button type="button" class="btn-details" data-relatie-samenvoegen="${esc(r.id)}">Samenvoegen</button>
       </div>
-      ${r.aliassen && r.aliassen.length ? `<div class="muted" style="font-size:11px;padding-left:2px;margin-top:2px">ook bekend als: ${esc(r.aliassen.join(', '))}</div>` : ''}
+      ${r.aliassen && r.aliassen.length ? `<div class="muted" style="font-size:12px;padding-left:2px;margin-top:2px">ook bekend als: ${esc(r.aliassen.join(', '))}</div>` : ''}
       <div class="groep-rij" style="flex-wrap:wrap;margin-top:4px" data-relatie-adresrij="${esc(r.id)}">
-        <input type="text" value="${esc(r.adres || '')}" data-relatie-adres="${esc(r.id)}" placeholder="Adres" style="flex:1;min-width:110px;font-size:12px" aria-label="Adres van ${esc(r.naam)}">
-        <input type="text" value="${esc(r.postcodePlaats || '')}" data-relatie-postcode-plaats="${esc(r.id)}" placeholder="Postcode en plaats" style="flex:1;min-width:110px;font-size:12px" aria-label="Postcode en plaats van ${esc(r.naam)}">
-        <input type="text" value="${esc(r.kvkNummer || '')}" data-relatie-kvk="${esc(r.id)}" placeholder="KVK-nummer" style="width:100px;font-size:12px" aria-label="KVK-nummer van ${esc(r.naam)}">
-        <input type="text" value="${esc(r.btwNummer || '')}" data-relatie-btw="${esc(r.id)}" placeholder="BTW-nummer" style="width:130px;font-size:12px" aria-label="BTW-nummer van ${esc(r.naam)}">
+        <input type="text" value="${esc(r.adres || '')}" data-relatie-adres="${esc(r.id)}" placeholder="Adres" style="flex:1;min-width:110px;font-size:13px" aria-label="Adres van ${esc(r.naam)}">
+        <input type="text" value="${esc(r.postcodePlaats || '')}" data-relatie-postcode-plaats="${esc(r.id)}" placeholder="Postcode en plaats" style="flex:1;min-width:110px;font-size:13px" aria-label="Postcode en plaats van ${esc(r.naam)}">
+        <input type="text" value="${esc(r.kvkNummer || '')}" data-relatie-kvk="${esc(r.id)}" placeholder="KVK-nummer" style="width:100px;font-size:13px" aria-label="KVK-nummer van ${esc(r.naam)}">
+        <input type="text" value="${esc(r.btwNummer || '')}" data-relatie-btw="${esc(r.id)}" placeholder="BTW-nummer" style="width:130px;font-size:13px" aria-label="BTW-nummer van ${esc(r.naam)}">
       </div>
     </div>`).join('');
 
@@ -662,7 +662,7 @@ function openKoppelContext(f) {
   doel.innerHTML = f.txIds.length && rest > 0.01
     ? `<button type="button" class="btn btn-sm" onclick="rondFactuurAfUi()" title="Voor een klein verschil, bijvoorbeeld bankkosten of afronding">Rest ${fmt(rest)} afronden als betalingsverschil</button>`
     : Number(f.afgeboekt) > 0
-      ? `<span class="muted" style="font-size:12px">Betalingsverschil ${fmt(f.afgeboekt)} is afgerond.</span> <button type="button" class="btn-details" onclick="maakAfrondingOngedaanUi()">Ongedaan maken</button>`
+      ? `<span class="muted" style="font-size:13px">Betalingsverschil ${fmt(f.afgeboekt)} is afgerond.</span> <button type="button" class="btn-details" onclick="maakAfrondingOngedaanUi()">Ongedaan maken</button>`
       : '';
 }
 

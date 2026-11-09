@@ -6,10 +6,10 @@
 // (zie facturen.js). De voorraad en de boekingen worden NIET aangepast: de
 // verkoop komt via de bank binnen, zoals altijd.
 
-import { state, BEDRIJFSGEGEVENS, bewaarFactuurmakerInstellingen } from './storage.js?v=20261109f';
-import { esc, fmt } from './helpers.js?v=20261109f';
-import { modelNaarPdf } from './pdf.js?v=20261109f';
-import { voegFactuurToe, werkFactuurBij, vindFactuur, plusDagen, vandaagISO, standaardTermijn, factuurnummerInGebruik } from './facturen.js?v=20261109f';
+import { state, BEDRIJFSGEGEVENS, bewaarFactuurmakerInstellingen } from './storage.js?v=20261109g';
+import { esc, fmt } from './helpers.js?v=20261109g';
+import { modelNaarPdf } from './pdf.js?v=20261109g';
+import { voegFactuurToe, werkFactuurBij, vindFactuur, plusDagen, vandaagISO, standaardTermijn, factuurnummerInGebruik } from './facturen.js?v=20261109g';
 
 const KEY = 'xtenate_factuurmaker';
 const el = id => document.getElementById(id);
@@ -134,7 +134,7 @@ body{font:13px/1.45 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#222
 .id{text-align:right}
 .twee{display:flex;justify-content:space-between;gap:30px;margin-bottom:24px}
 .twee div{flex:1}
-.lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#777;margin-bottom:3px}
+.lbl{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:#777;margin-bottom:3px}
 table{width:100%;border-collapse:collapse;margin:8px 0 14px}
 th{background:${kleur};color:#fff;text-align:left;padding:7px 8px;font-weight:600}
 td{padding:7px 8px;border-bottom:1px solid #e3e3e3;vertical-align:top}
@@ -142,8 +142,8 @@ td{padding:7px 8px;border-bottom:1px solid #e3e3e3;vertical-align:top}
 .tot{margin-left:auto;width:260px}
 .tot div{display:flex;justify-content:space-between;padding:3px 0}
 .tot .eind{border-top:2px solid ${kleur};margin-top:4px;padding-top:6px;font-weight:700;font-size:15px}
-.klein{font-size:11.5px;color:#555}
-.voet{margin-top:26px;padding-top:10px;border-top:1px solid #ddd;font-size:11px;color:#666}
+.klein{font-size:12.5px;color:#555}
+.voet{margin-top:26px;padding-top:10px;border-top:1px solid #ddd;font-size:12px;color:#666}
 </style></head><body>
 <div class="kop">${koprij}</div>
 <div class="twee">
@@ -316,13 +316,13 @@ export function renderFactuurmaker() {
 
     <div class="card" style="padding:14px;margin-bottom:12px">
       <div style="font-weight:600;margin-bottom:8px">Regels</div>
-      <div class="muted" style="display:grid;grid-template-columns:1fr 70px 90px 28px;gap:6px;font-size:11px;margin-bottom:4px"><span>Omschrijving</span><span>Aantal</span><span>Prijs</span><span></span></div>
+      <div class="muted" style="display:grid;grid-template-columns:1fr 70px 90px 28px;gap:6px;font-size:12px;margin-bottom:4px"><span>Omschrijving</span><span>Aantal</span><span>Prijs</span><span></span></div>
       <div id="fm-regels">${regelsHtml()}</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
         <select onchange="fmKiesArtikel(this.value);this.value=''" aria-label="Artikel uit voorraad toevoegen" style="flex:1;min-width:160px">${artikelOpties()}</select>
         <button class="btn btn-sm" onclick="fmVoegRegel()">+ Eigen regel</button>
       </div>
-      <div id="fm-waarschuwing" class="muted" style="display:none;margin-top:8px;font-size:12px;color:var(--warn,#b45309)"></div>
+      <div id="fm-waarschuwing" class="muted" style="display:none;margin-top:8px;font-size:13px;color:var(--warn,#b45309)"></div>
       <div class="form-group" style="margin-top:10px"><label>Opmerking onderaan (optioneel)</label><textarea rows="2" oninput="fmVeld('notitie',this.value)">${esc(c.notitie)}</textarea></div>
     </div>
 
@@ -349,7 +349,7 @@ export function renderFactuurmaker() {
           <input type="file" accept="image/*" onchange="fmLogo(event)">
           ${i.logo ? `<button class="btn btn-sm" style="margin-top:6px" onclick="fmWisLogo()">Logo verwijderen</button>` : ''}</div>
         <div class="form-group"><label>Voettekst</label><textarea rows="2" oninput="fmInst('voettekst',this.value)">${esc(i.voettekst)}</textarea></div>
-        <p class="muted" style="font-size:12px">Naam, adres, KVK en BTW-nummer komen uit je bedrijfsgegevens (Beheer). Deze instellingen blijven in deze browser staan.</p>
+        <p class="muted" style="font-size:13px">Naam, adres, KVK en BTW-nummer komen uit je bedrijfsgegevens (Beheer). Deze instellingen blijven in deze browser staan.</p>
       </div>
     </details>
    </div>

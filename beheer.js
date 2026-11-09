@@ -5,15 +5,15 @@
 // ongewijzigd: elke tegel roept dezelfde globale functie aan als het
 // zijbalk-item, dus er verandert niets aan wat ze doen.
 
-import { herstelpuntenBlok } from './herstelpunt.js?v=20261109f';
-import { cloudBackupBlok } from './cloudbackup.js?v=20261109f';
-import { draaiControles } from './controle.js?v=20261109f';
-import { esc } from './helpers.js?v=20261109f';
-import { saveVoorraadInstellingen, standaardMinVoorraad, saveControleInstellingen, CONTROLE_INSTELLINGEN, saveBtwInstellingen, BTW_INSTELLINGEN, saveBedrijfsgegevens, BEDRIJFSGEGEVENS, saveKmInstellingen, KM_INSTELLINGEN, saveFactuurInstellingen, FACTUUR_INSTELLINGEN, appDataStatus, state, rekeningenLijst, bankKoppelingDagenTotVerval } from './storage.js?v=20261109f';
-import { werkBankKoppelingRekBijInSupabase } from './supabase-client-v2.js?v=20261109f';
-import { hertekenHuidigePagina } from './ui.js?v=20261109f';
-import { getPendingItems } from './supabase-client-v2.js?v=20261109f';
-import { syncNu } from './autosync.js?v=20261109f';
+import { herstelpuntenBlok } from './herstelpunt.js?v=20261109g';
+import { cloudBackupBlok } from './cloudbackup.js?v=20261109g';
+import { draaiControles } from './controle.js?v=20261109g';
+import { esc } from './helpers.js?v=20261109g';
+import { saveVoorraadInstellingen, standaardMinVoorraad, saveControleInstellingen, CONTROLE_INSTELLINGEN, saveBtwInstellingen, BTW_INSTELLINGEN, saveBedrijfsgegevens, BEDRIJFSGEGEVENS, saveKmInstellingen, KM_INSTELLINGEN, saveFactuurInstellingen, FACTUUR_INSTELLINGEN, appDataStatus, state, rekeningenLijst, bankKoppelingDagenTotVerval } from './storage.js?v=20261109g';
+import { werkBankKoppelingRekBijInSupabase } from './supabase-client-v2.js?v=20261109g';
+import { hertekenHuidigePagina } from './ui.js?v=20261109g';
+import { getPendingItems } from './supabase-client-v2.js?v=20261109g';
+import { syncNu } from './autosync.js?v=20261109g';
 
 const el = id => document.getElementById(id);
 
@@ -142,7 +142,7 @@ function voorraadInstellingenBlok() {
         <label for="beheer-min-voorraad" style="display:block;font-weight:500;margin-bottom:4px">
           Standaard minimumvoorraad
         </label>
-        <div class="muted" style="font-size:12px;margin-bottom:10px">
+        <div class="muted" style="font-size:13px;margin-bottom:10px">
           Ligt er van een artikel minder dan dit aantal, dan geldt de voorraad als laag.
           Artikelen met een eigen minimum houden dat; deze waarde geldt voor de rest.
         </div>
@@ -150,7 +150,7 @@ function voorraadInstellingenBlok() {
           <input type="number" id="beheer-min-voorraad" min="0" step="1" value="${huidig}"
             style="width:90px" aria-label="Standaard minimumvoorraad">
           <button class="btn btn-primary" onclick="bewaarMinVoorraad()">Opslaan</button>
-          <span id="beheer-min-melding" class="muted" style="font-size:12px"></span>
+          <span id="beheer-min-melding" class="muted" style="font-size:13px"></span>
         </div>
       </div>
     </div>`;
@@ -185,7 +185,7 @@ function controleInstellingenBlok() {
         <label for="beheer-referentie-privest-2022" style="display:block;font-weight:500;margin-bottom:4px">
           Jaartotaal 2022 — privé-storting
         </label>
-        <div class="muted" style="font-size:12px;margin-bottom:10px">
+        <div class="muted" style="font-size:13px;margin-bottom:10px">
           Het bedrag uit het Per Periode-tabblad waar de Gegevenscontrole het jaartotaal van 2022
           tegen vergelijkt. Vul dit eenmalig in, na eigen natelling. Leeg laten zet de controle uit.
         </div>
@@ -194,7 +194,7 @@ function controleInstellingenBlok() {
             value="${huidig != null ? huidig : ''}"
             style="width:140px" aria-label="Jaartotaal 2022 privé-storting">
           <button class="btn btn-primary" onclick="bewaarReferentiePriveSt2022()">Opslaan</button>
-          <span id="beheer-referentie-melding" class="muted" style="font-size:12px"></span>
+          <span id="beheer-referentie-melding" class="muted" style="font-size:13px"></span>
         </div>
       </div>
     </div>`;
@@ -229,7 +229,7 @@ function btwInstellingenBlok() {
         <label for="beheer-btw-vanaf" style="display:block;font-weight:500;margin-bottom:4px">
           BTW-plichtig vanaf
         </label>
-        <div class="muted" style="font-size:12px;margin-bottom:10px">
+        <div class="muted" style="font-size:13px;margin-bottom:10px">
           Vanaf deze datum geldt BTW-plicht (de datum zelf telt mee). Leeg laten betekent:
           geen BTW-plicht. Werkt op dit moment nog nergens door — dat volgt in een latere fase.
         </div>
@@ -237,7 +237,7 @@ function btwInstellingenBlok() {
           <input type="date" id="beheer-btw-vanaf" value="${huidig || ''}"
             style="width:160px" aria-label="BTW-plichtig vanaf">
           <button class="btn btn-primary" onclick="bewaarBtwVanaf()">Opslaan</button>
-          <span id="beheer-btw-melding" class="muted" style="font-size:12px"></span>
+          <span id="beheer-btw-melding" class="muted" style="font-size:13px"></span>
         </div>
       </div>
     </div>`;
@@ -270,35 +270,35 @@ function bedrijfsgegevensBlok() {
     <div class="beheer-groep">
       <div class="beheer-groep-kop">Bedrijfsgegevens</div>
       <div class="card" style="padding:var(--spacing-4)">
-        <div class="muted" style="font-size:12px;margin-bottom:10px">
+        <div class="muted" style="font-size:13px;margin-bottom:10px">
           Alles optioneel. Zodra de naam is ingevuld, toont de factuur-pdf deze gegevens
           in plaats van de tekst "Interne kopie". Al gedownloade pdf's veranderen hier nooit door.
         </div>
         <div class="form-grid" style="margin-bottom:10px">
-          <label style="display:flex;flex-direction:column;gap:4px;font-size:12px">
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:13px">
             Bedrijfsnaam
             <input type="text" id="beheer-bedrijf-naam" value="${esc(g.naam || '')}" aria-label="Bedrijfsnaam">
           </label>
-          <label style="display:flex;flex-direction:column;gap:4px;font-size:12px">
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:13px">
             Adres
             <input type="text" id="beheer-bedrijf-adres" value="${esc(g.adres || '')}" aria-label="Adres">
           </label>
-          <label style="display:flex;flex-direction:column;gap:4px;font-size:12px">
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:13px">
             Postcode en plaats
             <input type="text" id="beheer-bedrijf-postcode-plaats" value="${esc(g.postcodePlaats || '')}" aria-label="Postcode en plaats">
           </label>
-          <label style="display:flex;flex-direction:column;gap:4px;font-size:12px">
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:13px">
             KVK-nummer
             <input type="text" id="beheer-bedrijf-kvk" value="${esc(g.kvkNummer || '')}" aria-label="KVK-nummer">
           </label>
-          <label style="display:flex;flex-direction:column;gap:4px;font-size:12px">
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:13px">
             BTW-nummer
             <input type="text" id="beheer-bedrijf-btwnr" value="${esc(g.btwNummer || '')}" aria-label="BTW-nummer">
           </label>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
           <button class="btn btn-primary" onclick="bewaarBedrijfsgegevens()">Opslaan</button>
-          <span id="beheer-bedrijf-melding" class="muted" style="font-size:12px"></span>
+          <span id="beheer-bedrijf-melding" class="muted" style="font-size:13px"></span>
         </div>
       </div>
     </div>`;
@@ -330,21 +330,21 @@ function factuurInstellingenBlok() {
     <div class="beheer-groep">
       <div class="beheer-groep-kop">Facturen</div>
       <div class="card" style="padding:var(--spacing-4)">
-        <div class="muted" style="font-size:12px;margin-bottom:10px">
+        <div class="muted" style="font-size:13px;margin-bottom:10px">
           Standaard betaaltermijn in dagen, gebruikt om de vervaldatum van een nieuwe factuur te
           berekenen. Al bestaande facturen behouden hun eigen vervaldatum.
         </div>
         <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end">
-          <label style="display:flex;flex-direction:column;gap:4px;font-size:12px">
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:13px">
             Debiteuren (dagen)
             <input type="number" id="beheer-fact-termijn-deb" min="0" step="1" value="${debiteur != null ? debiteur : ''}" style="width:90px" aria-label="Betaaltermijn debiteuren">
           </label>
-          <label style="display:flex;flex-direction:column;gap:4px;font-size:12px">
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:13px">
             Crediteuren (dagen)
             <input type="number" id="beheer-fact-termijn-cred" min="0" step="1" value="${crediteur != null ? crediteur : ''}" style="width:90px" aria-label="Betaaltermijn crediteuren">
           </label>
           <button class="btn btn-primary" onclick="bewaarFactuurInstellingen()">Opslaan</button>
-          <span id="beheer-fact-melding" class="muted" style="font-size:12px"></span>
+          <span id="beheer-fact-melding" class="muted" style="font-size:13px"></span>
         </div>
       </div>
     </div>`;
@@ -377,7 +377,7 @@ function kmInstellingenBlok() {
         <label for="beheer-km-tarief" style="display:block;font-weight:500;margin-bottom:4px">
           Tarief per kilometer
         </label>
-        <div class="muted" style="font-size:12px;margin-bottom:10px">
+        <div class="muted" style="font-size:13px;margin-bottom:10px">
           Het bedrag per kilometer waarmee ritten worden omgerekend naar een aftrekbedrag.
           Leeg laten betekent: nog geen berekening op de pagina Kilometers.
         </div>
@@ -386,7 +386,7 @@ function kmInstellingenBlok() {
             value="${huidig != null ? huidig : ''}"
             style="width:110px" aria-label="Tarief per kilometer">
           <button class="btn btn-primary" onclick="bewaarKmTarief()">Opslaan</button>
-          <span id="beheer-km-melding" class="muted" style="font-size:12px"></span>
+          <span id="beheer-km-melding" class="muted" style="font-size:13px"></span>
         </div>
       </div>
     </div>`;
@@ -443,8 +443,8 @@ function bankKoppelingenBlok() {
           <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--border)">
             <div style="min-width:180px">
               <div style="font-weight:500">${esc(k.aspspNaam || '—')}</div>
-              <div class="muted" style="font-size:12px">${esc(k.iban || '—')}</div>
-              <div class="muted" style="font-size:11px">${k.laatsteFout ? '⚠️ ' + esc(k.laatsteFout) + ' ' : ''}${k.laatsteSync ? 'Laatst opgehaald: ' + esc(new Date(k.laatsteSync).toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' })) : 'Nog niet automatisch opgehaald'}</div>
+              <div class="muted" style="font-size:13px">${esc(k.iban || '—')}</div>
+              <div class="muted" style="font-size:12px">${k.laatsteFout ? '⚠️ ' + esc(k.laatsteFout) + ' ' : ''}${k.laatsteSync ? 'Laatst opgehaald: ' + esc(new Date(k.laatsteSync).toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' })) : 'Nog niet automatisch opgehaald'}</div>
             </div>
             <select id="beheer-bank-rek-${esc(k.id)}" style="min-width:160px" aria-label="Rekening voor ${esc(k.iban || k.aspspNaam || '')}">
               ${rekeningOpties(k.rek)}
@@ -453,20 +453,20 @@ function bankKoppelingenBlok() {
             ${waarschuwing}
           </div>`;
       }).join('')
-    : `<div class="muted" style="font-size:12px">Nog geen bankkoppelingen. Klik op “Bankrekening koppelen” om Revolut te koppelen.</div>`;
+    : `<div class="muted" style="font-size:13px">Nog geen bankkoppelingen. Klik op “Bankrekening koppelen” om Revolut te koppelen.</div>`;
 
   return `
     <div class="beheer-groep">
       <div class="beheer-groep-kop">Bankkoppelingen</div>
       <div class="card" style="padding:var(--spacing-4)">
-        <div class="muted" style="font-size:12px;margin-bottom:10px">
+        <div class="muted" style="font-size:13px;margin-bottom:10px">
           Per gekoppelde bankrekening: welke eigen rekening dit is, en hoelang de toestemming
           van de bank nog geldig is. Een toestemming die bijna verloopt, moet je zelf bij de
           bank opnieuw bevestigen — dat kan geen automatisering overnemen.
         </div>
         ${rijen}
         <div style="margin-top:10px"><button class="btn btn-primary" onclick="startBankKoppeling()">Bankrekening koppelen</button></div>
-        <div style="margin-top:6px"><span id="beheer-bank-koppeling-melding" class="muted" style="font-size:12px"></span></div>
+        <div style="margin-top:6px"><span id="beheer-bank-koppeling-melding" class="muted" style="font-size:13px"></span></div>
       </div>
     </div>`;
 }
@@ -520,7 +520,7 @@ function synchronisatieBlok() {
     return `
       <div style="padding:8px 0;border-top:1px solid var(--border)">
         <div style="font-weight:500">${esc(String(omschrijving))}</div>
-        <div class="muted" style="font-size:12px">
+        <div class="muted" style="font-size:13px">
           ${p.attempts} van ${p.maxAttempts || 5} pogingen · ${esc(p.laatsteFout || 'geen foutmelding bekend')}
         </div>
       </div>`;
@@ -530,7 +530,7 @@ function synchronisatieBlok() {
   const appRegels = appStatus.items.map(it => `
       <div style="padding:8px 0;border-top:1px solid var(--border)">
         <div style="font-weight:500">${esc(APP_DATA_NAMEN[it.sleutel] || it.sleutel)}</div>
-        <div class="muted" style="font-size:12px">
+        <div class="muted" style="font-size:13px">
           ${it.pogingen} van 5 pogingen · ${esc(it.laatsteFout)}
         </div>
       </div>`).join('');
@@ -541,7 +541,7 @@ function synchronisatieBlok() {
   const inhoud = totaalVastgelopen
     ? `<div class="alert alert-error" style="margin-bottom:4px">${totaalVastgelopen} wijziging(en) vastgelopen na 5 pogingen</div>${regels}${appRegels}
        <button class="btn btn-primary" style="margin-top:12px" onclick="herprobeerSynchronisatie()">Opnieuw proberen</button>`
-    : `<div class="muted" style="font-size:13px">
+    : `<div class="muted" style="font-size:14px">
          Niets vastgelopen.${totaalOpenstaand ? ` ${totaalOpenstaand} wijziging(en) worden nog verwerkt.` : ' Alles is gesynchroniseerd.'}
        </div>`;
 

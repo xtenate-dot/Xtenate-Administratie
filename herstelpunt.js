@@ -4,10 +4,10 @@
 
 import {
   state, load, save, saveTxData, saveHistTxData, saveCoversData, saveHnviData
-} from './storage.js?v=20261109f';
+} from './storage.js?v=20261109g';
 import {
   vervangBoekingenInSupabase, vervangVoorraadInSupabase, saveHnviToSupabase, deleteFromSupabase
-} from './supabase-client-v2.js?v=20261109f';
+} from './supabase-client-v2.js?v=20261109g';
 
 const SLEUTEL = 'xtenate_herstelpunten';
 const MAX = 3;
@@ -78,9 +78,9 @@ export function herstelpuntenBlok() {
   const rijen = l.length
     ? l.map((p, i) => `<div style="display:flex;gap:12px;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid var(--border)">
         <div><div style="font-weight:600">${datumTijd(p.tijd)}</div>
-        <div class="muted" style="font-size:12px">${p.reden} · ${p.TX.length + p.HIST_TX.length} boekingen · ${p.HNVI_LOTS.length} loten · ${p.COVERS.length} artikelen</div></div>
+        <div class="muted" style="font-size:13px">${p.reden} · ${p.TX.length + p.HIST_TX.length} boekingen · ${p.HNVI_LOTS.length} loten · ${p.COVERS.length} artikelen</div></div>
         <button class="btn btn-sm" onclick="zetHerstelpuntTerug(${i})">Terugzetten</button></div>`).join('')
-    : '<div class="muted" style="font-size:13px">Nog geen herstelpunten. Er wordt er automatisch een gemaakt vóór elke import en elke wis-actie.</div>';
+    : '<div class="muted" style="font-size:14px">Nog geen herstelpunten. Er wordt er automatisch een gemaakt vóór elke import en elke wis-actie.</div>';
   return `<div class="card" style="margin-top:var(--spacing-4)"><div style="font-weight:600;margin-bottom:4px">Herstelpunten</div>
-    <div class="muted" style="font-size:12px;margin-bottom:8px">Automatisch bewaard in deze browser. Laatste ${MAX}.</div>${rijen}</div>`;
+    <div class="muted" style="font-size:13px;margin-bottom:8px">Automatisch bewaard in deze browser. Laatste ${MAX}.</div>${rijen}</div>`;
 }

@@ -3,9 +3,9 @@
 // namen minstens 3 van de laatste 6 maanden voorkomen met een vergelijkbaar bedrag, en meldt wanneer er
 // deze maand nog niets van is binnengekomen.
 
-import { state } from './storage.js?v=20261109f';
-import { esc, fmt } from './helpers.js?v=20261109f';
-import { vandaagIso } from './jaren.js?v=20261109f';
+import { state } from './storage.js?v=20261109g';
+import { esc, fmt } from './helpers.js?v=20261109g';
+import { vandaagIso } from './jaren.js?v=20261109g';
 
 const SLEUTEL = 'xtenate_terugkerend_verborgen';
 const el = id => document.getElementById(id);
@@ -105,6 +105,6 @@ export function renderTerugkerend() {
     ${lijst.length ? `<div class="card card-flush"><div class="table-wrap"><table class="tbl-compact">
       <thead><tr><th>Naam</th><th>Soort</th><th style="text-align:right">Gemiddeld bedrag</th><th>Meestal</th><th>Laatste boeking</th><th>Deze maand</th><th></th></tr></thead>
       <tbody>${rijen}</tbody></table></div></div>` : '<div class="card"><p>Nog geen terugkerende posten gevonden. Daarvoor moet dezelfde naam in minstens 3 van de laatste 6 maanden voorkomen met een vergelijkbaar bedrag.</p></div>'}
-    <p class="muted" style="font-size:12px;margin-top:10px">Automatisch herkend uit je boekingen: dezelfde naam, in minstens 3 van de laatste 6 maanden, met een bedrag dat hooguit 20% afwijkt. Er wordt niets geboekt.
+    <p class="muted" style="font-size:13px;margin-top:10px">Automatisch herkend uit je boekingen: dezelfde naam, in minstens 3 van de laatste 6 maanden, met een bedrag dat hooguit 20% afwijkt. Er wordt niets geboekt.
       ${verborgen.length ? `<label style="margin-left:8px"><input type="checkbox" ${toonVerborgen ? 'checked' : ''} onchange="zetToonVerborgenTerugkerend(this.checked)"> ${verborgen.length} verborgen tonen</label>` : ''}</p>`;
 }

@@ -4,9 +4,9 @@
 // Controleren, Geslaagd. Een fase gaat pas open als de vorige is afgerond.
 // Migreren is in deze versie nog niet gebouwd en blijft dus op slot.
 
-import { maakVolledigeReservekopie, beschikbareJaren } from './export.js?v=20261109f';
-import { alsTekst, diagnose, diagnoseAlsTekst, dryRun } from './migratie.js?v=20261109f';
-import { herstelPreview } from './herstel.js?v=20261109f';
+import { maakVolledigeReservekopie, beschikbareJaren } from './export.js?v=20261109g';
+import { alsTekst, diagnose, diagnoseAlsTekst, dryRun } from './migratie.js?v=20261109g';
+import { herstelPreview } from './herstel.js?v=20261109g';
 
 const el = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
@@ -114,7 +114,7 @@ function renderDryRunUitkomst({ plan, totalen, waarschuwingen, regels, inDatabas
       <td style="padding-left:16px">${esc(r.tabel)}</td>
       <td style="text-align:right;font-weight:600">${r.toevoegen}</td>
       <td style="text-align:right" class="muted">${inDatabase?.[r.tabel] ?? '—'}</td>
-      <td class="muted" style="padding-right:16px;font-size:11px">${esc(r.toelichting)}</td>
+      <td class="muted" style="padding-right:16px;font-size:12px">${esc(r.toelichting)}</td>
     </tr>`;
 
   const jaarRij = j => `
@@ -199,7 +199,7 @@ function renderDryRunUitkomst({ plan, totalen, waarschuwingen, regels, inDatabas
       <button class="btn btn-primary" disabled title="Wordt gebouwd nadat je de cijfers hebt goedgekeurd">Migreren</button>
     </div>
     <textarea id="mig-tekst" readonly style="width:100%;height:150px;margin-top:var(--spacing-3);display:none;
-      font-family:ui-monospace,monospace;font-size:11px;padding:10px;border:1px solid var(--border-strong);
+      font-family:ui-monospace,monospace;font-size:12px;padding:10px;border:1px solid var(--border-strong);
       border-radius:var(--radius-sm);background:var(--bg-subtle-layer);color:var(--text-primary)"></textarea>`;
 }
 
@@ -268,7 +268,7 @@ function renderHerstelPreview() {
       <span class="ctrl-item-main" style="cursor:default">
         <span class="ctrl-item-label">${c.goed === null ? '·' : c.goed ? '✓' : '✕'} ${esc(c.titel)}</span>
       </span>
-      <span class="${c.goed === false ? 'neg' : 'muted'}" style="font-size:11.5px;padding-right:12px">${esc(c.waarde)}</span>
+      <span class="${c.goed === false ? 'neg' : 'muted'}" style="font-size:12.5px;padding-right:12px">${esc(c.waarde)}</span>
     </div>`;
 
   const jtRij = t => `
@@ -330,7 +330,7 @@ function renderHerstelPreview() {
         <td class="pos">${esc(t.datum)}</td>
         <td style="text-align:right">${bedrag(t.bedrag)}</td>
         <td class="muted">${esc(t.type)}</td>
-        <td class="muted" style="font-size:11px;padding-right:16px">${esc(String(t.naam || '').slice(0, 46))}</td>
+        <td class="muted" style="font-size:12px;padding-right:16px">${esc(String(t.naam || '').slice(0, 46))}</td>
       </tr>`).join('')}</tbody>
     </table></div></div>
 
@@ -386,7 +386,7 @@ function renderHerstelPreview() {
         title="Wordt pas gebouwd nadat je deze preview hebt goedgekeurd">Herstel uitvoeren</button>
     </div>
     <textarea id="mig-tekst" readonly style="width:100%;height:200px;margin-top:var(--spacing-3);display:none;
-      font-family:ui-monospace,monospace;font-size:11px;padding:10px;border:1px solid var(--border-strong);
+      font-family:ui-monospace,monospace;font-size:12px;padding:10px;border:1px solid var(--border-strong);
       border-radius:var(--radius-sm);background:var(--bg-subtle-layer);color:var(--text-primary)"></textarea>`;
 }
 

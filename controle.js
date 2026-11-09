@@ -8,14 +8,14 @@
 //   'gb:<nr>'  -> die grootboekrekening
 //   'pagina:<naam>' -> die pagina
 
-import { BEGINSALDO_2026, esc, fmt, isPriveBetaaldeKost, teltBij, weergaveNaam } from './helpers.js?v=20261109f';
-import { txVanJaar, isTxJaar, banksaldoTot, lopendJaar } from './jaren.js?v=20261109f';
-import { MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261109f';
-import { DREMPEL, vindDuplicaten } from './duplicaten.js?v=20261109f';
+import { BEGINSALDO_2026, esc, fmt, isPriveBetaaldeKost, teltBij, weergaveNaam } from './helpers.js?v=20261109g';
+import { txVanJaar, isTxJaar, banksaldoTot, lopendJaar } from './jaren.js?v=20261109g';
+import { MAAND_SALDOS, state, grootboekNamen, rekeningNamen } from './storage.js?v=20261109g';
+import { DREMPEL, vindDuplicaten } from './duplicaten.js?v=20261109g';
 import {
   REDEN_LABEL, aantalVerborgen, herstelAlles, herstelControle, herstelMelding,
   isControleUit, isVerborgen, verbergMelding, verborgenOverzicht, zetControleUit
-} from './negeren.js?v=20261109f';
+} from './negeren.js?v=20261109g';
 
 const el = id => document.getElementById(id);
 const HOOFDREKENING = '1010';
@@ -381,7 +381,7 @@ function renderRegel(c, index) {
         <p class="ctrl-uitleg">${esc(c.uitleg)}</p>
         ${aantal ? `<div class="ctrl-controle-acties">
           <button class="btn btn-sm btn-ghost" onclick="zetControleUitVanaf(${index})">Deze controle niet meer tonen</button>
-          ${c.verborgen ? `<span class="muted" style="font-size:11px">${enkelvoud(c.verborgen, 'melding', 'meldingen')} verborgen</span>` : ''}
+          ${c.verborgen ? `<span class="muted" style="font-size:12px">${enkelvoud(c.verborgen, 'melding', 'meldingen')} verborgen</span>` : ''}
         </div>` : ''}
         ${aantal
           ? `<div class="ctrl-items" id="ctrl-items-${index}">${c.items.slice(0, 15).map(i => regelItem(i, index)).join('')}</div>
@@ -539,7 +539,7 @@ export function renderControle() {
     return `
       <div class="section-head">
         <div class="eyebrow">${esc(sectie)}</div>
-        <div style="font-size:11.5px;color:${heeftFout ? 'var(--semantic-danger-bright)' : open ? 'var(--semantic-warning-bright)' : 'var(--text-secondary)'}">${open ? `${enkelvoud(open, 'punt', 'punten')} open` : 'in orde'}</div>
+        <div style="font-size:12.5px;color:${heeftFout ? 'var(--semantic-danger-bright)' : open ? 'var(--semantic-warning-bright)' : 'var(--text-secondary)'}">${open ? `${enkelvoud(open, 'punt', 'punten')} open` : 'in orde'}</div>
       </div>
       <div class="card card-flush">
         ${inSectie.map(c => renderRegel(c, laatsteResultaten.indexOf(c))).join('')}

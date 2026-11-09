@@ -2,9 +2,9 @@
 // inkoopfacturen/bonnetjes (bij uitgaven) en verkoopfacturen (bij inkomsten).
 // De indeling volgt het soort boeking waar de bijlage aan hangt; je hoeft niets apart in te stellen.
 
-import { state } from './storage.js?v=20261109f';
-import { esc, fmt, ddmm, isUitgave, isInkomst, weergaveNaam } from './helpers.js?v=20261109f';
-import { alleBonnetjes, heeftBonnetje, bonnetjesBeschikbaar } from './bonnetjes.js?v=20261109f';
+import { state } from './storage.js?v=20261109g';
+import { esc, fmt, ddmm, isUitgave, isInkomst, weergaveNaam } from './helpers.js?v=20261109g';
+import { alleBonnetjes, heeftBonnetje, bonnetjesBeschikbaar } from './bonnetjes.js?v=20261109g';
 
 const el = id => document.getElementById(id);
 let jaarKeuze = 'alle';       // 'alle' of 'JJJJ'
@@ -35,7 +35,7 @@ function tabel(rijen, leegTekst) {
   return `<div class="card card-flush"><div class="table-wrap"><table class="tbl-compact">
     <thead><tr><th>Datum</th><th>Boeking</th><th style="text-align:right">Bedrag</th><th>Bijlage</th></tr></thead>
     <tbody>${gesorteerd.map(r => `<tr><td class="muted" style="white-space:nowrap">${r.t ? esc(ddmm(r.t.datum)) + '-' + esc(String(r.t.datum).slice(0, 4)) : '—'}</td>
-      <td>${r.t ? esc(weergaveNaam(r.t)) : '<span class="muted">boeking niet gevonden</span>'}${r.t && r.t.omschr && r.t.omschr !== r.t.naam ? ` <span class="muted" style="font-size:11px">· ${esc(String(r.t.omschr).slice(0, 50))}</span>` : ''}</td>
+      <td>${r.t ? esc(weergaveNaam(r.t)) : '<span class="muted">boeking niet gevonden</span>'}${r.t && r.t.omschr && r.t.omschr !== r.t.naam ? ` <span class="muted" style="font-size:12px">· ${esc(String(r.t.omschr).slice(0, 50))}</span>` : ''}</td>
       <td style="text-align:right">${r.t ? fmt(r.t.bedrag) : ''}</td>
       <td><a href="#" onclick="openBonnetje('${esc(r.b.bid)}');return false">📎 ${esc(r.b.naam)}</a></td></tr>`).join('')}</tbody></table></div></div>`;
 }
@@ -51,20 +51,20 @@ export function renderBonnetjesPagina() {
   doel.innerHTML = `
     ${!bonnetjesBeschikbaar ? `<div class="card" style="padding:12px 16px;margin-bottom:12px;color:var(--semantic-danger-bright)">Bijlagen zijn in deze browser niet beschikbaar (privévenster?).</div>` : ''}
     <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:var(--spacing-4)">
-      <select onchange="zetBonnetjesJaar(this.value)" aria-label="Jaar" style="font-size:13px"><option value="alle">Alle jaren</option>${jaren.map(j => `<option value="${j}"${j === jaarKeuze ? ' selected' : ''}>${j}</option>`).join('')}</select>
+      <select onchange="zetBonnetjesJaar(this.value)" aria-label="Jaar" style="font-size:14px"><option value="alle">Alle jaren</option>${jaren.map(j => `<option value="${j}"${j === jaarKeuze ? ' selected' : ''}>${j}</option>`).join('')}</select>
       <button class="btn btn-primary" onclick="openBonScan()">📷 Bonnetje scannen</button>
-      <span class="muted" style="font-size:12px">Een bijlage voeg je toe bij een boeking (Bank), of via de scanner. De indeling volgt het soort boeking.</span>
+      <span class="muted" style="font-size:13px">Een bijlage voeg je toe bij een boeking (Bank), of via de scanner. De indeling volgt het soort boeking.</span>
     </div>
     <div class="section-head"><div class="section-titel">Inkoopfacturen en bonnetjes (${ink.length})</div></div>
     <div style="margin-bottom:var(--spacing-4)">${tabel(ink, 'Nog geen bijlagen bij uitgaven.')}
-      <p style="margin:8px 0 0;font-size:13px"><a href="#" onclick="zetBonnetjesOntbrekend(${toonOntbrekend ? 'false' : 'true'});return false">${toonOntbrekend ? '▾' : '▸'} ${zonder.length} uitgaven nog zonder bijlage</a>
-        <span class="muted" style="font-size:12px"> (niet bij alles is een bon nodig, bijvoorbeeld bankkosten of een overboeking)</span></p>
-      ${toonOntbrekend ? `<div class="card card-flush" style="margin-top:6px"><div class="table-wrap" style="max-height:340px;overflow:auto"><table class="tbl-compact"><tbody>${zonder.slice(0, 300).map(t => `<tr><td class="muted" style="white-space:nowrap">${esc(ddmm(t.datum))}-${esc(String(t.datum).slice(0, 4))}</td><td>${esc(weergaveNaam(t))}</td><td style="text-align:right">${fmt(t.bedrag)}</td></tr>`).join('')}</tbody></table></div></div>${zonder.length > 300 ? `<p class="muted" style="font-size:12px">Alleen de nieuwste 300 getoond.</p>` : ''}` : ''}
+      <p style="margin:8px 0 0;font-size:14px"><a href="#" onclick="zetBonnetjesOntbrekend(${toonOntbrekend ? 'false' : 'true'});return false">${toonOntbrekend ? '▾' : '▸'} ${zonder.length} uitgaven nog zonder bijlage</a>
+        <span class="muted" style="font-size:13px"> (niet bij alles is een bon nodig, bijvoorbeeld bankkosten of een overboeking)</span></p>
+      ${toonOntbrekend ? `<div class="card card-flush" style="margin-top:6px"><div class="table-wrap" style="max-height:340px;overflow:auto"><table class="tbl-compact"><tbody>${zonder.slice(0, 300).map(t => `<tr><td class="muted" style="white-space:nowrap">${esc(ddmm(t.datum))}-${esc(String(t.datum).slice(0, 4))}</td><td>${esc(weergaveNaam(t))}</td><td style="text-align:right">${fmt(t.bedrag)}</td></tr>`).join('')}</tbody></table></div></div>${zonder.length > 300 ? `<p class="muted" style="font-size:13px">Alleen de nieuwste 300 getoond.</p>` : ''}` : ''}
     </div>
     <div class="section-head"><div class="section-titel">Verkoopfacturen (${ver.length})</div></div>
     <div style="margin-bottom:var(--spacing-4)">${tabel(ver, 'Nog geen bijlagen bij inkomsten.')}</div>
     ${ove.length ? `<div class="section-head"><div class="section-titel">Overig (${ove.length})</div></div>
-    <div style="margin-bottom:var(--spacing-4)">${tabel(ove, '')}<p class="muted" style="font-size:12px;margin-top:6px">Bijlagen bij privéstortingen, opnames of boekingen die niet meer bestaan.</p></div>` : ''}`;
+    <div style="margin-bottom:var(--spacing-4)">${tabel(ove, '')}<p class="muted" style="font-size:13px;margin-top:6px">Bijlagen bij privéstortingen, opnames of boekingen die niet meer bestaan.</p></div>` : ''}`;
 }
 
 export function zetBonnetjesJaar(j) { jaarKeuze = j; renderBonnetjesPagina(); }

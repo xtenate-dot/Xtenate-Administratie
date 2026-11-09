@@ -5,14 +5,14 @@
 // niet nog eens voorgesteld. Grootboek en soort worden afgeleid uit eerdere
 // boekingen met dezelfde naam; wat onbekend is kies je zelf.
 
-import { state, saveTxData, jaarIsVergrendeld } from './storage.js?v=20261109f';
-import { isTxJaar, jaarVan, EERSTE_TX_JAAR, vandaagIso } from './jaren.js?v=20261109f';
-import { esc, fmt } from './helpers.js?v=20261109f';
-import { addToPendingQueue } from './supabase-client-v2.js?v=20261109f';
-import { maakHerstelpunt } from './herstelpunt.js?v=20261109f';
-import { facturenVan, isOpenstaand, koppelBetaling, vindFactuur, restBedrag, isDeelsBetaald } from './facturen.js?v=20261109f';
-import { vindRelatie, relatieNummer } from './relaties.js?v=20261109f';
-import { telInbox, haalInboxOp, zetInboxStatus } from './bankinbox.js?v=20261109f';
+import { state, saveTxData, jaarIsVergrendeld } from './storage.js?v=20261109g';
+import { isTxJaar, jaarVan, EERSTE_TX_JAAR, vandaagIso } from './jaren.js?v=20261109g';
+import { esc, fmt } from './helpers.js?v=20261109g';
+import { addToPendingQueue } from './supabase-client-v2.js?v=20261109g';
+import { maakHerstelpunt } from './herstelpunt.js?v=20261109g';
+import { facturenVan, isOpenstaand, koppelBetaling, vindFactuur, restBedrag, isDeelsBetaald } from './facturen.js?v=20261109g';
+import { vindRelatie, relatieNummer } from './relaties.js?v=20261109g';
+import { telInbox, haalInboxOp, zetInboxStatus } from './bankinbox.js?v=20261109g';
 
 const REK = '1010';          // dagboek "Bank" (rekening 1010)
 const el = id => document.getElementById(id);
@@ -329,11 +329,11 @@ function factuurKeuze(r, i) {
   const soort = factuurSoortVan(r);
   if (!soort) return '<span class="muted">—</span>';
   const k = factuurKandidaten(r);
-  if (!k.length && !r.factuurId) return '<span class="muted" style="font-size:12px">geen open facturen</span>';
-  return `<select onchange="zetBankimportKeuze(${i},'factuur',this.value)" style="font-size:12px;max-width:230px">
+  if (!k.length && !r.factuurId) return '<span class="muted" style="font-size:13px">geen open facturen</span>';
+  return `<select onchange="zetBankimportKeuze(${i},'factuur',this.value)" style="font-size:13px;max-width:230px">
       <option value="">— geen factuur —</option>
       ${k.map(x => `<option value="${esc(x.f.id)}"${x.f.id === r.factuurId ? ' selected' : ''}>${x.bedragGelijk ? '✓ ' : ''}${esc(factuurLabel(x.f))}</option>`).join('')}
-    </select>${r.factuurVoorstel && r.factuurId ? '<div class="muted" style="font-size:11px">voorstel op bedrag en naam</div>' : ''}`;
+    </select>${r.factuurVoorstel && r.factuurId ? '<div class="muted" style="font-size:12px">voorstel op bedrag en naam</div>' : ''}`;
 }
 
 export function zetBankimportKeuze(i, veld, waarde) {
@@ -412,12 +412,12 @@ export function renderBankimport() {
   const knop = `<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:var(--spacing-4)">
     <button class="btn btn-primary" onclick="kiesRevolutBestand()">Revolut-afschrift kiezen (CSV)</button>
     ${(state.BANK_KOPPELINGEN || []).length ? `
-      <select onchange="zetPeriode(this.value)" aria-label="Periode" style="font-size:13px">${PERIODES.map(([w, l]) => `<option value="${w}"${w === periodeSoort ? ' selected' : ''}>${l}</option>`).join('')}</select>
+      <select onchange="zetPeriode(this.value)" aria-label="Periode" style="font-size:14px">${PERIODES.map(([w, l]) => `<option value="${w}"${w === periodeSoort ? ' selected' : ''}>${l}</option>`).join('')}</select>
       ${periodeSoort === 'eigen' ? `<input type="date" value="${esc(eigenVan)}" onchange="zetEigenPeriode('van',this.value)" aria-label="Van"> <span class="muted">t/m</span> <input type="date" value="${esc(eigenTot)}" onchange="zetEigenPeriode('tot',this.value)" aria-label="Tot">` : ''}
       <button class="btn" onclick="haalBankTransactiesOp()">Ophalen bij de bank</button>
       ${inboxAantal ? `<button class="btn btn-primary" onclick="laadInboxVoorstel()" title="Regels die de ochtendronde automatisch heeft opgehaald">📥 Inbox (${inboxAantal} nieuw)</button>` : ''}` : ''}
-    <span class="muted" style="font-size:12px">In Revolut: Rekeningen → Afschrift → CSV, voor de periode die je wilt.</span>
-    ${melding ? `<span style="font-size:13px">${esc(melding)}</span>` : ''}</div>`;
+    <span class="muted" style="font-size:13px">In Revolut: Rekeningen → Afschrift → CSV, voor de periode die je wilt.</span>
+    ${melding ? `<span style="font-size:14px">${esc(melding)}</span>` : ''}</div>`;
   if (!voorstel) {
     doel.innerHTML = knop + `<div class="card"><p>Kies een afschrift. Je ziet eerst een voorstel; er wordt niets geboekt tot je op Importeer klikt.
       Boekingen die er al staan worden herkend en overgeslagen.</p></div>`;
@@ -435,10 +435,10 @@ export function renderBankimport() {
         <td style="text-align:right">${fmt(r.bedrag)}</td><td colspan="3" class="muted">staat al in de administratie</td><td></td></tr>`
     : `<tr><td><input type="checkbox" ${r.kies ? 'checked' : ''} onchange="zetBankimportKeuze(${i},'kies',this.checked)"></td>
         <td>${esc(r.datum.slice(8, 10) + '-' + r.datum.slice(5, 7))}</td>
-        <td>${esc(r.naam)}<div class="muted" style="font-size:11px">${esc(r.herkomst)}</div></td>
+        <td>${esc(r.naam)}<div class="muted" style="font-size:12px">${esc(r.herkomst)}</div></td>
         <td style="text-align:right">${fmt(r.bedrag)}</td>
-        <td><select onchange="zetBankimportKeuze(${i},'gb',this.value)" style="font-size:12px;max-width:190px"${!r.gb ? ' class="input-fout"' : ''}>${optGb(r.gb)}</select></td>
-        <td><select onchange="zetBankimportKeuze(${i},'type',this.value)" style="font-size:12px">${optType(r.type)}</select></td>
+        <td><select onchange="zetBankimportKeuze(${i},'gb',this.value)" style="font-size:13px;max-width:190px"${!r.gb ? ' class="input-fout"' : ''}>${optGb(r.gb)}</select></td>
+        <td><select onchange="zetBankimportKeuze(${i},'type',this.value)" style="font-size:13px">${optType(r.type)}</select></td>
         <td>${factuurKeuze(r, i)}</td>
         <td><button class="btn btn-sm btn-ghost" title="Deze regel uit het voorstel halen" onclick="verwijderBankimportRegel(${i})">Verwijder</button></td></tr>`).join('');
 
@@ -447,16 +447,16 @@ export function renderBankimport() {
        <div style="font-weight:600;color:var(--warning,#B45309);margin-bottom:6px">⏳ Nog in behandeling bij de bank (${inBehandeling.length})</div>
        <div class="table-wrap"><table class="tbl-compact"><tbody>${inBehandeling.map(t =>
          `<tr style="opacity:.7"><td>${esc(t.datum)}</td><td>${esc(t.naam || t.omschr || '')}</td><td style="text-align:right">${fmt(Math.abs(t.totaal))}</td><td>${t.totaal < 0 ? 'af' : 'bij'}</td></tr>`).join('')}</tbody></table></div>
-       <p class="muted" style="font-size:12px;margin-top:6px">Deze zijn nog niet definitief; bedrag of datum kan nog wijzigen. Haal later opnieuw op, dan staan ze in het voorstel.</p></div>`
+       <p class="muted" style="font-size:13px;margin-top:6px">Deze zijn nog niet definitief; bedrag of datum kan nog wijzigen. Haal later opnieuw op, dan staan ze in het voorstel.</p></div>`
     : '';
   const ontbreekt = voorstel.ontbreekt.length
     ? `<div class="section-head"><div class="section-titel">Staat in de administratie, niet in het bestand (${voorstel.ontbreekt.length})</div></div>
        <div class="card card-flush"><div class="table-wrap"><table class="tbl-compact"><tbody>${voorstel.ontbreekt.map(t =>
          `<tr><td>${esc(t.datum)}</td><td>${esc(t.naam || '')}</td><td style="text-align:right">${fmt(t.bedrag)}</td><td>${esc(t.type)}</td><td>${esc(t.gb)}</td></tr>`).join('')}</tbody></table></div></div>
-       <p class="muted" style="font-size:12px;margin-top:6px">Controleer deze: ze kunnen een verkeerd bedrag of een verkeerde datum hebben, of er is iets dubbel geboekt.</p>`
+       <p class="muted" style="font-size:13px;margin-top:6px">Controleer deze: ze kunnen een verkeerd bedrag of een verkeerde datum hebben, of er is iets dubbel geboekt.</p>`
     : '';
   const overg = voorstel.overgeslagen.length
-    ? `<p class="muted" style="font-size:12px">${voorstel.overgeslagen.length} regels overgeslagen (niet afgerond of onleesbaar).</p>` : '';
+    ? `<p class="muted" style="font-size:13px">${voorstel.overgeslagen.length} regels overgeslagen (niet afgerond of onleesbaar).</p>` : '';
 
   doel.innerHTML = knop + wacht + `
     <div class="kpi-grid" style="margin-bottom:var(--spacing-4)">

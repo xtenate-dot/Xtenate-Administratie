@@ -4,7 +4,7 @@
 // De knop "Uitvoeren" verschijnt pas nadat de reservekopie is gedownload én het
 // vinkje is gezet. Het slot zit ook in uitvoeren.js zelf, niet alleen hier.
 
-import { stapBackup, stapPreview, stapUitvoeren, stapControle } from './uitvoeren.js?v=20261109f';
+import { stapBackup, stapPreview, stapUitvoeren, stapControle } from './uitvoeren.js?v=20261109g';
 
 const el = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
@@ -183,7 +183,7 @@ function render() {
         <div class="ctrl-item">
           <span class="ctrl-item-main" style="cursor:default">
             <span class="ctrl-item-label">${c.goed ? '✓' : '✕'} ${esc(c.titel)}</span></span>
-          <span class="${c.goed ? 'pos' : 'neg'}" style="font-size:11.5px;padding-right:12px">${esc(c.waarde)}</span>
+          <span class="${c.goed ? 'pos' : 'neg'}" style="font-size:12.5px;padding-right:12px">${esc(c.waarde)}</span>
         </div>`).join('')}</div>
 
       <div class="section-head"><div class="eyebrow">Checksums per sleutel</div></div>
@@ -193,14 +193,14 @@ function render() {
         <tbody>
           ${gewijzigd.map(r => `<tr>
             <td style="padding-left:16px"><code>${esc(r.sleutel)}</code></td>
-            <td class="muted" style="font-size:10px">${esc(r.voor.slice(0, 24))}</td>
-            <td class="muted" style="font-size:10px">${esc(String(r.na).slice(0, 24))}</td>
+            <td class="muted" style="font-size:11px">${esc(r.voor.slice(0, 24))}</td>
+            <td class="muted" style="font-size:11px">${esc(String(r.na).slice(0, 24))}</td>
             <td class="${r.mocht ? 'pos' : 'neg'}" style="padding-right:16px">
               ${r.mocht ? 'gewijzigd zoals afgesproken' : 'ONTERECHT GEWIJZIGD'}</td></tr>`).join('')}
           ${onveranderd.map(r => `<tr>
             <td style="padding-left:16px"><code>${esc(r.sleutel)}</code></td>
-            <td class="muted" style="font-size:10px">${esc(r.voor.slice(0, 24))}</td>
-            <td class="muted" style="font-size:10px">${esc(String(r.na).slice(0, 24))}</td>
+            <td class="muted" style="font-size:11px">${esc(r.voor.slice(0, 24))}</td>
+            <td class="muted" style="font-size:11px">${esc(String(r.na).slice(0, 24))}</td>
             <td class="muted" style="padding-right:16px">ONVERANDERD</td></tr>`).join('')}
         </tbody>
       </table></div></div>

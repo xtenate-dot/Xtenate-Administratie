@@ -8,10 +8,10 @@
 //      passende naam, en tonen de beste voorstellen. Jij kiest er één: de foto wordt dan als bijlage bewaard.
 // Je kunt het bedrag en de datum altijd zelf corrigeren als de tekst niet goed is gelezen.
 
-import { state } from './storage.js?v=20261109f';
-import { esc, fmt, ddmm, isUitgave } from './helpers.js?v=20261109f';
-import { heeftBonnetje, voegBonnetjeToe, bonnetjesBeschikbaar } from './bonnetjes.js?v=20261109f';
-import { haalInboxOp } from './bankinbox.js?v=20261109f';
+import { state } from './storage.js?v=20261109g';
+import { esc, fmt, ddmm, isUitgave } from './helpers.js?v=20261109g';
+import { heeftBonnetje, voegBonnetjeToe, bonnetjesBeschikbaar } from './bonnetjes.js?v=20261109g';
+import { haalInboxOp } from './bankinbox.js?v=20261109g';
 
 const TESSERACT = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
 const MAANDEN = { jan: 1, feb: 2, mrt: 3, maa: 3, mar: 3, apr: 4, mei: 5, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, okt: 10, oct: 10, nov: 11, dec: 12 };
@@ -154,24 +154,24 @@ function teken() {
         <button class="btn btn-primary" onclick="document.getElementById('bonscan-bestand').click()"${toestand.bezig ? ' disabled' : ''}>📷 Foto maken</button>
         <button class="btn" onclick="document.getElementById('bonscan-bestand2').click()"${toestand.bezig ? ' disabled' : ''}>Bestand kiezen</button>
       </div>
-      ${toestand.bezig ? `<p class="muted">${esc(toestand.bezig)}<br><span style="font-size:12px">De eerste keer kan dit een minuut duren (taaldata wordt eenmalig geladen).</span></p>` : ''}
-      ${toestand.boodschap ? `<p style="font-size:13px">${esc(toestand.boodschap)}</p>` : ''}
+      ${toestand.bezig ? `<p class="muted">${esc(toestand.bezig)}<br><span style="font-size:13px">De eerste keer kan dit een minuut duren (taaldata wordt eenmalig geladen).</span></p>` : ''}
+      ${toestand.boodschap ? `<p style="font-size:14px">${esc(toestand.boodschap)}</p>` : ''}
       ${heeftBestand && !toestand.bezig ? `
-        <div class="card" style="padding:10px 12px;margin-bottom:12px;font-size:13px">
+        <div class="card" style="padding:10px 12px;margin-bottom:12px;font-size:14px">
           <div><b>Gelezen van de bon:</b> ${toestand.bedragen.length ? 'bedrag ' + toestand.bedragen.slice(0, 3).map(b => fmt(b.bedrag)).join(' / ') : 'geen bedrag herkend'}${toestand.datum ? ' · datum ' + esc(ddmm(toestand.datum)) + '-' + toestand.datum.slice(0, 4) : ' · geen datum herkend'}</div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px">
-            <label class="muted" style="font-size:12px">Klopt dat niet? Typ het bedrag:</label>
+            <label class="muted" style="font-size:13px">Klopt dat niet? Typ het bedrag:</label>
             <input type="text" inputmode="decimal" value="${esc(toestand.handmatig)}" placeholder="bijv. 24,95" style="width:100px" oninput="zetBonScanBedrag(this.value)">
-            <label class="muted" style="font-size:12px">datum:</label>
+            <label class="muted" style="font-size:13px">datum:</label>
             <input type="date" value="${esc(toestand.datum)}" onchange="zetBonScanDatum(this.value)">
           </div></div>
         <div style="font-weight:600;margin-bottom:6px">Passende boekingen</div>
         ${lijst.length ? lijst.map((v, i) => `<label class="card" style="display:flex;gap:10px;align-items:flex-start;padding:8px 12px;margin-bottom:6px;cursor:pointer">
             <input type="radio" name="bonscan-keuze" value="${esc(v.t.id)}"${i === 0 ? ' checked' : ''} style="margin-top:3px">
             <span style="flex:1"><b>${esc(ddmm(v.t.datum))}</b> · ${esc(v.t.naam || v.t.omschr || '')} · <b>${fmt(v.t.bedrag)}</b>
-              <span class="muted" style="display:block;font-size:12px">${esc(v.redenen.join(' · '))}${v.t.omschr && v.t.omschr !== v.t.naam ? ' · ' + esc(String(v.t.omschr).slice(0, 50)) : ''}</span></span></label>`).join('')
-          : `<p class="muted" style="font-size:13px">Geen boeking gevonden met dit bedrag${man ? '' : ' (zonder bijlage)'}.${inboxHits.length ? '' : ' Is de bankregel al geboekt? Zo niet: boek hem eerst via Bank verwerken en probeer het opnieuw.'}</p>`}
-        ${inboxHits.length && !lijst.length ? `<p style="font-size:13px;margin-top:8px">📥 Er staat wel een passende regel in je bank-inbox die nog niet is geboekt: ${inboxHits.map(r => `${esc(ddmm(r.datum))} ${esc(String(r.naam || '').slice(0, 25))} ${fmt(Math.abs(r.bedrag))}`).join('; ')}. Boek die eerst, dan kun je de bon eraan koppelen.</p>` : ''}` : ''}
+              <span class="muted" style="display:block;font-size:13px">${esc(v.redenen.join(' · '))}${v.t.omschr && v.t.omschr !== v.t.naam ? ' · ' + esc(String(v.t.omschr).slice(0, 50)) : ''}</span></span></label>`).join('')
+          : `<p class="muted" style="font-size:14px">Geen boeking gevonden met dit bedrag${man ? '' : ' (zonder bijlage)'}.${inboxHits.length ? '' : ' Is de bankregel al geboekt? Zo niet: boek hem eerst via Bank verwerken en probeer het opnieuw.'}</p>`}
+        ${inboxHits.length && !lijst.length ? `<p style="font-size:14px;margin-top:8px">📥 Er staat wel een passende regel in je bank-inbox die nog niet is geboekt: ${inboxHits.map(r => `${esc(ddmm(r.datum))} ${esc(String(r.naam || '').slice(0, 25))} ${fmt(Math.abs(r.bedrag))}`).join('; ')}. Boek die eerst, dan kun je de bon eraan koppelen.</p>` : ''}` : ''}
     </div>
     <div class="pm-voet"><span class="pm-hint">De foto wordt verkleind en veilig in je eigen opslag bewaard (zeven jaar bewaarplicht).</span>
       <div class="pm-knoppen"><button class="btn" onclick="sluitBonScan()">Sluiten</button>

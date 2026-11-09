@@ -5,10 +5,10 @@
 // download je er een als bestand. De back-ups zelf worden alleen door de database
 // gemaakt (functie maak_cloud_backup); de app kan ze lezen en verwijderen, niet vervalsen.
 
-import { getClient, heeftClient } from './supabase.js?v=20261109f';
-import { esc } from './helpers.js?v=20261109f';
-import { state } from './storage.js?v=20261109f';
-import { wachtrijStatus } from './supabase-client-v2.js?v=20261109f';
+import { getClient, heeftClient } from './supabase.js?v=20261109g';
+import { esc } from './helpers.js?v=20261109g';
+import { state } from './storage.js?v=20261109g';
+import { wachtrijStatus } from './supabase-client-v2.js?v=20261109g';
 
 const el = id => document.getElementById(id);
 const nl = iso => new Date(iso).toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' });
@@ -45,13 +45,13 @@ export function cloudBackupBlok() {
     <div class="beheer-groep">
       <div class="beheer-groep-kop">Back-ups in de cloud</div>
       <div class="card" style="padding:var(--spacing-4)">
-        <div class="muted" style="font-size:12px;margin-bottom:10px">
+        <div class="muted" style="font-size:13px;margin-bottom:10px">
           Elke nacht maakt je eigen Supabase automatisch een kopie van je administratie (alleen als er iets veranderd is).
           De laatste 30 nachtelijke en 10 handmatige blijven bewaard. Bijlagen (bonnetjes) staan al apart in de cloud.
         </div>
-        <div id="cloud-backups"><span class="muted" style="font-size:12px">Laden…</span></div>
+        <div id="cloud-backups"><span class="muted" style="font-size:13px">Laden…</span></div>
         <div style="margin-top:10px"><button class="btn btn-primary" onclick="maakCloudBackupNu()">Nu back-up maken</button>
-          <span id="cloud-backup-melding" class="muted" style="font-size:12px;margin-left:8px"></span></div>
+          <span id="cloud-backup-melding" class="muted" style="font-size:13px;margin-left:8px"></span></div>
       </div>
     </div>`;
 }
@@ -66,15 +66,15 @@ export async function renderCloudBackups() {
     const nieuw = data && data[0] ? data[0].gemaakt : null;
     if (nieuw !== laatsteCloudBackup) { laatsteCloudBackup = nieuw; window.hertekenHuidigePagina && window.hertekenHuidigePagina(); return; }
     doel.innerHTML = data.length
-      ? data.map(b => `<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">
+      ? data.map(b => `<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid var(--border);font-size:14px">
           <span style="min-width:110px">${esc(nl(b.gemaakt))}</span>
-          <span class="muted" style="font-size:11px;min-width:70px">${b.reden === 'nacht' ? 'automatisch' : 'handmatig'}</span>
-          <span class="muted" style="flex:1;font-size:12px">${esc(aantalTekst(b.aantallen))}</span>
+          <span class="muted" style="font-size:12px;min-width:70px">${b.reden === 'nacht' ? 'automatisch' : 'handmatig'}</span>
+          <span class="muted" style="flex:1;font-size:13px">${esc(aantalTekst(b.aantallen))}</span>
           <button class="btn btn-sm" onclick="downloadCloudBackup(${Number(b.id)})">Downloaden</button>
           <button class="btn btn-sm" onclick="vraagTerugzetten(${Number(b.id)})">Terugzetten…</button></div>`).join('')
-      : '<span class="muted" style="font-size:12px">Nog geen back-ups. De eerste komt vannacht, of klik op "Nu back-up maken".</span>';
+      : '<span class="muted" style="font-size:13px">Nog geen back-ups. De eerste komt vannacht, of klik op "Nu back-up maken".</span>';
   } catch {
-    doel.innerHTML = '<span class="muted" style="font-size:12px">De lijst kon niet geladen worden.</span>';
+    doel.innerHTML = '<span class="muted" style="font-size:13px">De lijst kon niet geladen worden.</span>';
   }
 }
 
@@ -137,7 +137,7 @@ export async function vraagTerugzetten(id) {
   const w = wachtrijStatus(), open = w.open;
   l.innerHTML = `<div class="pm-venster" style="max-width:560px" role="dialog" aria-label="Back-up terugzetten">
     <div class="pm-kop"><div><h3>Terugzetten naar ${esc(nl(b.gemaakt))}</h3><p class="pm-sub">${b.reden === 'nacht' ? 'Automatische' : 'Handmatige'} back-up</p></div><button class="pm-kruis" onclick="sluitTerugzetten()" aria-label="Sluiten">×</button></div>
-    <div class="pm-inhoud" style="padding:16px 20px;font-size:13px">
+    <div class="pm-inhoud" style="padding:16px 20px;font-size:14px">
       <table class="tbl-compact" style="width:100%;margin-bottom:12px"><thead><tr><th></th><th style="text-align:right">Nu</th><th style="text-align:right">Na terugzetten</th></tr></thead><tbody>
         ${rij('Boekingen', nu.boekingen, a.boekingen)}${rij('HNVI-loten', nu.hnvi_loten, a.hnvi_loten)}${rij('Relaties', nu.relaties, a.relaties)}
         <tr><td>Lijsten en instellingen (o.a. voorraad, facturen)</td><td style="text-align:right">—</td><td style="text-align:right">${a.app_data ?? 0}</td></tr></tbody></table>

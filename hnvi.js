@@ -1,15 +1,15 @@
 // hnvi.js — HNVI/Xtenate voorraadbeheer, inclusief AI-factuurimport.
 
-import { bedragUit, ddmm, esc, fmt, leegVlak } from './helpers.js?v=20261109f';
-import { maakSorteerbaar } from './tables.js?v=20261109f';
-import { openApiKeyModal } from './modals.js?v=20261109f';
-import { saveHnviData, state } from './storage.js?v=20261109f';
+import { bedragUit, ddmm, esc, fmt, leegVlak } from './helpers.js?v=20261109g';
+import { maakSorteerbaar } from './tables.js?v=20261109g';
+import { openApiKeyModal } from './modals.js?v=20261109g';
+import { saveHnviData, state } from './storage.js?v=20261109g';
 
 /** Globaal boekjaar vertaald naar het hnvi-filter: 'all' betekent hier ''. */
 const hnviJaar = () => (state.huidigJaar === 'all' ? '' : (state.huidigJaar || ''));
-import { splitsLoten, lotAantal, lotVerkochtStuks } from './hnvilot.js?v=20261109f';
-import { saveHnviToSupabase, deleteFromSupabase, addToPendingQueue } from './supabase-client-v2.js?v=20261109f';
-import { downloadModelPdf } from './pdf.js?v=20261109f';
+import { splitsLoten, lotAantal, lotVerkochtStuks } from './hnvilot.js?v=20261109g';
+import { saveHnviToSupabase, deleteFromSupabase, addToPendingQueue } from './supabase-client-v2.js?v=20261109g';
+import { downloadModelPdf } from './pdf.js?v=20261109g';
 
 /** De loten zoals ze nu op het scherm staan: status- en jaarfilter meegenomen. */
 function zichtbareLoten() {
@@ -153,15 +153,15 @@ export function renderHNVI() {
         if (i.factuur) regels.push(`factuur ${esc(i.factuur)}`);
         if (i.noot) regels.push(esc(i.noot));
         return regels.length
-          ? `<div style="font-size:10px;color:var(--text-secondary);margin-top:2px">${regels.join(' \u00b7 ')}</div>`
+          ? `<div style="font-size:11px;color:var(--text-secondary);margin-top:2px">${regels.join(' \u00b7 ')}</div>`
           : '';
       })()}</td>
-      <td style="text-align:right" data-v="${Number(i.inkoop)||0}">${fmt(i.inkoop)}${lotAantal(i) > 1 && lotVerkochtStuks(i) > 0 && lotVerkochtStuks(i) < lotAantal(i) ? `<div style="font-size:10px;color:var(--text-secondary)">verkocht deel ${fmt(kost)}</div>` : ''}</td>
+      <td style="text-align:right" data-v="${Number(i.inkoop)||0}">${fmt(i.inkoop)}${lotAantal(i) > 1 && lotVerkochtStuks(i) > 0 && lotVerkochtStuks(i) < lotAantal(i) ? `<div style="font-size:11px;color:var(--text-secondary)">verkocht deel ${fmt(kost)}</div>` : ''}</td>
       <td style="text-align:right" data-v="${Number(i.verkoop)||0}">${
         i.verkoop!=null&&i.verkoop>0
-          ? `${fmt(i.verkoop)}${i.verkoopDatum?`<div style="font-size:10px;color:var(--text-secondary)">${ddmm(i.verkoopDatum)}</div>`:''}`
+          ? `${fmt(i.verkoop)}${i.verkoopDatum?`<div style="font-size:11px;color:var(--text-secondary)">${ddmm(i.verkoopDatum)}</div>`:''}`
           : '—'}</td>
-      <td style="text-align:right" data-v="${w||0}">${w!=null&&i.verkoop>0?`<span class="${w>=0?'pos':'neg'}">${w>=0?'+':''}${fmt(w)}</span><div style="font-size:10px;color:var(--text-secondary)">${pct}%</div>`:'—'}</td>
+      <td style="text-align:right" data-v="${w||0}">${w!=null&&i.verkoop>0?`<span class="${w>=0?'pos':'neg'}">${w>=0?'+':''}${fmt(w)}</span><div style="font-size:11px;color:var(--text-secondary)">${pct}%</div>`:'—'}</td>
       <td data-v="${esc(i.status)}">${i.status==='verkocht'?(lotVerkochtStuks(i) < lotAantal(i) ? '<span class="badge badge-purple">deels verkocht</span>' : '<span class="badge badge-purple">verkocht</span>'):'<span class="badge badge-gray">op voorraad</span>'}</td>
       <td style="white-space:nowrap">
         <span class="sell-link" onclick="openHNVISell('${esc(i.id)}')">${i.status==='voorraad'?'Verkoop':'Wijzig'}</span>
@@ -486,7 +486,7 @@ Als er meerdere identieke items zijn (bijv 4x iPhone SE) maak dan voor elk een a
 
   document.getElementById('hnvi-factuur-status').textContent = `${state.hnviImportItems.length} items gevonden uit ${files.length} facturen — controleer en importeer:`;
   document.getElementById('hnvi-factuur-preview').innerHTML = `
-    <table style="width:100%;font-size:12.5px;border-collapse:collapse">
+    <table style="width:100%;font-size:13px;border-collapse:collapse">
       <thead><tr>
         <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border-default);color:var(--text-secondary);font-weight:500">Omschrijving</th>
         <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border-default);color:var(--text-secondary);font-weight:500">Datum</th>

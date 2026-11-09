@@ -2,13 +2,13 @@
 // ervoor staat ten opzichte van het urencriterium van 1.225 uur per jaar.
 // Het is alleen een logboek: het raakt boekingen en belasting niet.
 
-import { state } from './storage.js?v=20261109f';
-import { esc, ddmm } from './helpers.js?v=20261109f';
-import { lopendJaar, vandaagIso } from './jaren.js?v=20261109f';
+import { state } from './storage.js?v=20261109g';
+import { esc, ddmm } from './helpers.js?v=20261109g';
+import { lopendJaar, vandaagIso } from './jaren.js?v=20261109g';
 import {
   CATEGORIEEN, URENCRITERIUM, leesUren, voegUurToe, werkUurBij, vindUur, verwijderUur,
   urenVanJaar, urenOverzicht, criteriumStand, timerStart, timerStand, timerWis
-} from './uren.js?v=20261109f';
+} from './uren.js?v=20261109g';
 
 const el = id => document.getElementById(id);
 const MAANDEN = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
@@ -37,7 +37,7 @@ export function renderUren() {
 
   const maxM = Math.max(1, ...perMaand);
   const maanden = perMaand.map((u, i) => `
-    <div style="flex:1;text-align:center;font-size:11px">
+    <div style="flex:1;text-align:center;font-size:12px">
       <div style="height:60px;display:flex;align-items:flex-end;justify-content:center">
         <div style="width:70%;height:${Math.round(u / maxM * 100)}%;min-height:${u > 0 ? 2 : 0}px;background:var(--accent,#2563eb);border-radius:3px 3px 0 0"></div>
       </div>
@@ -72,10 +72,10 @@ export function renderUren() {
       <div style="height:10px;background:var(--border,#e5e7eb);border-radius:5px;margin:8px 0;overflow:hidden">
         <div style="height:100%;width:${balk}%;background:${st.gehaald ? '#16a34a' : 'var(--accent,#2563eb)'}"></div>
       </div>
-      <div class="muted" style="font-size:12px">
+      <div class="muted" style="font-size:13px">
         ${st.perWeekTot != null ? `Gemiddeld ${nl(st.perWeekTot)} uur per week tot nu toe. ` : ''}${prog}${nodig}
       </div>
-      <div class="muted" style="font-size:12px;margin-top:6px">
+      <div class="muted" style="font-size:13px;margin-top:6px">
         Je claimt de zelfstandigenaftrek nu niet, dus dit is voor je eigen overzicht. Mocht je het urencriterium later wél nodig hebben, dan heb je het logboek al.
       </div>
     </div>
@@ -83,14 +83,14 @@ export function renderUren() {
     <div class="card" style="padding:var(--spacing-3);margin-bottom:var(--spacing-3)">
       <div style="font-weight:600;margin-bottom:8px">${bewerk ? 'Uren bewerken' : 'Uren toevoegen'}</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
-        <label style="font-size:12px">Datum<br><input type="date" id="uren-datum" value="${esc(bewerk ? bewerk.datum : vandaagIso())}"></label>
-        <label style="font-size:12px">Uren<br><input type="text" id="uren-aantal" inputmode="decimal" placeholder="1,5 of 1:30" size="9" value="${bewerk ? esc(String(bewerk.uren).replace('.', ',')) : ''}"></label>
-        <label style="font-size:12px">Soort<br><select id="uren-cat">${CATEGORIEEN.map(c => `<option${bewerk && bewerk.categorie === c ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select></label>
-        <label style="font-size:12px;flex:1;min-width:140px">Omschrijving (optioneel)<br><input type="text" id="uren-omschr" style="width:100%" value="${bewerk ? esc(bewerk.omschrijving) : ''}"></label>
+        <label style="font-size:13px">Datum<br><input type="date" id="uren-datum" value="${esc(bewerk ? bewerk.datum : vandaagIso())}"></label>
+        <label style="font-size:13px">Uren<br><input type="text" id="uren-aantal" inputmode="decimal" placeholder="1,5 of 1:30" size="9" value="${bewerk ? esc(String(bewerk.uren).replace('.', ',')) : ''}"></label>
+        <label style="font-size:13px">Soort<br><select id="uren-cat">${CATEGORIEEN.map(c => `<option${bewerk && bewerk.categorie === c ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select></label>
+        <label style="font-size:13px;flex:1;min-width:140px">Omschrijving (optioneel)<br><input type="text" id="uren-omschr" style="width:100%" value="${bewerk ? esc(bewerk.omschrijving) : ''}"></label>
         <button class="btn btn-primary" onclick="urenOpslaan()">${bewerk ? 'Opslaan' : 'Toevoegen'}</button>
         ${bewerk ? `<button class="btn" onclick="urenAnnuleer()">Annuleer</button>` : timerHtml}
       </div>
-      <div id="uren-fout" style="color:var(--danger,#b91c1c);font-size:12px;margin-top:6px"></div>
+      <div id="uren-fout" style="color:var(--danger,#b91c1c);font-size:13px;margin-top:6px"></div>
     </div>
 
     <div class="card" style="padding:var(--spacing-3);margin-bottom:var(--spacing-3)">

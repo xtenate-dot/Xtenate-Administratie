@@ -8,11 +8,11 @@
 import {
   state, saveHistTxData, saveTxData, saveRekeningen, saveGrootboek, jaarIsVergrendeld,
   grootboekNamen, grootboekOptgroepen, rekeningenLijst
-} from './storage.js?v=20261109f';
-import { addToPendingQueue, syncPendingQueue, isSupabaseReady } from './supabase-client-v2.js?v=20261109f';
-import { esc, fmt, isInkomst, maandLabel } from './helpers.js?v=20261109f';
-import { lopendJaar, txVanJaar, banksaldoTot, vandaagIso } from './jaren.js?v=20261109f';
-import { telInbox } from './bankinbox.js?v=20261109f';
+} from './storage.js?v=20261109g';
+import { addToPendingQueue, syncPendingQueue, isSupabaseReady } from './supabase-client-v2.js?v=20261109g';
+import { esc, fmt, isInkomst, maandLabel } from './helpers.js?v=20261109g';
+import { lopendJaar, txVanJaar, banksaldoTot, vandaagIso } from './jaren.js?v=20261109g';
+import { telInbox } from './bankinbox.js?v=20261109g';
 
 const el = id => document.getElementById(id);
 export const VRAAGPOST_GB = '9999';
@@ -192,24 +192,24 @@ export function renderDagboeken(behoudFocus = false, behoudScroll = false) {
       .dagboek-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
       .dagboek-chip{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 14px;border:1px solid var(--border-default);border-radius:var(--radius-md,8px);background:var(--bg-card);color:var(--text-primary);cursor:pointer;font:inherit;text-align:left}
       .dagboek-chip.actief{border-color:var(--accent,#6d4aff);box-shadow:0 0 0 1px var(--accent,#6d4aff)}
-      .dagboek-chip .muted{font-size:11.5px}
-      .dg-bedrag{font-variant-numeric:tabular-nums;font-weight:600;font-size:14.5px;white-space:nowrap}
+      .dagboek-chip .muted{font-size:12.5px}
+      .dg-bedrag{font-variant-numeric:tabular-nums;font-weight:600;font-size:15px;white-space:nowrap}
       .dg-plus{color:var(--semantic-success-bright,#1f9d55)} .dg-min{color:var(--semantic-error-bright,#d64545)}
       .dg-bedragcel{text-align:right;width:150px}
       .dg-datum{width:64px;color:var(--text-secondary);font-variant-numeric:tabular-nums;white-space:nowrap}
-      .dg-naam{font-weight:500} .dg-omschr{font-size:11.5px;color:var(--text-secondary);max-width:360px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-      .dg-maand td{background:var(--bg-elevated,rgba(127,127,127,.10));padding:8px 12px;font-size:13px}
+      .dg-naam{font-weight:500} .dg-omschr{font-size:12.5px;color:var(--text-secondary);max-width:360px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      .dg-maand td{background:var(--bg-elevated,rgba(127,127,127,.10));padding:8px 12px;font-size:14px}
       .dg-mtot{float:right;display:inline-flex;gap:16px;font-variant-numeric:tabular-nums}
       .dg-samenvatting{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
       .dg-samenvatting>div{padding:10px 16px;border:1px solid var(--border-default);border-radius:var(--radius-md,8px);background:var(--bg-card);min-width:150px}
-      .dg-samenvatting .lbl{font-size:11.5px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.03em}
+      .dg-samenvatting .lbl{font-size:12.5px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.03em}
       .dg-samenvatting .val{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
       #dagboeken-inhoud .tbl-compact td{padding-top:9px;padding-bottom:9px}
       .dagboek-bulk{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:10px 14px;margin-bottom:10px;border:1px solid var(--accent,#6d4aff);border-radius:var(--radius-md,8px);background:var(--bg-card)}
     </style>
     <div class="dagboek-chips">${chips}<button type="button" class="dagboek-chip" onclick="openNieuwDagboek()"><strong>+ Nieuw dagboek</strong><span class="muted">eigen dagboek maken</span></button></div>
-    ${gekozen === 'vraagposten' ? `<p class="muted" style="font-size:13px;margin:0 0 10px">Boekingen zonder (bestaand) grootboek, of op ${VRAAGPOST_GB} "Nog uit te zoeken". Vink ze aan en geef ze in één keer een grootboek.</p>`
-      : `<p class="muted" style="font-size:13px;margin:0 0 10px">${dagboek ? esc(uitleg(dagboek, jaar)) : ''}</p>`}
+    ${gekozen === 'vraagposten' ? `<p class="muted" style="font-size:14px;margin:0 0 10px">Boekingen zonder (bestaand) grootboek, of op ${VRAAGPOST_GB} "Nog uit te zoeken". Vink ze aan en geef ze in één keer een grootboek.</p>`
+      : `<p class="muted" style="font-size:14px;margin:0 0 10px">${dagboek ? esc(uitleg(dagboek, jaar)) : ''}</p>`}
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
       <select id="dagboek-jaar" onchange="zetDagboekJaar(this.value)" aria-label="Jaar">${gebruikteJaren.map(y => `<option ${y === jaar ? 'selected' : ''}>${esc(y)}</option>`).join('')}<option value="all" ${jaar === 'all' ? 'selected' : ''}>Alle jaren</option></select>
       <select id="dagboek-periode" onchange="zetDagboekPeriode(this.value)" aria-label="Periode" ${jaar === 'all' && periode !== 'eigen' ? 'disabled' : ''}>
@@ -220,7 +220,7 @@ export function renderDagboeken(behoudFocus = false, behoudScroll = false) {
       ${periode === 'eigen' ? `<input type="date" id="dagboek-van" value="${esc(vanDatum)}" onchange="zetDagboekVanTot(this.value, document.getElementById('dagboek-tot').value)" aria-label="Van"> t/m
       <input type="date" id="dagboek-tot" value="${esc(totDatum)}" onchange="zetDagboekVanTot(document.getElementById('dagboek-van').value, this.value)" aria-label="Tot">` : ''}
       <input type="search" id="dagboek-zoek" placeholder="Zoek in dit dagboek…" value="${esc(zoek)}" oninput="zetDagboekZoek(this.value)" style="min-width:220px">
-      <span class="muted" style="font-size:13px">${rijen.length} boeking${rijen.length === 1 ? '' : 'en'}${rijen.length > 600 ? ' (eerste 600 getoond)' : ''}</span>
+      <span class="muted" style="font-size:14px">${rijen.length} boeking${rijen.length === 1 ? '' : 'en'}${rijen.length > 600 ? ' (eerste 600 getoond)' : ''}</span>
       <span style="flex:1"></span>
       ${gekozen !== 'vraagposten' && dagboek?.soort !== 'memoriaal' ? `<button type="button" class="btn btn-sm btn-primary" onclick="nieuweBoekingInDagboek()">+ Boeking in ${esc(dagboek?.naam || 'dagboek')}</button>` : ''}
       <button type="button" class="btn btn-sm" onclick="openMemoriaalBoeking()">+ Memoriaalboeking</button>
@@ -241,7 +241,7 @@ export function renderDagboeken(behoudFocus = false, behoudScroll = false) {
       <thead><tr><th style="width:32px"><input type="checkbox" onchange="vinkDagboekAlles(this.checked)" aria-label="Alles selecteren" ${rijen.length && geselecteerd.length === rijen.length ? 'checked' : ''}></th>
         <th>Datum</th><th>Naam en omschrijving</th><th>Grootboek</th>${gekozen === 'vraagposten' ? '<th>Dagboek</th>' : ''}<th style="text-align:right">Bedrag</th><th></th></tr></thead>
       <tbody>${tbody || `<tr><td colspan="7" class="muted" style="padding:16px">Geen boekingen.</td></tr>`}</tbody></table></div></div>
-    <div id="dagboek-inbox" class="muted" style="font-size:12.5px;margin-top:10px"></div>`;
+    <div id="dagboek-inbox" class="muted" style="font-size:13px;margin-top:10px"></div>`;
   if (dagboek?.soort === 'bank' || dagboek?.isHoofdrekening) {
     telInbox().then(n => { const h = el('dagboek-inbox'); if (h && n) h.innerHTML = `Er staan ${n} nieuwe bankregels in de <a href="#" onclick="nav('bank');return false">bank-inbox</a>; die komen na verwerking in dit dagboek.`; }).catch(() => {});
   }
@@ -331,8 +331,8 @@ export function openNieuwDagboek() {
       <div class="form-group full"><label for="dg-naam">Naam</label><input id="dg-naam" placeholder="bijv. PayPal"></div>
       <div class="form-group"><label for="dg-soort">Soort</label><select id="dg-soort"><option value="overig">Overig</option><option value="creditcard">Creditcard</option><option value="memoriaal">Memoriaal</option></select></div>
       <div class="form-group"><label for="dg-nr">Nummer (3 of 4 cijfers)</label><input id="dg-nr" inputmode="numeric" value="${volgendNummer()}"></div>
-    </div><div id="dg-fout" style="color:var(--semantic-error,#c0392b);font-size:13px;margin-top:6px"></div>
-    <p class="muted" style="font-size:12px">Een nieuw dagboek telt niet mee in het banksaldo. Het banksaldo komt alleen uit het dagboek Bank.</p></div>
+    </div><div id="dg-fout" style="color:var(--semantic-error,#c0392b);font-size:14px;margin-top:6px"></div>
+    <p class="muted" style="font-size:13px">Een nieuw dagboek telt niet mee in het banksaldo. Het banksaldo komt alleen uit het dagboek Bank.</p></div>
     <div class="pm-voet"><button type="button" class="btn" data-dg-sluit>Annuleren</button><button type="button" class="btn btn-primary" onclick="bewaarNieuwDagboek()">Aanmaken</button></div>`);
   setTimeout(() => el('dg-naam')?.focus(), 30);
 }
@@ -374,7 +374,7 @@ export function openMemoriaalBoeking() {
       <div class="form-group"><label for="mm-gb">Grootboek</label><select id="mm-gb"><option value="">Kies grootboek…</option>${gbOpties()}</select></div>
       <div class="form-group"><label for="mm-rek">Dagboek</label><select id="mm-rek">${dagboeken.map(d => `<option value="${esc(d.nummer)}" ${d.nummer === standaard ? 'selected' : ''}>${esc(d.naam)}</option>`).join('')}</select></div>
       <div class="form-group full"><label for="mm-naam">Naam / omschrijving</label><input id="mm-naam" placeholder="bijv. Camera retour"></div>
-    </div><div id="mm-fout" style="color:var(--semantic-error,#c0392b);font-size:13px;margin-top:6px"></div></div>
+    </div><div id="mm-fout" style="color:var(--semantic-error,#c0392b);font-size:14px;margin-top:6px"></div></div>
     <div class="pm-voet"><button type="button" class="btn" data-dg-sluit>Annuleren</button><button type="button" class="btn btn-primary" onclick="bewaarMemoriaal()">Boeken</button></div>`);
 }
 export function mmVoorbeeld(v) {

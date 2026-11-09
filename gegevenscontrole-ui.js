@@ -10,7 +10,7 @@
 
 import { bouwMeldingen, kiesActie, wisKeuze, keuzeVan, alleKeuzes, keuzeOverzicht, ACTIES,
   exporteerMeldingen, opslagVingerafdrukken, vergelijkVingerafdrukken }
-  from './gegevenscontrole.js?v=20261109f';
+  from './gegevenscontrole.js?v=20261109g';
 
 const el = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
@@ -89,7 +89,7 @@ function bevestigingsblok(m, actie) {
           ${actie === ACTIES.NEGEREN ? `<tr><td class="muted">Blijft werken</td>
             <td>de gegevens blijven in elke lijst, elk totaal en elke berekening meedoen, precies als nu</td></tr>` : ''}
           <tr><td class="muted">Vingerafdruk</td>
-              <td class="muted" style="font-size:11px"><code>${esc(m.vinger)}</code> — vastgelegd zodat de keuze
+              <td class="muted" style="font-size:12px"><code>${esc(m.vinger)}</code> — vastgelegd zodat de keuze
               later te herleiden blijft, ook als de gegevens veranderen</td></tr>
         </tbody>
       </table>
@@ -100,7 +100,7 @@ function bevestigingsblok(m, actie) {
             <td><code>${esc(v.id)}</code></td><td class="muted">${esc(v.nu)}</td>
             <td class="pos">${esc(v.na)}</td>
             <td style="text-align:right">${Number(v.bedrag).toFixed(2)}</td>
-            <td class="muted" style="font-size:11px">${esc(String(v.naam).slice(0, 34))}</td>
+            <td class="muted" style="font-size:12px">${esc(String(v.naam).slice(0, 34))}</td>
           </tr>`).join('')}</tbody>
         </table></div>
         <p class="ctrl-uitleg">Eerste ${m.voorbeelden.length} van ${m.aantalRecords}.</p>` : ''}
@@ -122,12 +122,12 @@ function meldingBlok(m) {
       <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
         <div style="flex:1">
           <div style="font-weight:600">${esc(m.titel)}</div>
-          <div class="muted" style="font-size:11.5px;margin-top:2px">
+          <div class="muted" style="font-size:12.5px;margin-top:2px">
             <code>${esc(m.sleutel)}</code> · ${m.aantalRecords} record${m.aantalRecords === 1 ? '' : 's'}
             · ${m.categorie === 'bewezen' ? 'bewezen' : 'onbekend'}${m.groep ? ' · groepsactie' : ''}
           </div>
         </div>
-        <span class="${m.categorie === 'bewezen' ? 'pos' : 'neg'}" style="font-size:11px;white-space:nowrap">
+        <span class="${m.categorie === 'bewezen' ? 'pos' : 'neg'}" style="font-size:12px;white-space:nowrap">
           ${m.categorie === 'bewezen' ? 'correctie bewezen' : 'niet bewezen'}
         </span>
       </div>
@@ -151,7 +151,7 @@ function meldingBlok(m) {
         <div class="modal-actions" style="justify-content:flex-start">
           ${m.acties.map(a => `<button class="btn btn-sm ${a === ACTIES.CORRIGEREN ? 'btn-primary' : ''}"
             onclick="kiesGc('${esc(m.id)}','${a}')">${esc(naam[a])}</button>`).join('')}
-          <span class="muted" style="font-size:11px;align-self:center">
+          <span class="muted" style="font-size:12px;align-self:center">
             ${!m.acties.includes(ACTIES.CORRIGEREN) ? 'corrigeren kan niet: de juiste waarde staat niet vast. ' : ''}
             ${!m.acties.includes(ACTIES.VERBERGEN) ? 'verbergen kan niet: er is niet vastgelegd wat verborgen hier zou betekenen.' : ''}
           </span>
@@ -188,8 +188,8 @@ export async function controleerGcSchrijfacties() {
           <th style="padding-right:16px">Uitkomst</th></tr></thead>
         <tbody>${r.map(x => `<tr>
           <td style="padding-left:16px"><code>${esc(x.sleutel)}</code></td>
-          <td class="muted" style="font-size:10px">${esc(x.voor)}</td>
-          <td class="muted" style="font-size:10px">${esc(x.na)}</td>
+          <td class="muted" style="font-size:11px">${esc(x.voor)}</td>
+          <td class="muted" style="font-size:11px">${esc(x.na)}</td>
           <td class="${x.gelijk ? 'pos' : 'neg'}" style="padding-right:16px">${x.gelijk ? 'gelijk' : 'VERANDERD'}</td>
         </tr>`).join('')}</tbody>
       </table></div></div>`;
@@ -246,13 +246,13 @@ function render() {
           <td class="${kleur[k.actie]}"><strong>${esc(naam[k.actie])}</strong></td>
           <td class="muted"><code>${esc(k.sleutel)}</code></td>
           <td style="text-align:right">${k.aantalRecords}</td>
-          <td class="muted" style="font-size:11px;padding-right:16px">${esc(k.gevolg)}</td>
+          <td class="muted" style="font-size:12px;padding-right:16px">${esc(k.gevolg)}</td>
         </tr>`).join('')}</tbody>
       </table></div></div>
       <div class="modal-actions">
         <button class="btn btn-primary" disabled
           title="Wordt pas gebouwd nadat je de gegevenscontrole hebt goedgekeurd">Keuzes uitvoeren</button>
-        <span class="muted" style="font-size:11px;align-self:center">
+        <span class="muted" style="font-size:12px;align-self:center">
           de uitvoerende stap bestaat nog niet — er kan hier niets worden weggeschreven</span>
       </div>` : ''}`;
 }

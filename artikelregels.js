@@ -5,10 +5,10 @@
 // en zet daar de opbrengst per kanaal (Bol.com, Marktplaats, overig) naast.
 // De voorraadtelling zelf (aantal stuks) wordt hier NIET door aangepast; de regels geven alleen prijzen.
 
-import { state, saveArtikelRegels } from './storage.js?v=20261109f';
-import { esc, fmt } from './helpers.js?v=20261109f';
-import { lopendJaar, vandaagIso } from './jaren.js?v=20261109f';
-import { leesBestellingen } from './bol.js?v=20261109f';
+import { state, saveArtikelRegels } from './storage.js?v=20261109g';
+import { esc, fmt } from './helpers.js?v=20261109g';
+import { lopendJaar, vandaagIso } from './jaren.js?v=20261109g';
+import { leesBestellingen } from './bol.js?v=20261109g';
 
 export const KANALEN = ['Bol.com', 'Marktplaats', 'Overig'];
 const el = id => document.getElementById(id);
@@ -98,15 +98,15 @@ export function renderRendement(behoudFocus = false) {
     if (r.ontbreekt) warn.push('Een regel mist nog een bedrag');
     return `<tr>
       <td><strong>${esc(c.artikel)}</strong>${warn.length ? ` <span class="badge badge-amber" title="${esc(warn.join('. '))}">!</span>` : ''}
-        <div class="muted" style="font-size:11px">${r.inkoopRegels} inkoop${r.inkoopRegels === 1 ? '' : 'en'} · ${r.verkoopRegels} verkoop${r.verkoopRegels === 1 ? '' : 'en'} in ${esc(jaar)}</div></td>
+        <div class="muted" style="font-size:12px">${r.inkoopRegels} inkoop${r.inkoopRegels === 1 ? '' : 'en'} · ${r.verkoopRegels} verkoop${r.verkoopRegels === 1 ? '' : 'en'} in ${esc(jaar)}</div></td>
       <td style="text-align:right">${Number(c.voorraad) || 0}</td>
       <td style="text-align:right">${r.kost != null ? fmt(r.kost) : '<span class="muted">—</span>'}</td>
       <td style="text-align:right">${r.voorraadWaarde != null ? fmt(r.voorraadWaarde) : '<span class="muted">—</span>'}</td>
       <td style="text-align:right">${r.stuks || '<span class="muted">—</span>'}</td>
       <td style="text-align:right">${r.stuks ? fmt(r.opbrengst) : '<span class="muted">—</span>'}
-        ${r.stuks ? `<div class="muted" style="font-size:11px">${KANALEN.filter(k => r.perKanaal[k]).map(k => `${k.replace('.com', '')} ${fmt(r.perKanaal[k])}`).join(' · ')}</div>` : ''}</td>
+        ${r.stuks ? `<div class="muted" style="font-size:12px">${KANALEN.filter(k => r.perKanaal[k]).map(k => `${k.replace('.com', '')} ${fmt(r.perKanaal[k])}`).join(' · ')}</div>` : ''}</td>
       <td style="text-align:right">${r.gemVerkoop != null ? fmt(r.gemVerkoop) : '<span class="muted">—</span>'}</td>
-      <td style="text-align:right">${r.winst != null ? `<strong style="color:var(${r.winst >= 0 ? '--green-text,#0a7d33' : '--red-text,#c0392b'})">${fmt(r.winst)}</strong>${r.marge != null ? `<div class="muted" style="font-size:11px">${Math.round(r.marge * 100)}%</div>` : ''}` : '<span class="muted">—</span>'}</td>
+      <td style="text-align:right">${r.winst != null ? `<strong style="color:var(${r.winst >= 0 ? '--green-text,#0a7d33' : '--red-text,#c0392b'})">${fmt(r.winst)}</strong>${r.marge != null ? `<div class="muted" style="font-size:12px">${Math.round(r.marge * 100)}%</div>` : ''}` : '<span class="muted">—</span>'}</td>
       <td style="text-align:right;white-space:nowrap">
         <button type="button" class="btn-details" onclick="openArtikelRegels('${esc(String(c.id))}')">Regels</button></td></tr>`;
   }).join('');
@@ -122,7 +122,7 @@ export function renderRendement(behoudFocus = false) {
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
       <select id="rend-jaar" onchange="zetRendementJaar(this.value)" aria-label="Jaar">${jarenLijst().map(y => `<option ${y === jaar ? 'selected' : ''}>${esc(y)}</option>`).join('')}</select>
       <input type="search" id="rend-zoek" placeholder="Zoek artikel…" value="${esc(zoek)}" oninput="zetRendementZoek(this.value)" style="min-width:200px">
-      <label style="font-size:13px"><input type="checkbox" ${alleenMetRegels ? 'checked' : ''} onchange="zetRendementFilter(this.checked)"> alleen met regels</label>
+      <label style="font-size:14px"><input type="checkbox" ${alleenMetRegels ? 'checked' : ''} onchange="zetRendementFilter(this.checked)"> alleen met regels</label>
       <span style="flex:1"></span>
       <button type="button" class="btn btn-sm btn-primary" onclick="openInkoopLijst()">Inkoop verwerken${onverwerkteInkoop(jaar) ? ` (${onverwerkteInkoop(jaar)} open)` : ''}</button>
       <button type="button" class="btn btn-sm" onclick="haalBolVerkopen()">Bol-verkopen ophalen</button>
@@ -133,7 +133,7 @@ export function renderRendement(behoudFocus = false) {
         <th style="text-align:right">Voorraadwaarde</th><th style="text-align:right">Verkocht ${esc(jaar)}</th><th style="text-align:right">Opbrengst</th>
         <th style="text-align:right">Gem. verkoopprijs</th><th style="text-align:right">Winst</th><th></th></tr></thead>
       <tbody>${rijen || '<tr><td colspan="9" class="muted" style="padding:16px">Geen artikelen gevonden.</td></tr>'}</tbody></table></div></div>
-    <p class="muted" style="font-size:12px;margin-top:10px">${aantalRegels ? '' : 'Je hebt nog geen regels. Open een artikel met "Regels" en voeg per inkoop of verkoop een regel toe; of haal je Bol-verkopen op. '}
+    <p class="muted" style="font-size:13px;margin-top:10px">${aantalRegels ? '' : 'Je hebt nog geen regels. Open een artikel met "Regels" en voeg per inkoop of verkoop een regel toe; of haal je Bol-verkopen op. '}
       De gemiddelde kostprijs is het gewogen gemiddelde van alle inkoopregels met een bedrag. Winst = opbrengst − kosten van de verkoop − (stuks × gemiddelde kostprijs).
       Het aantal stuks op voorraad blijft zoals je het op de voorraadpagina bijhoudt.</p>`;
   if (behoudFocus && actief === 'rend-zoek') {
@@ -186,10 +186,10 @@ export function openArtikelRegels(artikelId) {
     <div class="pm-inhoud">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><h4 style="margin:0">Inkopen</h4>
         <button type="button" class="btn btn-sm" onclick="openRegelFormulier('inkoop','${esc(String(c.id))}')">+ Inkoop</button></div>
-      ${ink.length ? `<table class="pm-tabel"><thead><tr><th>Datum</th><th style="text-align:right">Aantal</th><th style="text-align:right">Totaal</th><th style="text-align:right">Per stuk</th><th>Opmerking</th><th></th></tr></thead><tbody>${ink.map(r => tr(r, 'inkoop')).join('')}</tbody></table>` : '<p class="muted" style="font-size:13px">Nog geen inkopen.</p>'}
+      ${ink.length ? `<table class="pm-tabel"><thead><tr><th>Datum</th><th style="text-align:right">Aantal</th><th style="text-align:right">Totaal</th><th style="text-align:right">Per stuk</th><th>Opmerking</th><th></th></tr></thead><tbody>${ink.map(r => tr(r, 'inkoop')).join('')}</tbody></table>` : '<p class="muted" style="font-size:14px">Nog geen inkopen.</p>'}
       <div style="display:flex;justify-content:space-between;align-items:center;margin:18px 0 6px"><h4 style="margin:0">Verkopen en retouren</h4>
         <button type="button" class="btn btn-sm" onclick="openRegelFormulier('verkoop','${esc(String(c.id))}')">+ Verkoop</button></div>
-      ${ver.length ? `<table class="pm-tabel"><thead><tr><th>Datum</th><th style="text-align:right">Aantal</th><th style="text-align:right">Ontvangen</th><th style="text-align:right">Per stuk</th><th>Kanaal</th><th style="text-align:right">Kosten</th><th>Opmerking</th><th></th></tr></thead><tbody>${ver.map(r => tr(r, 'verkoop')).join('')}</tbody></table>` : '<p class="muted" style="font-size:13px">Nog geen verkopen.</p>'}
+      ${ver.length ? `<table class="pm-tabel"><thead><tr><th>Datum</th><th style="text-align:right">Aantal</th><th style="text-align:right">Ontvangen</th><th style="text-align:right">Per stuk</th><th>Kanaal</th><th style="text-align:right">Kosten</th><th>Opmerking</th><th></th></tr></thead><tbody>${ver.map(r => tr(r, 'verkoop')).join('')}</tbody></table>` : '<p class="muted" style="font-size:14px">Nog geen verkopen.</p>'}
     </div>`, true);
 }
 
@@ -213,9 +213,9 @@ export function openRegelFormulier(soort, artikelId, regelId = null) {
       <div class="form-group full"><label for="ar-omschr">Opmerking (bijv. leverancier, bestelnummer)</label><input id="ar-omschr" value="${esc(r?.omschr || '')}"></div>
       <div class="form-group full"><label>Gekoppelde bankboeking (optioneel)</label>
         <input type="hidden" id="ar-tx" value="${esc(r?.txId || '')}">
-        <div id="ar-bank" class="muted" style="font-size:12.5px">${r?.txId ? 'Gekoppeld aan een bankboeking.' : 'Vul een bedrag in; boekingen met hetzelfde bedrag verschijnen hier.'}</div></div>
+        <div id="ar-bank" class="muted" style="font-size:13px">${r?.txId ? 'Gekoppeld aan een bankboeking.' : 'Vul een bedrag in; boekingen met hetzelfde bedrag verschijnen hier.'}</div></div>
     </div>
-    <p class="muted" style="font-size:12px;margin:8px 0 0">Een regel zonder bedrag telt wel voor het aantal, maar niet voor de kostprijs.</p></div>
+    <p class="muted" style="font-size:13px;margin:8px 0 0">Een regel zonder bedrag telt wel voor het aantal, maar niet voor de kostprijs.</p></div>
     <div class="pm-voet"><button type="button" class="btn" data-ar-sluit>Annuleren</button>
       <button type="button" class="btn btn-primary" onclick="bewaarRegel('${soort}','${esc(String(c.id))}','${esc(regelId || '')}')">Opslaan</button></div>`);
   window.__arSoort = soort;
@@ -322,9 +322,9 @@ export async function haalBolVerkopen() {
       ${nieuw.length ? `<p>${nieuw.length} nieuwe verkoopregels, samen ${fmt(totaal)} ontvangen (prijs per stuk zoals Bol die geeft, inclusief btw; commissie als kosten).</p>
       <table class="pm-tabel"><thead><tr><th>Artikel</th><th style="text-align:right">Stuks</th><th style="text-align:right">Bedrag</th></tr></thead><tbody>
       ${[...perArtikel].map(([id, p]) => `<tr><td>${esc(naam(id))}</td><td style="text-align:right">${p.n}</td><td style="text-align:right">${fmt(p.b)}</td></tr>`).join('')}</tbody></table>
-      <p class="muted" style="font-size:12px;margin-top:10px">Heb je Bol-verkopen al met de hand ingevoerd, dan komen die dubbel te staan. Controleer dat eerst. Er wordt hier niets aan de voorraadtelling veranderd.</p>`
+      <p class="muted" style="font-size:13px;margin-top:10px">Heb je Bol-verkopen al met de hand ingevoerd, dan komen die dubbel te staan. Controleer dat eerst. Er wordt hier niets aan de voorraadtelling veranderd.</p>`
       : '<p>Geen nieuwe Bol-verkopen om toe te voegen.</p>'}
-      ${onbekend.length ? `<p class="muted" style="font-size:12px">${onbekend.length} Bol-artikel${onbekend.length === 1 ? '' : 'en'} zonder gekoppeld artikel (overgeslagen): ${esc(onbekend.slice(0, 5).join(', '))}${onbekend.length > 5 ? '…' : ''}</p>` : ''}
+      ${onbekend.length ? `<p class="muted" style="font-size:13px">${onbekend.length} Bol-artikel${onbekend.length === 1 ? '' : 'en'} zonder gekoppeld artikel (overgeslagen): ${esc(onbekend.slice(0, 5).join(', '))}${onbekend.length > 5 ? '…' : ''}</p>` : ''}
     </div>
     <div class="pm-voet"><button type="button" class="btn" data-ar-sluit>Sluiten</button>
       ${nieuw.length ? '<button type="button" class="btn btn-primary" id="ar-bol-ok">Toevoegen</button>' : ''}</div>`, true);
@@ -386,7 +386,7 @@ const ivOpties = sel => [...state.COVERS].sort((a, b) => String(a.artikel).local
 function ivRijenHtml() {
   return ivRijen.map((r, i) => `<tr>
     <td><select id="iv-a-${i}" onchange="ivKies(${i})" style="max-width:240px"><option value="">— kies artikel —</option>${ivOpties(r.artikelId)}</select>
-      <div class="muted" id="iv-h-${i}" style="font-size:11px"></div></td>
+      <div class="muted" id="iv-h-${i}" style="font-size:12px"></div></td>
     <td><input id="iv-n-${i}" value="${esc(r.aantal ?? '')}" inputmode="numeric" oninput="ivRekenen()" style="width:64px;text-align:right" aria-label="Aantal"></td>
     <td><input id="iv-p-${i}" value="${esc(r.prijs ?? '')}" inputmode="decimal" placeholder="automatisch" oninput="ivRekenen()" style="width:96px;text-align:right" aria-label="Prijs per stuk"></td>
     <td style="text-align:right" id="iv-b-${i}">—</td><td style="text-align:right" id="iv-s-${i}">—</td>
@@ -477,13 +477,13 @@ export function openInkoopVerwerken(txId) {
       <div class="pm-sub">${esc(t.datum)} · ${esc(t.naam || '—')} · <b>${fmt(t.bedrag)}</b>${t.omschr ? ' · ' + esc(String(t.omschr).slice(0, 50)) : ''}</div></div>
       <button type="button" class="pm-kruis" data-ar-sluit aria-label="Sluiten">×</button></div>
     <div class="pm-inhoud">
-      <p class="muted" style="font-size:13px;margin:0 0 10px">Welke artikelen zaten in deze betaling en hoeveel stuks? Laat de prijs leeg: dan wordt het bedrag gelijk over de stuks verdeeld. Weet je de prijs van een artikel wel, vul die dan in; de rest wordt verdeeld over wat overblijft.</p>
+      <p class="muted" style="font-size:14px;margin:0 0 10px">Welke artikelen zaten in deze betaling en hoeveel stuks? Laat de prijs leeg: dan wordt het bedrag gelijk over de stuks verdeeld. Weet je de prijs van een artikel wel, vul die dan in; de rest wordt verdeeld over wat overblijft.</p>
       <table class="pm-tabel"><thead><tr><th>Artikel</th><th style="text-align:right">Aantal</th><th style="text-align:right">Prijs p/s</th><th style="text-align:right">Bedrag</th><th style="text-align:right">Per stuk</th><th></th></tr></thead>
         <tbody id="iv-rijen">${ivRijenHtml()}</tbody></table>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
         <button type="button" class="btn btn-sm" onclick="ivRijToevoegen()">+ Artikel</button>
-        <div id="iv-samen" style="font-size:13px"></div></div>
-      <p class="muted" style="font-size:12px;margin:10px 0 0">Dit past je voorraadaantallen niet aan; die houd je zelf bij. Het bepaalt alleen wat een stuk gekost heeft, en dus wat bij verkoop als kosten telt.</p>
+        <div id="iv-samen" style="font-size:14px"></div></div>
+      <p class="muted" style="font-size:13px;margin:10px 0 0">Dit past je voorraadaantallen niet aan; die houd je zelf bij. Het bepaalt alleen wat een stuk gekost heeft, en dus wat bij verkoop als kosten telt.</p>
     </div>
     <div class="pm-voet"><button type="button" class="btn" data-ar-sluit>Annuleren</button>
       ${bestaand.length ? '<button type="button" class="btn" style="margin-right:auto" onclick="ivVerwijderAlles()">Koppeling weghalen</button>' : ''}
@@ -539,12 +539,12 @@ export function openInkoopLijst() {
     <div class="pm-inhoud">
       <div style="display:flex;gap:12px;align-items:center;margin-bottom:10px">
         <select onchange="zetInkoopLijst(this.value)" aria-label="Jaar">${jaren.map(y => `<option${y === jaar ? ' selected' : ''}>${esc(y)}</option>`).join('')}</select>
-        <label style="font-size:13px"><input type="checkbox" ${ilAlleenOpen ? 'checked' : ''} onchange="zetInkoopLijst(null,this.checked)"> alleen nog te verwerken</label></div>
+        <label style="font-size:14px"><input type="checkbox" ${ilAlleenOpen ? 'checked' : ''} onchange="zetInkoopLijst(null,this.checked)"> alleen nog te verwerken</label></div>
       <table class="pm-tabel"><thead><tr><th>Datum</th><th>Leverancier</th><th style="text-align:right">Bedrag</th><th>Artikelen</th><th></th></tr></thead><tbody>
       ${toon.map(t => { const rg = regelsVanTx(t.id); return `<tr><td>${esc(String(t.datum).slice(8, 10) + '-' + String(t.datum).slice(5, 7))}</td>
-        <td>${esc(t.naam || '—')}<div class="muted" style="font-size:11px">${esc(String(t.omschr || '').slice(0, 40))}</div></td>
+        <td>${esc(t.naam || '—')}<div class="muted" style="font-size:12px">${esc(String(t.omschr || '').slice(0, 40))}</div></td>
         <td style="text-align:right">${fmt(t.bedrag)}</td>
-        <td style="font-size:12px">${rg.length ? esc(rg.map(r => `${r.aantal}× ${naam(r.artikelId)}`).join(', ')) : '<span class="muted">nog niet verwerkt</span>'}</td>
+        <td style="font-size:13px">${rg.length ? esc(rg.map(r => `${r.aantal}× ${naam(r.artikelId)}`).join(', ')) : '<span class="muted">nog niet verwerkt</span>'}</td>
         <td style="text-align:right"><button type="button" class="btn-details" onclick="openInkoopVerwerken('${esc(String(t.id))}')">${rg.length ? 'Wijzig' : 'Verwerk'}</button></td></tr>`; }).join('') || '<tr><td colspan="5" class="muted" style="padding:14px">Alles is verwerkt.</td></tr>'}
       </tbody></table></div>`, true);
 }

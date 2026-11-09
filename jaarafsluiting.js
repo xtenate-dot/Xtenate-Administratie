@@ -2,19 +2,19 @@
 // controlelijst, de inkoop die wel en niet meetelt, het resultaat en de
 // aangifte. Alleen kijken; er wordt niets aangepast.
 
-import { state, saveCoversData } from './storage.js?v=20261109f';
-import { maakHerstelpunt } from './herstelpunt.js?v=20261109f';
-import { lopendJaar, txVanJaar, vandaagIso } from './jaren.js?v=20261109f';
-import { esc, fmt, MND_KORT, isUitgave } from './helpers.js?v=20261109f';
-import { aangifteModel, inkoopOverzicht, ibOver, hnviLotenVanJaar, hnviOmzetBuitenBank } from './belasting.js?v=20261109f';
-import { totaalUren, URENCRITERIUM } from './uren.js?v=20261109f';
+import { state, saveCoversData } from './storage.js?v=20261109g';
+import { maakHerstelpunt } from './herstelpunt.js?v=20261109g';
+import { lopendJaar, txVanJaar, vandaagIso } from './jaren.js?v=20261109g';
+import { esc, fmt, MND_KORT, isUitgave } from './helpers.js?v=20261109g';
+import { aangifteModel, inkoopOverzicht, ibOver, hnviLotenVanJaar, hnviOmzetBuitenBank } from './belasting.js?v=20261109g';
+import { totaalUren, URENCRITERIUM } from './uren.js?v=20261109g';
 const nlU = n => Number(n).toLocaleString('nl-NL', { maximumFractionDigits: 1 });
-import { heeftBonnetje } from './bonnetjes.js?v=20261109f';
-import { korStatus } from './kor.js?v=20261109f';
-import { draaiControles } from './controle.js?v=20261109f';
-import { banksaldoTot } from './jaren.js?v=20261109f';
-import { telInbox } from './bankinbox.js?v=20261109f';
-import { facturenVan, restBedrag } from './facturen.js?v=20261109f';
+import { heeftBonnetje } from './bonnetjes.js?v=20261109g';
+import { korStatus } from './kor.js?v=20261109g';
+import { draaiControles } from './controle.js?v=20261109g';
+import { banksaldoTot } from './jaren.js?v=20261109g';
+import { telInbox } from './bankinbox.js?v=20261109g';
+import { facturenVan, restBedrag } from './facturen.js?v=20261109g';
 
 const el = id => document.getElementById(id);
 const jr = x => String(x || '').slice(0, 4);
@@ -24,7 +24,7 @@ function regel(ernst, titel, uitleg = '', ga = '') {
   return `<div class="ctrl-regel ctrl-${ernst === 'info' ? 'ok' : ernst}" style="padding:10px 14px;display:flex;gap:10px;align-items:flex-start">
     <span aria-hidden="true">${icoon}</span>
     <div style="flex:1"><div style="font-weight:600">${esc(titel)}</div>
-    ${uitleg ? `<div class="muted" style="font-size:12px;margin-top:2px">${uitleg}</div>` : ''}</div>
+    ${uitleg ? `<div class="muted" style="font-size:13px;margin-top:2px">${uitleg}</div>` : ''}</div>
     ${ga ? `<button class="btn btn-sm" onclick="nav('${ga}')">Openen →</button>` : ''}</div>`;
 }
 
@@ -91,7 +91,7 @@ function checks(jaar, tx, inkoop) {
       uit.push(`<div class="ctrl-regel ctrl-waarschuwing" style="padding:10px 14px;display:flex;gap:10px;align-items:flex-start">
         <span aria-hidden="true">⚠️</span>
         <div style="flex:1"><div style="font-weight:600">${zonderEind.length} artikelen zonder eindvoorraad ${esc(jaar)}</div>
-        <div class="muted" style="font-size:12px;margin-top:2px">Zonder eindstand telt de voorraad van ${esc(jaar)} als leeg in de aangifte. Leg de huidige voorraad vast als eindstand, maar alleen als er sinds 31 december niets is in- of verkocht. Pas anders de aantallen per artikel aan.</div></div>
+        <div class="muted" style="font-size:13px;margin-top:2px">Zonder eindstand telt de voorraad van ${esc(jaar)} als leeg in de aangifte. Leg de huidige voorraad vast als eindstand, maar alleen als er sinds 31 december niets is in- of verkocht. Pas anders de aantallen per artikel aan.</div></div>
         <button class="btn btn-sm" onclick="legEindvoorraadVast('${esc(jaar)}')">Leg vast</button></div>`);
     } else if ((state.COVERS || []).length) {
       uit.push(regel('ok', `Eindvoorraad ${jaar} is vastgelegd`));
@@ -154,7 +154,7 @@ function inkoopTabel(inkoop) {
     <tbody>${r}<tr style="font-weight:600;background:var(--accent-softer)"><td>Totaal</td>
     <td style="text-align:right">${fmt(t.ingekocht)}</td><td style="text-align:right">${fmt(t.aftrekbaar)}</td>
     <td style="text-align:right">${fmt(t.voorraad)}</td><td style="text-align:right">${fmt(t.teVerdelen)}</td></tr></tbody></table></div></div>
-    <p class="muted" style="font-size:12px;margin-top:6px">Een negatief bedrag bij “Niet toegerekend” betekent dat je dit jaar inkoop aftrekt die je in een eerder jaar hebt betaald (loten uit vorig jaar die nu zijn verkocht). “Wel aftrekbaar” is de inkoop van wat dit jaar is verkocht. “Nog op voorraad” telt pas mee in het jaar van verkoop.</p>`;
+    <p class="muted" style="font-size:13px;margin-top:6px">Een negatief bedrag bij “Niet toegerekend” betekent dat je dit jaar inkoop aftrekt die je in een eerder jaar hebt betaald (loten uit vorig jaar die nu zijn verkocht). “Wel aftrekbaar” is de inkoop van wat dit jaar is verkocht. “Nog op voorraad” telt pas mee in het jaar van verkoop.</p>`;
 }
 
 function bonnetjesInfo(tx) {
@@ -182,8 +182,8 @@ export function renderJaarafsluiting() {
       <div class="card" style="padding:0">${checks(jaar, tx, inkoop).join('')}</div>
       <div class="section-head"><div class="section-titel">Inkoop: wel en niet meegeteld</div></div>
       ${inkoopTabel(inkoop)}
-      <p class="muted" style="font-size:12px;margin:8px 0">${bonnetjesInfo(tx)}</p>
-      <p class="muted" style="font-size:12px;margin:8px 0">Uren ${esc(jaar)}: ${nlU(totaalUren(jaar))} van ${URENCRITERIUM.toLocaleString('nl-NL')} (urencriterium, ter info).</p>
+      <p class="muted" style="font-size:13px;margin:8px 0">${bonnetjesInfo(tx)}</p>
+      <p class="muted" style="font-size:13px;margin:8px 0">Uren ${esc(jaar)}: ${nlU(totaalUren(jaar))} van ${URENCRITERIUM.toLocaleString('nl-NL')} (urencriterium, ter info).</p>
       <div class="section-head"><div class="section-titel">Resultaat</div></div>
       <div class="kpi-grid">
         <div class="kpi kpi--secondary"><div class="kpi-lbl">Omzet</div><div class="kpi-val">${fmt(omzet)}</div></div>
@@ -194,8 +194,8 @@ export function renderJaarafsluiting() {
       <div class="section-head"><div class="section-titel">Vergrendelen</div></div>
       <div class="card" style="display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap">
         <div>${(state.VERGRENDELD || []).includes(jaar)
-          ? `<strong>🔒 ${esc(jaar)} is vergrendeld.</strong><div class="muted" style="font-size:12px">Wijzigen en verwijderen van boekingen uit dit jaar vraagt een extra bevestiging.</div>`
-          : `<strong>${esc(jaar)} is niet vergrendeld.</strong><div class="muted" style="font-size:12px">Vergrendel het jaar zodra de aangifte is ingediend. Dan kun je boekingen niet meer per ongeluk wijzigen.</div>`}</div>
+          ? `<strong>🔒 ${esc(jaar)} is vergrendeld.</strong><div class="muted" style="font-size:13px">Wijzigen en verwijderen van boekingen uit dit jaar vraagt een extra bevestiging.</div>`
+          : `<strong>${esc(jaar)} is niet vergrendeld.</strong><div class="muted" style="font-size:13px">Vergrendel het jaar zodra de aangifte is ingediend. Dan kun je boekingen niet meer per ongeluk wijzigen.</div>`}</div>
         <button class="btn" onclick="wisselVergrendeling('${esc(jaar)}')">${(state.VERGRENDELD || []).includes(jaar) ? 'Ontgrendelen' : 'Jaar vergrendelen'}</button>
       </div>
       <div class="section-head"><div class="section-titel">Aangifte</div></div>
@@ -231,7 +231,7 @@ function korKaart(jaar) {
   return `<div class="section-head"><div class="section-titel">KOR-omzetgrens</div></div>
     <div class="card"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><strong>${eur(k.omzet)} van ${eur(k.grens)}</strong><span style="color:${kleur};font-weight:600">${Math.round(k.pct * 100)}%</span></div>
     <div style="height:10px;border-radius:5px;background:var(--accent-softer);margin:8px 0;overflow:hidden"><div style="height:100%;width:${Math.min(100, k.pct * 100)}%;background:${kleur}"></div></div>
-    <div class="muted" style="font-size:12px">${k.niveau === 'over' ? `Je zit ${eur(-k.ruimte)} boven de grens.` : `Nog ${eur(k.ruimte)} ruimte.`}
+    <div class="muted" style="font-size:13px">${k.niveau === 'over' ? `Je zit ${eur(-k.ruimte)} boven de grens.` : `Nog ${eur(k.ruimte)} ruimte.`}
     ${k.prognose !== null ? ` Op dit tempo kom je dit jaar uit op ongeveer ${eur(k.prognose)}.` : ''}
     Indicatie op basis van de omzet in de aangifte; welke omzet precies meetelt, stem je af met je boekhouder of de Belastingdienst.</div></div>`;
 }

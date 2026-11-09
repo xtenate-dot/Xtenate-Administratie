@@ -6,10 +6,10 @@
 // bedrijfskosten (geen balansposten, geen HNVI- of voorraadinkoop).
 // HNVI-inkoop staat apart, omdat die pas bij verkoop een kostenpost is.
 
-import { state } from './storage.js?v=20261109f';
-import { esc, fmt, isInkomst, isKostenBoeking, isKostenTerugbetaling, isOmzet, isUitgave, MND_KORT } from './helpers.js?v=20261109f';
-import { isKostenpost, inkoopOverzicht, voorraadRekeningen } from './belasting.js?v=20261109f';
-import { kmTarief } from './km.js?v=20261109f';
+import { state } from './storage.js?v=20261109g';
+import { esc, fmt, isInkomst, isKostenBoeking, isKostenTerugbetaling, isOmzet, isUitgave, MND_KORT } from './helpers.js?v=20261109g';
+import { isKostenpost, inkoopOverzicht, voorraadRekeningen } from './belasting.js?v=20261109g';
+import { kmTarief } from './km.js?v=20261109g';
 
 const el = id => document.getElementById(id);
 let stand = 'maand';          // 'maand' | 'kwartaal' | 'jaar'
@@ -207,9 +207,9 @@ function matrixHtml(m, soort) {
   }
   body += totaalRij(m.samen[1].titel, m.samen[1].waarden, m.samen[1].totaal);
   body += totaalRij(m.samen[2].titel, m.samen[2].waarden, m.samen[2].totaal);
-  return `<div class="card card-flush"><div class="table-wrap"><table class="tbl-compact" style="font-size:12px">
+  return `<div class="card card-flush"><div class="table-wrap"><table class="tbl-compact" style="font-size:13px">
     <thead>${kop}</thead><tbody>${body}</tbody></table></div></div>
-    <p class="muted" style="font-size:12px;margin-top:var(--spacing-2)">
+    <p class="muted" style="font-size:13px;margin-top:var(--spacing-2)">
       Zoals in je Excel: omzet en inkomsten zijn negatief, kosten positief. Een negatief resultaat betekent winst. HNVI- en AliExpress-inkoop staan hier voor het volle bankbedrag; wat fiscaal meetelt staat op Belasting.</p>`;
 }
 
@@ -223,7 +223,7 @@ function inkoopSectie(jaar) {
       <td style="text-align:right">${fmt(r.aftrekbaar)}</td>
       <td style="text-align:right">${fmt(r.voorraad)}</td>
       <td style="text-align:right;color:${Math.abs(r.teVerdelen) > 0.005 ? 'var(--semantic-warning-bright)' : ''}">${fmt(r.teVerdelen)}</td>
-      <td class="muted" style="font-size:12px">${esc(r.opmerking)}</td></tr>`).join('');
+      <td class="muted" style="font-size:13px">${esc(r.opmerking)}</td></tr>`).join('');
   const t = o.totaal;
   return `<div class="section-head"><div class="section-titel">Inkoop ${esc(jaar)}: wel en niet mee te rekenen</div></div>
     <div class="card card-flush"><div class="table-wrap"><table class="tbl-compact">
@@ -234,7 +234,7 @@ function inkoopSectie(jaar) {
       <tfoot><tr style="font-weight:600"><td>Totaal</td><td style="text-align:right">${fmt(t.ingekocht)}</td>
         <td style="text-align:right">${fmt(t.aftrekbaar)}</td><td style="text-align:right">${fmt(t.voorraad)}</td>
         <td style="text-align:right">${fmt(t.teVerdelen)}</td><td></td></tr></tfoot></table></div></div>
-    <p class="muted" style="font-size:12px;margin-top:var(--spacing-2)">
+    <p class="muted" style="font-size:13px;margin-top:var(--spacing-2)">
       "Nog te verdelen" is inkoop uit de bank die nog niet aan verkochte of nog aanwezige artikelen is gekoppeld. Die telt nu nergens mee als kosten.</p>`;
 }
 
@@ -354,7 +354,7 @@ export function renderPeriode() {
         <td style="text-align:right">${fmt(tot.priveSt)}</td><td style="text-align:right">${fmt(tot.priveOp)}</td>
         <td style="text-align:right">${rijen.reduce((s, r) => s + (r.km || 0), 0).toLocaleString('nl-NL')} km</td><td style="text-align:right">${tot.aantal}</td></tr></tfoot></table></div></div>`
       : '<div class="card"><p>Geen boekingen gevonden.</p></div>'}
-    <p class="muted" style="font-size:12px;margin-top:var(--spacing-2)">
+    <p class="muted" style="font-size:13px;margin-top:var(--spacing-2)">
       Resultaat (kas) = omzet min kosten min HNVI-inkoop en voorraadinkoop (AliExpress enz.) zoals die in de bank staan. Terugbetalingen op kostenrekeningen zijn van de kosten afgehaald. De kosten bevatten de kilometervergoeding (kilometers × tarief uit de pagina Kilometers). Het fiscale resultaat staat op de pagina Belasting:
       daar telt HNVI-inkoop pas mee zodra het lot is verkocht.</p>
     ${stand === 'jaar' ? '' : inkoopSectie(gekozenJaar)}`;

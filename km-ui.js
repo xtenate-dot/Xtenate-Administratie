@@ -5,12 +5,12 @@
 // winstberekening (belasting.js) of de aangifte-pdf — dat is een latere,
 // bewuste stap. Dit scherm laat alleen zien wat er zelf is ingevoerd.
 
-import { state } from './storage.js?v=20261109f';
-import { esc, fmt, ddmm } from './helpers.js?v=20261109f';
+import { state } from './storage.js?v=20261109g';
+import { esc, fmt, ddmm } from './helpers.js?v=20261109g';
 import {
   rittenVanJaar, totaalKmVanJaar, kmTarief, kmAftrek,
   vindRit, voegRitToe, werkRitBij, verwijderRit, vandaagISO
-} from './km.js?v=20261109f';
+} from './km.js?v=20261109g';
 
 const el = id => document.getElementById(id);
 
@@ -25,7 +25,7 @@ export function renderKm() {
   const aftrek = kmAftrek(jaar);
 
   const melding = tarief == null
-    ? `<div class="muted" style="font-size:12px;margin-bottom:var(--spacing-3)">
+    ? `<div class="muted" style="font-size:13px;margin-bottom:var(--spacing-3)">
          Nog geen tarief per kilometer ingesteld — vul dat in bij Beheer. Zolang dat leeg is, tonen bedragen "—".
        </div>`
     : '';

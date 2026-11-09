@@ -11,16 +11,16 @@
 //    op display:none en gaan alleen open via .open. Een eigen regel voor
 //    .modal-overlay zou dat overschrijven en elk venster tegelijk tonen.
 
-import { state, saveTxData, saveHistTxData } from './storage.js?v=20261109f';
-import { fmt } from './helpers.js?v=20261109f';
+import { state, saveTxData, saveHistTxData } from './storage.js?v=20261109g';
+import { fmt } from './helpers.js?v=20261109g';
 import {
   saveToSupabase,
   deleteFromSupabase,
   addToPendingQueue
-} from './supabase-client-v2.js?v=20261109f';
-import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking, facturenVan, isOpenstaand, factuurStatus, restBedrag, isDeelsBetaald } from './facturen.js?v=20261109f';
-import { vindRelatie, relatieNummer } from './relaties.js?v=20261109f';
-import { txVanJaar, lopendJaar } from './jaren.js?v=20261109f';
+} from './supabase-client-v2.js?v=20261109g';
+import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking, facturenVan, isOpenstaand, factuurStatus, restBedrag, isDeelsBetaald } from './facturen.js?v=20261109g';
+import { vindRelatie, relatieNummer } from './relaties.js?v=20261109g';
+import { txVanJaar, lopendJaar } from './jaren.js?v=20261109g';
 
 export const veilig = s => String(s ?? '').replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -117,7 +117,7 @@ export function tekenPartijen(o) {
 
   lijst.innerHTML = gesorteerd.map(([naam, g], i) => `
     <div class="partij-rij">
-      <span class="partij-naam" title="${veilig(naam)}">${perPartij[i].nr ? `<span class="muted" style="font-size:11px">${perPartij[i].nr}</span> ` : ''}${veilig(naam)}${perPartij[i].open.length ? ` <span class="badge badge-amber" title="Openstaande facturen">${perPartij[i].open.length} open · ${fmt(perPartij[i].bedragOpen)}</span>` : ''}</span>
+      <span class="partij-naam" title="${veilig(naam)}">${perPartij[i].nr ? `<span class="muted" style="font-size:12px">${perPartij[i].nr}</span> ` : ''}${veilig(naam)}${perPartij[i].open.length ? ` <span class="badge badge-amber" title="Openstaande facturen">${perPartij[i].open.length} open · ${fmt(perPartij[i].bedragOpen)}</span>` : ''}</span>
       <span class="partij-aantal">${g.aantal}&times;</span>
       <span class="partij-bedrag ${teken}">${plus}${fmt(g.totaal)}</span>
       <button type="button" class="btn-details" data-rij="${i}">Details</button>
