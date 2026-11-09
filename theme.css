@@ -23,33 +23,33 @@
   --purple-50: #F5F0FF;    /* zeer zacht (light mode) */
 
   /* ============ DONKERE LAGEN (DARK MODE) ============ */
-  --bg-app: #080B16;           /* hoofdachtergrond */
-  --bg-sidebar: #090E1C;       /* zijbalk */
-  --bg-topbar: #0B1020;        /* bovenste balk */
-  --bg-card: #11172A;          /* kaarten, panels */
-  --bg-card-hover: #151C32;    /* kaarten bij hover */
-  --bg-input: #0D1425;         /* invoervelden */
-  --bg-elevated: #0F1628;      /* modals, dropdowns, floating elementen */
-  --bg-subtle-layer: #0E1424;  /* tabelkoppen, subvlakken */
+  --bg-app: #0F1424;           /* hoofdachtergrond */
+  --bg-sidebar: #121830;       /* zijbalk */
+  --bg-topbar: #121830;        /* bovenste balk */
+  --bg-card: #1A2140;          /* kaarten, panels */
+  --bg-card-hover: #212A4D;    /* kaarten bij hover */
+  --bg-input: #141B33;         /* invoervelden */
+  --bg-elevated: #1F2748;      /* modals, dropdowns, floating elementen */
+  --bg-subtle-layer: #161D38;  /* tabelkoppen, subvlakken */
 
   /* Lichte lagen (LIGHT MODE) */
-  --light-bg-app: #FCFCFD;
+  --light-bg-app: #F4F5F9;
   --light-bg-sidebar: #FFFFFF;
   --light-bg-topbar: #FFFFFF;
   --light-bg-card: #FFFFFF;
   --light-bg-card-hover: #FAF8FF;
-  --light-bg-input: #F9FAFB;
+  --light-bg-input: #FFFFFF;
   --light-bg-elevated: #FFFFFF;
-  --light-bg-subtle-layer: #F9FAFB;
+  --light-bg-subtle-layer: #F3F4F8;
 
   /* ============ VISUELE EFFECTEN ============ */
   /* Achtergrond: drie zeer subtiele lagen. Los van elkaar nauwelijks
      zichtbaar; samen geven ze het canvas diepte en een paarse ondertoon.
      De derde laag zit onder het dashboard en tilt het middengebied op. */
   --app-gradient-layer: 
-    radial-gradient(1200px 620px at 12% -8%, rgba(76,29,149,0.32) 0%, transparent 62%),
-    radial-gradient(900px 520px at 96% 6%, rgba(124,58,237,0.12) 0%, transparent 58%),
-    radial-gradient(1400px 800px at 50% 42%, rgba(91,33,182,0.07) 0%, transparent 70%);
+    radial-gradient(1200px 620px at 12% -8%, rgba(76,29,149,0.20) 0%, transparent 62%),
+    radial-gradient(900px 520px at 96% 6%, rgba(124,58,237,0.08) 0%, transparent 58%),
+    radial-gradient(1400px 800px at 50% 42%, rgba(91,33,182,0.04) 0%, transparent 70%);
   --app-gradient-light: none;
 
   /* Kaarten: lichte inner glow van bovenaf plus een haarlijn bovenrand.
@@ -61,33 +61,33 @@
 
   /* ============ GRENZEN/LIJNEN ============ */
   /* Dark mode */
-  --border-default: rgba(255,255,255,0.06);
-  --border-soft: rgba(255,255,255,0.04);
-  --border-strong: rgba(255,255,255,0.12);
-  --border-purple: rgba(139,92,246,0.16);
-  --border-purple-strong: rgba(139,92,246,0.30);
+  --border-default: rgba(255,255,255,0.10);
+  --border-soft: rgba(255,255,255,0.06);
+  --border-strong: rgba(255,255,255,0.18);
+  --border-purple: rgba(139,92,246,0.26);
+  --border-purple-strong: rgba(139,92,246,0.45);
 
   /* Light mode */
-  --light-border-default: #E5E7EB;
-  --light-border-soft: #F0F1F3;
-  --light-border-strong: #D6D9DF;
+  --light-border-default: #DDE1E9;
+  --light-border-soft: #ECEEF3;
+  --light-border-strong: #C9CED8;
   --light-border-purple: #DDD2FB;
   --light-border-purple-strong: #C4B5FD;
 
   /* ============ TYPOGRAFIE: PRIMAIR ============ */
   /* Dark mode */
-  --text-primary: #F4F5FA;
-  --text-secondary: #A9AECB;
-  --text-muted: #6E7495;       /* BELANGRIJK: muted ≠ secondary */
-  --text-subtle: #4A5568;
+  --text-primary: #F4F6FC;
+  --text-secondary: #C0C5DE;
+  --text-muted: #9BA1C0;       /* BELANGRIJK: muted ≠ secondary */
+  --text-subtle: #6B7392;
   --text-lavender: #C4B5FD;
 
   /* Light mode */
-  --light-text-primary: #1F2937;
-  --light-text-secondary: #6B7280;
-  --light-text-muted: #9CA3AF;
-  --light-text-subtle: #D1D5DB;
-  --light-text-lavender: #7C3AED;
+  --light-text-primary: #111827;
+  --light-text-secondary: #4B5563;
+  --light-text-muted: #636B7A;
+  --light-text-subtle: #B8BEC9;
+  --light-text-lavender: #6D28D9;
 
   /* ============ SEMANTISCHE KLEUREN: FINANCIEEL EN STATUS ============ */
   /* Succesvol / Positief (Groen) */
@@ -181,9 +181,9 @@
      een nieuwe rekening opvalt als 'nog niet ingedeeld' in plaats van dat hij
      de kleur van een bestaande categorie leent. */
   --cat-fallback: #6E7495;
-  --chart-background: #101629;
-  --chart-grid: rgba(255,255,255,0.05);
-  --chart-axis: #6E7495;
+  --chart-background: #1A2140;
+  --chart-grid: rgba(255,255,255,0.08);
+  --chart-axis: #9BA1C0;
 
   /* Light mode */
   --light-chart-revenue: #7C3AED;
@@ -219,8 +219,8 @@
   --light-cat-20: #94A90F;
   --light-cat-fallback: #9CA3AF;
   --light-chart-background: #FFFFFF;
-  --light-chart-grid: #EEF0F3;
-  --light-chart-axis: #9CA3AF;
+  --light-chart-grid: #E6E9EF;
+  --light-chart-axis: #636B7A;
 
   /* ============ SCHADUW & GLOED ============ */
   /* Dark mode */
@@ -254,7 +254,7 @@
 
   /* Light mode */
   --light-shadow-subtle: 0 1px 2px rgba(16,24,40,0.04);
-  --light-shadow-sm: 0 1px 3px rgba(16,24,40,0.06);
+  --light-shadow-sm: 0 1px 3px rgba(16,24,40,0.10), 0 1px 2px rgba(16,24,40,0.06);
   --light-shadow-card: 0 4px 12px -2px rgba(16,24,40,0.08);
   --light-shadow-lg: 0 16px 40px -12px rgba(16,24,40,0.16);
   --light-shadow-purple: 0 0 20px rgba(124,58,237,0.06);
