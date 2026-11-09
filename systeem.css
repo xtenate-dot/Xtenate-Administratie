@@ -1,0 +1,141 @@
+/* systeem.css — de ontwerpregels van Xtenate Administratie.
+ *
+ * Eén plek voor hoe paginakoppen, knoppen, invoervelden, tabellen en vensters
+ * eruitzien. Dit bestand laadt NA components.css, zodat deze regels voorgaan
+ * en bestaande pagina's vanzelf dezelfde uitstraling krijgen. Nieuwe pagina's
+ * hoeven alleen deze klassen te gebruiken:
+ *
+ *   .page-head / .page-title / .page-sub   paginakop
+ *   .page-acties                           rij met knoppen onder de kop
+ *   .btn  .btn-primary  .btn-danger  .btn-ghost  .btn-sm   knoppen
+ *   .btn-details                           kleine knop in een tabelrij
+ *   .werkbalk                              filters en zoekveld in één rij
+ *   table  th  td  .td-num  tfoot          tabellen
+ *   .modal  .modal-kop  .modal-actions     vensters
+ *
+ * Er staat hier alleen vormgeving in; geen gedrag en geen berekeningen.
+ */
+
+:root {
+  /* Lettergroottes: één schaal voor de hele app. */
+  --fs-klein: 12px;      /* kolomkoppen, hulptekst */
+  --fs-basis: 13.5px;    /* tabellen en formulieren */
+  --fs-groot: 16px;      /* kopjes van blokken */
+  --fs-titel: 24px;      /* paginatitel */
+
+  /* Hoogtes van bedieningselementen: knoppen en velden lopen gelijk. */
+  --h-veld: 34px;
+  --h-veld-klein: 30px;
+  --h-rij: 44px;         /* minimale tabelrij */
+}
+
+/* ---------- Paginakop: duidelijke trap titel → uitleg → inhoud ---------- */
+.page-head {
+  align-items: flex-end;
+  padding-bottom: var(--spacing-4);
+  margin-bottom: var(--spacing-5);
+  border-bottom: 1px solid var(--border-default);
+}
+.page-title {
+  font-size: var(--fs-titel); font-weight: 650;
+  letter-spacing: -0.5px; line-height: 1.2;
+}
+.page-sub {
+  font-size: 13.5px; line-height: 1.45;
+  color: var(--text-secondary); opacity: 1;
+  margin-top: 4px;
+}
+
+/* ---------- Bedieningselementen: één hoogte ---------- */
+select,
+input[type=text], input[type=number], input[type=date],
+input[type=search], input[type=password], input[type=email] {
+  min-height: var(--h-veld);
+  font-size: var(--fs-basis);
+}
+.btn { min-height: var(--h-veld); justify-content: center; }
+.btn-sm { min-height: var(--h-veld-klein); }
+.btn-details {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 28px; font-weight: 500;
+}
+
+/* Werkbalk: zoekveld en filters op één lijn met gelijke tussenruimte. */
+.page-controls, .werkbalk {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: var(--spacing-2) var(--spacing-3);
+  margin-bottom: var(--spacing-4);
+}
+
+/* ---------- Tabellen ---------- */
+table { font-size: var(--fs-basis); }
+th {
+  font-size: var(--fs-klein); font-weight: 600;
+  letter-spacing: 0.5px; color: var(--text-muted);
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-strong);
+}
+td { font-variant-numeric: tabular-nums; }
+tbody td { height: var(--h-rij); }
+tbody tr:last-child td { border-bottom: none; }
+th:first-child, td:first-child { padding-left: 18px; }
+th:last-child, td:last-child { padding-right: 18px; }
+th.td-num, th[style*="text-align:right"], th[style*="text-align: right"] { text-align: right; }
+
+/* Bedragen: positief en negatief direct herkenbaar, zonder te schreeuwen. */
+td.pos, td .pos, td.neg, td .neg { font-weight: 500; }
+
+/* Totaalregel onderaan een tabel. */
+tfoot td, tr.totaal td {
+  font-weight: 650;
+  background: var(--bg-subtle-layer);
+  border-top: 1px solid var(--border-strong);
+  border-bottom: none;
+}
+
+/* Op ruime schermen mag een tabel meer rijen tonen voordat hij scrolt. */
+@media (min-width: 901px) {
+  .table-scroll { max-height: calc(100vh - 300px); min-height: 360px; }
+}
+
+/* Een tabel in een eigen blok krijgt een nette omranding. */
+.table-wrap {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-base);
+  background: var(--bg-card);
+}
+.card .table-wrap, .card > table { border: none; border-radius: 0; background: none; }
+.table-wrap table th:first-child { border-top-left-radius: var(--radius-base); }
+.table-wrap table th:last-child { border-top-right-radius: var(--radius-base); }
+
+/* ---------- Vensters ---------- */
+.modal { padding: var(--spacing-5) var(--spacing-5) 0; }
+.modal > div:first-child[style*="space-between"] {
+  padding-bottom: var(--spacing-3);
+  margin-bottom: var(--spacing-4) !important;
+  border-bottom: 1px solid var(--border-default);
+}
+.modal h3 { font-size: var(--fs-groot); margin-bottom: var(--spacing-4); }
+.modal-sub { color: var(--text-secondary); opacity: 1; }
+
+/* Knoppen blijven onderin beeld bij lange formulieren; Verwijderen links,
+   Annuleren en Opslaan rechts. */
+.modal-actions {
+  position: sticky; bottom: 0; z-index: 3;
+  margin: var(--spacing-5) calc(-1 * var(--spacing-5)) 0;
+  padding: var(--spacing-3) var(--spacing-5);
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border-default);
+}
+.modal-actions .btn-danger { order: -1; margin-right: auto; }
+.modal-actions .btn-primary { order: 2; }
+
+/* Gegroepeerde invoer binnen een venster. */
+.form-sectie {
+  grid-column: 1 / -1;
+  font-size: var(--fs-klein); font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.8px; color: var(--text-muted);
+  padding-top: var(--spacing-2);
+  border-top: 1px solid var(--border-soft);
+}
+.form-sectie:first-child { border-top: none; padding-top: 0; }

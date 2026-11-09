@@ -8,9 +8,9 @@
 // De koppeling loopt via het boekingnummer. Een back-up als bestand staat in
 // Beheer: de fiscus wil de stukken zeven jaar zien.
 
-import { state } from './storage.js?v=20261109i';
-import { esc } from './helpers.js?v=20261109i';
-import { getClient, heeftClient } from './supabase.js?v=20261109i';
+import { state } from './storage.js?v=20261109j';
+import { esc } from './helpers.js?v=20261109j';
+import { getClient, heeftClient } from './supabase.js?v=20261109j';
 
 const DB_NAAM = 'xtenate_bonnetjes';
 const MAX_PDF = 8 * 1024 * 1024;
