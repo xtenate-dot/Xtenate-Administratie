@@ -217,3 +217,15 @@ button.vtab.active { border-bottom-color: var(--accent-primary); }
   text-transform: uppercase; color: var(--text-muted);
 }
 .metric .sub { color: var(--text-muted); }
+
+/* Knoppen zonder eigen klasse in een paginakop krijgen de standaard knopstijl. */
+.page-head button:not([class]) {
+  font: inherit; font-size: 13px; font-weight: 500;
+  min-height: var(--h-veld); padding: 7px 13px;
+  border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  background: var(--bg-input); color: var(--text-primary); cursor: pointer;
+}
+.page-head button:not([class]):hover { background: var(--bg-card-hover); border-color: var(--border-purple-strong); }
+
+/* Periodes ("jan 2026") breken niet over twee regels. */
+#p-periode td:first-child, #p-periode th:first-child { white-space: nowrap; }

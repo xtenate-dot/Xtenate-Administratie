@@ -35,7 +35,16 @@ export const PRIJS_COVER = 31.95;
 
 export const BEGINSALDO_2026 = 183.15;
 
-export const fmt = n => '€\u202f' + Number(n).toLocaleString('nl-NL', {minimumFractionDigits:2, maximumFractionDigits:2});
+// Negatieve bedragen krijgen het minteken vóór het eurosymbool (−€ 360,40), net
+// als de bedragen in de tabellen. Een bedrag dat op centen afgerond nul wordt,
+// toont als gewone nul en dus nooit als "−€ 0,00".
+const NF2 = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
+export const fmt = n => {
+  const v = Number(n);
+  if (!Number.isFinite(v)) return '€\u202f' + v.toLocaleString('nl-NL', NF2);
+  const r = Math.round(v * 100) / 100;
+  return (r < 0 ? '\u2212' : '') + '€\u202f' + Math.abs(r).toLocaleString('nl-NL', NF2);
+};
 
 export const ddmm = d => d.slice(8,10) + '-' + d.slice(5,7);
 

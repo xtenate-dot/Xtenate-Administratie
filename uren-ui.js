@@ -2,13 +2,13 @@
 // ervoor staat ten opzichte van het urencriterium van 1.225 uur per jaar.
 // Het is alleen een logboek: het raakt boekingen en belasting niet.
 
-import { state } from './storage.js?v=20261109o';
-import { esc, ddmm } from './helpers.js?v=20261109o';
-import { lopendJaar, vandaagIso } from './jaren.js?v=20261109o';
+import { state } from './storage.js?v=20261109p';
+import { esc, ddmm } from './helpers.js?v=20261109p';
+import { lopendJaar, vandaagIso } from './jaren.js?v=20261109p';
 import {
   CATEGORIEEN, URENCRITERIUM, leesUren, voegUurToe, werkUurBij, vindUur, verwijderUur,
   urenVanJaar, urenOverzicht, criteriumStand, timerStart, timerStand, timerWis
-} from './uren.js?v=20261109o';
+} from './uren.js?v=20261109p';
 
 const el = id => document.getElementById(id);
 const MAANDEN = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];

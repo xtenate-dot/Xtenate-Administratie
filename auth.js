@@ -6,9 +6,9 @@
 // er nog steeds bij. Echte afscherming ontstaat pas wanneer de gegevens in
 // Supabase staan en Row Level Security ze bewaakt.
 
-import { getClient, leesbareFout, testVerbinding } from './supabase.js?v=20261109o';
-import { configProbleem, isGeconfigureerd } from './config.js?v=20261109o';
-import { loadDataHybrid, state } from './storage.js?v=20261109o';
+import { getClient, leesbareFout, testVerbinding } from './supabase.js?v=20261109p';
+import { configProbleem, isGeconfigureerd } from './config.js?v=20261109p';
+import { loadDataHybrid, state } from './storage.js?v=20261109p';
 
 const el = id => document.getElementById(id);
 
