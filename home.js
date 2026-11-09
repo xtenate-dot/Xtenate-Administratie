@@ -8,16 +8,16 @@
 // nodig is. Alle gebruikte functies zijn alleen-lezend; deze module wijzigt
 // nooit data.
 
-import { draaiControles } from './controle.js?v=20261109e';
-import { factuurSamenvatting } from './facturen.js?v=20261109e';
-import { esc, fmt } from './helpers.js?v=20261109e';
-import { standaardMinVoorraad, state } from './storage.js?v=20261109e';
-import { telInbox } from './bankinbox.js?v=20261109e';
-import { onverwerkteInkoop } from './artikelregels.js?v=20261109e';
-import { berekenJaarMetrics, berekenBanksaldo, vorigJaarMetrics, kpi, kpiTrend } from './dashboard.js?v=20261109e';
-import { txVanJaar, lopendJaar } from './jaren.js?v=20261109e';
-import { charts, cssVar, dc, baseOpts, lijn } from './charts.js?v=20261109e';
-import { fmtKort, isInkomst, isOmzet } from './helpers.js?v=20261109e';
+import { draaiControles } from './controle.js?v=20261109f';
+import { factuurSamenvatting } from './facturen.js?v=20261109f';
+import { esc, fmt } from './helpers.js?v=20261109f';
+import { standaardMinVoorraad, state } from './storage.js?v=20261109f';
+import { telInbox } from './bankinbox.js?v=20261109f';
+import { onverwerkteInkoop } from './artikelregels.js?v=20261109f';
+import { berekenJaarMetrics, berekenBanksaldo, vorigJaarMetrics, kpi, kpiTrend } from './dashboard.js?v=20261109f';
+import { txVanJaar, lopendJaar } from './jaren.js?v=20261109f';
+import { charts, cssVar, dc, baseOpts, lijn } from './charts.js?v=20261109f';
+import { fmtKort, isInkomst, isOmzet } from './helpers.js?v=20261109f';
 
 const el = id => document.getElementById(id);
 
@@ -242,7 +242,7 @@ export function renderPortaal() {
     ${kpiRij(jaar)}
     <div class="card" id="home-todo" style="margin-bottom:16px;padding:14px 18px">
       <div style="font-weight:600;margin-bottom:6px">Nog te doen</div>
-      <ul id="home-todo-lijst" style="margin:0;padding-left:18px;line-height:1.9">${taken.join('')}</ul>
+      <ul id="home-todo-lijst" style="margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:8px">${taken.join('')}</ul>
       <div id="home-todo-leeg" class="muted" style="font-size:13px;display:${taken.length ? 'none' : 'block'}">Alles op orde.</div>
     </div>
     <div class="card home-jaren">
