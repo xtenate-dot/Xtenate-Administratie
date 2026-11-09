@@ -1,6 +1,6 @@
 // zelftest-ui.js — het venster rond de Supabase-zelftest.
 
-import { draaiZelftest } from './zelftest.js?v=20261109g';
+import { draaiZelftest } from './zelftest.js?v=20261109h';
 
 const el = id => document.getElementById(id);
 let bezig = false;

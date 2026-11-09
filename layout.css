@@ -173,7 +173,7 @@ body.nav-collapsed .main { margin-left: var(--sidebar-width-collapsed); }
 /* ============================================================
    PAGINARUIMTE
    ============================================================ */
-.page-wrap { padding: var(--spacing-6) var(--spacing-5) var(--spacing-7); max-width: var(--content-max-width); }
+.page-wrap { padding: var(--spacing-6) var(--spacing-6) var(--spacing-7); max-width: var(--content-max-width); }
 
 .page { display: none; }
 .page.active { display: block; }

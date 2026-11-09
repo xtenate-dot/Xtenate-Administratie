@@ -157,7 +157,7 @@
   border: 1px solid var(--border-default);
   border-radius: var(--radius-base);
   padding: var(--spacing-5);
-  margin-bottom: var(--spacing-3);
+  margin-bottom: var(--spacing-4);
   box-shadow: var(--shadow-card), var(--card-topline);
   transition: border-color var(--duration-base) var(--easing-standard),
               box-shadow var(--duration-base) var(--easing-standard),
@@ -278,8 +278,8 @@ th {
   font-weight: 600;
   font-size: 11.5px;
   text-transform: uppercase;
-  letter-spacing: 0.7px;
-  padding: 10px 12px;
+  letter-spacing: 0.6px;
+  padding: 11px 14px;
   border-bottom: 1px solid var(--border-default);
   white-space: nowrap;
   position: sticky; top: 0; z-index: 2;
@@ -287,7 +287,7 @@ th {
 .table-scroll th { box-shadow: inset 0 -1px 0 var(--border-default); }
 
 td {
-  padding: 10px 12px;
+  padding: 12px 14px;
   border-bottom: 1px solid var(--border-default);
   vertical-align: middle;
   color: var(--text-primary);
