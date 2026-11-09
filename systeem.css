@@ -241,3 +241,36 @@ button.vtab.active { border-bottom-color: var(--accent-primary); }
 
 /* Het artikelvenster heeft veel velden: breder, zodat de groepen rustig staan. */
 #modal-cover .modal { width: 660px; }
+
+/* ---------- Lange lijsten (Voorraad, Artikelvoorraad, HNVI, Bank) ----------
+   Op een groot scherm scrolt de lijst in een eigen venster met vaste
+   kolomkoppen, zodat je bij 50+ regels altijd ziet welke kolom wat is. */
+@media (min-width: 901px) {
+  #p-voorraad .table-wrap, #p-rendement .table-wrap,
+  #p-hnvi .table-wrap, #p-bank .table-wrap {
+    max-height: calc(100vh - 150px);
+    overflow: auto;
+  }
+  #p-voorraad th, #p-rendement th, #p-hnvi th, #p-bank th {
+    position: sticky; top: 0; z-index: 2;
+    background: var(--bg-card);
+    box-shadow: 0 1px 0 var(--border-strong);
+  }
+}
+
+/* Dichtere rijen: veel regels, dus iets minder lucht per regel (nog altijd
+   ruim boven de 36 px, zodat klikken en lezen prettig blijft). */
+#p-voorraad tbody td, #p-rendement tbody td, #p-hnvi tbody td {
+  height: 38px; padding-top: 6px; padding-bottom: 6px;
+}
+
+/* Waarden die bij bijna elk artikel hetzelfde zijn, vallen terug naar de
+   achtergrond; wat afwijkt valt zo meteen op. */
+#p-voorraad td[data-label="Minimum"], #p-rendement td[data-label="Minimum"] {
+  color: var(--text-muted); font-size: var(--fs-klein);
+}
+
+/* Minder verticale ruimte boven de lijst. */
+#p-voorraad .kpi-grid, #p-rendement .kpi-grid { margin-bottom: var(--spacing-3); }
+#p-voorraad .kpi-grid > .kpi, #p-rendement .kpi-grid > .kpi { padding-top: var(--spacing-2); padding-bottom: var(--spacing-2); }
+#p-voorraad .toolbar, #p-rendement .toolbar { margin-bottom: var(--spacing-2); }
