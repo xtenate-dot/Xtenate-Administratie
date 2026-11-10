@@ -19,7 +19,7 @@ import {
   saveAppData,
   loadAppData,
   laatsteAppDataFout
-} from './supabase-client-v2.js?v=20261110k';
+} from './supabase-client-v2.js?v=20261110l';
 
 /**
  * Stuurt een los lijstje (groepen, facturen, tellers) naar de cloud zonder
@@ -121,6 +121,7 @@ function appDataWaarde(sleutel) {
   if (sleutel === 'hnvi_extra') return state.HNVI_EXTRA;
   if (sleutel === 'relatie_extra') return state.RELATIE_EXTRA;
   if (sleutel === 'kostenplaats') return state.KOSTENPLAATS;
+  if (sleutel === 'bol_maandcijfers') return state.BOL_MAAND;
   if (sleutel === 'vergrendeld') return state.VERGRENDELD;
   if (sleutel === 'tellers') return { tx: state.nxtTx, cover: state.nxtCover, hnvi: state.nxtHnvi };
   return undefined;
@@ -490,6 +491,13 @@ export function bewaarFactuurmakerInstellingen(instellingen) {
 // ook op andere apparaten het oude waarde overschrijft.
 state.RELATIE_EXTRA = load('xtenate_relatie_extra', {});
 state.KOSTENPLAATS = load('xtenate_kostenplaats', {});
+// Maandcijfers uit de Bol-factuurspecificaties (per factuurnummer); alleen om te tonen, los van boekingen.
+state.BOL_MAAND = load('xtenate_bol_maand', {});
+export function bewaarBolMaand(lijst) {
+  state.BOL_MAAND = { ...state.BOL_MAAND, ...lijst };
+  save('xtenate_bol_maand', state.BOL_MAAND);
+  duwAppData('bol_maandcijfers', state.BOL_MAAND);
+}
 export function bewaarRelatieExtra(relatieId, velden) {
   state.RELATIE_EXTRA[relatieId] = { ...(state.RELATIE_EXTRA[relatieId] || {}), ...velden };
   save('xtenate_relatie_extra', state.RELATIE_EXTRA);
@@ -997,6 +1005,10 @@ export async function loadDataHybrid() {
           for (const [k, v] of Object.entries(state.RELATIE_EXTRA)) samen[k] = { ...(samen[k] || {}), ...v };
           state.RELATIE_EXTRA = samen;
           save('xtenate_relatie_extra', state.RELATIE_EXTRA);
+        }
+        if (extra.bol_maandcijfers && typeof extra.bol_maandcijfers === 'object') {
+          state.BOL_MAAND = { ...extra.bol_maandcijfers, ...state.BOL_MAAND };
+          save('xtenate_bol_maand', state.BOL_MAAND);
         }
         if (extra.kostenplaats && typeof extra.kostenplaats === 'object') {
           state.KOSTENPLAATS = { ...extra.kostenplaats, ...state.KOSTENPLAATS };
