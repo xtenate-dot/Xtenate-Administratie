@@ -1,6 +1,14 @@
-# Openstaande wensen en afspraken (bijgewerkt 23-10-2026)
+# Openstaande wensen en afspraken (bijgewerkt 10-11-2026)
 
 Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
+
+## Gedaan op 9/10-11-2026 (live, v20261110a)
+- Visuele herinrichting (alleen uiterlijk, geen berekeningen): schuivende menupil + paginaintro, Home met KPI-tegels/jaarvergelijking, kleuren/contrast, lettergrootte, systeem.css, samenvattingsbalken, sticky tabelkoppen, modals in secties, Beheer "Geavanceerd" inklapbaar.
+- "Winst per artikel" uit het menu (pagina blijft bereikbaar via knop op Voorraad); "Artikelvoorraad" heet nu "Veilingvoorraad".
+- Knop "Exporteer naar Excel" op Bank (huidige maand/filters) en Dagboeken (huidig dagboek + periode) via lijst-export.js. Volledige jaarexport blijft onder Beheer > Exporteer Excel en Per periode.
+
+## Open: bankSaldo-verschil EUR 9,36
+App en Excel/bank wijken constant EUR 9,36 af vanaf eind oktober 2026. Zoek de oorzaak in oktober of eerder (ontbrekende/dubbele/verkeerd getekende boeking; let op 2 okt PostNL annulering +9,50). Pas niets aan zonder ja van de gebruiker. Aanpak: Bank-export per maand vergelijken met de Excel.
 
 ## Gedaan op 23-10-2026 (nog door de gebruiker te testen)
 - HNVI: aantal per lot + verkochte stuks + "opbrengst staat al in de bank" (hnvilot.js, HNVI_EXTRA in app_data).
