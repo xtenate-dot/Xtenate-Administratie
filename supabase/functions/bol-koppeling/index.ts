@@ -204,13 +204,19 @@ async function verwerkFacturen(gekozen: ReturnType<typeof accounts>, van: string
         if (rijen.length < 50) break;
       }
       if (!compleet) continue;
+      // Postgres (jsonb) weigert het teken \u0000 in tekst; haal dat eruit voor het opslaan.
+      const schoon = (x: unknown) => JSON.parse(JSON.stringify(x).replace(/\\u0000/g, ""));
+      const datum = String(f?.issueDate ?? "").slice(0, 10);
       const { error } = await supabase.from("bol_facturen").upsert({
         user_id: userId, account: acc.nummer, invoice_id: id,
-        uitgegeven: f?.issueDate ? String(f.issueDate).slice(0, 10) : null,
+        uitgegeven: /^\d{4}-\d{2}-\d{2}$/.test(datum) ? datum : null,
         type: f?.invoiceType ? String(f.invoiceType) : null,
-        kop: f, specificatie: paginas, opgehaald_op: new Date().toISOString(),
+        kop: schoon(f), specificatie: schoon(paginas), opgehaald_op: new Date().toISOString(),
       }, { onConflict: "user_id,account,invoice_id" });
-      if (error) return Response.json({ ok: false, fout: "Opslaan van de facturen is mislukt (bestaat de tabel bol_facturen al?)." }, { status: 500 });
+      if (error) {
+        const detail = `${error.code ?? ""} ${error.message ?? ""}`.replace(/\s+/g, " ").slice(0, 220);
+        return Response.json({ ok: false, fout: `Opslaan van factuur ${id} is mislukt: ${detail} (grootte ${JSON.stringify(paginas).length} tekens, ${paginas.length} pagina's).` }, { status: 500 });
+      }
       facturen += 1;
     }
   }
