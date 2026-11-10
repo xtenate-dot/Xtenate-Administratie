@@ -45,6 +45,9 @@ App en Excel/bank wijken constant EUR 9,36 af vanaf eind oktober 2026. Zoek de o
 - Kostenplaats/kostendrager: vrij label per boeking in het boekingsvenster (app_data 'kostenplaats', sleutel = boeking-id; boekingen-tabel en sync ongewijzigd), badge in de banklijst, kolom in Excel-export. Nog niet: filter of overzicht per kostenplaats.
 - Niet getest in de live app.
 
+## Gedaan 10-11-2026 (v20261110e): partijen samenvoegen en vindbaarheid
+- Klanten/Leveranciers groeperen nu op één naam per partij: via gekoppelde relatie, alias of hoofdletterongevoelig. Knop 'Gegevens' per rij en 'Gegevens invullen of wijzigen' in Details. Blok 'Samenvoegen': andere schrijfwijze (bijv. BOLCOM BV bij Bol.com) wordt alias van de relatie; boekingen zelf blijven ongewijzigd. Niet getest in de live app.
+
 ## Wensen van de gebruiker (nog te doen)
 0a. **Bank-inbox: meerdere regels tegelijk verwijderen (10-11-2026).** Regels in de bank-inbox aan kunnen vinken (met 'alles selecteren') en in één keer verwijderen. Doel: de inbox snel op 0 krijgen.
 0b. **Bank-inbox: filter 'alleen openstaande'.** Een filter dat alleen de nog niet verwerkte/openstaande bedragen toont, zodat je bij correcties niet lang hoeft te scrollen.

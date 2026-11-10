@@ -1086,7 +1086,7 @@ body.nav-collapsed .account-blok .btn { justify-content: center; }
 /* Vast raster, geen space-between: anders zwabberen de bedragen per regel. */
 .partij-rij {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 56px 128px 84px;
+  grid-template-columns: minmax(0, 1fr) 56px 128px 176px;
   align-items: center; gap: var(--spacing-3);
   padding: 10px 16px; border-top: 1px solid var(--border-default);
 }
@@ -1105,6 +1105,7 @@ body.nav-collapsed .account-blok .btn { justify-content: center; }
 }
 .leeg { padding: 22px 16px; text-align: center; color: var(--text-secondary); font-size: 14px; }
 
+.partij-acties { display: flex; gap: 6px; justify-self: end; }
 .btn-details {
   justify-self: end;
   padding: 5px 12px; font: inherit; font-size: 13px; font-weight: 500;
@@ -1119,7 +1120,8 @@ body.nav-collapsed .account-blok .btn { justify-content: center; }
 input[type="checkbox"], input[type="radio"] { accent-color: var(--accent-primary); }
 
 @media (max-width: 640px) {
-  .partij-rij { grid-template-columns: minmax(0,1fr) 44px 104px 72px; gap: 8px; padding: 10px 12px; }
+  .partij-rij { grid-template-columns: minmax(0,1fr) 40px 92px 132px; gap: 6px; padding: 10px 12px; }
+  .partij-acties .btn-details { padding: 5px 8px; font-size: 12px; }
   .partij-bedrag { font-size: 13px; }
 }
 

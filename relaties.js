@@ -10,12 +10,12 @@
 // samenvoegen op basis van relatieSleutel() bleek op de echte data lang
 // niet betrouwbaar genoeg (114 rauwe schrijfwijzen → maar 108 sleutels).
 
-import { state, saveFacturen, bewaarRelatieExtra } from './storage.js?v=20261110d';
-import { getClient } from './supabase.js?v=20261110d';
+import { state, saveFacturen, bewaarRelatieExtra } from './storage.js?v=20261110e';
+import { getClient } from './supabase.js?v=20261110e';
 import {
   loadRelatiesFromSupabase, maakRelatieInSupabase,
   werkRelatieBijInSupabase, verwijderRelatieInSupabase
-} from './supabase-client-v2.js?v=20261110d';
+} from './supabase-client-v2.js?v=20261110e';
 
 export function vindRelatie(id) {
   return state.RELATIES.find(r => r.id === id) || null;
@@ -178,4 +178,15 @@ export async function bewaarRelatieGegevens(id, g = {}) {
     email: t(g.email), telefoon: t(g.telefoon), iban: t(g.iban), termijn: t(g.termijn), notitie: t(g.notitie)
   });
   return true;
+}
+
+/** Voegt een andere schrijfwijze toe als alias van een relatie (voor partijen zonder eigen relatie). */
+export async function voegNaamToeAlsAlias(relatieId, naam) {
+  const r = vindRelatie(relatieId), n = String(naam || '').trim();
+  if (!r || !n) return false;
+  if (n.toLowerCase() === r.naam.toLowerCase() || (r.aliassen || []).some(a => a.toLowerCase() === n.toLowerCase())) return true;
+  const aliassen = [...(r.aliassen || []), n];
+  const ok = await werkRelatieBijInSupabase(relatieId, { aliassen });
+  if (ok) r.aliassen = aliassen;
+  return ok;
 }

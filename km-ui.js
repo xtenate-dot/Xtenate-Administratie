@@ -5,12 +5,12 @@
 // winstberekening (belasting.js) of de aangifte-pdf — dat is een latere,
 // bewuste stap. Dit scherm laat alleen zien wat er zelf is ingevoerd.
 
-import { state } from './storage.js?v=20261110d';
-import { esc, fmt, ddmm } from './helpers.js?v=20261110d';
+import { state } from './storage.js?v=20261110e';
+import { esc, fmt, ddmm } from './helpers.js?v=20261110e';
 import {
   rittenVanJaar, totaalKmVanJaar, kmTarief, kmAftrek,
   vindRit, voegRitToe, werkRitBij, verwijderRit, vandaagISO
-} from './km.js?v=20261110d';
+} from './km.js?v=20261110e';
 
 const el = id => document.getElementById(id);
 

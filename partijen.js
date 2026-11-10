@@ -11,16 +11,17 @@
 //    op display:none en gaan alleen open via .open. Een eigen regel voor
 //    .modal-overlay zou dat overschrijven en elk venster tegelijk tonen.
 
-import { state, saveTxData, saveHistTxData } from './storage.js?v=20261110d';
-import { fmt } from './helpers.js?v=20261110d';
+import { state, saveTxData, saveHistTxData } from './storage.js?v=20261110e';
+import { fmt } from './helpers.js?v=20261110e';
 import {
   saveToSupabase,
   deleteFromSupabase,
   addToPendingQueue
-} from './supabase-client-v2.js?v=20261110d';
-import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking, facturenVan, isOpenstaand, factuurStatus, restBedrag, isDeelsBetaald } from './facturen.js?v=20261110d';
-import { vindRelatie, relatieNummer, vindRelatieOpNaam, zorgRelatieVoorNaam, relatieExtra, bewaarRelatieGegevens, zorgRelatienummer } from './relaties.js?v=20261110d';
-import { txVanJaar, lopendJaar } from './jaren.js?v=20261110d';
+} from './supabase-client-v2.js?v=20261110e';
+import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking, facturenVan, isOpenstaand, factuurStatus, restBedrag, isDeelsBetaald } from './facturen.js?v=20261110e';
+import { voegRelatiesSamen, voegNaamToeAlsAlias } from './relaties.js?v=20261110e';
+import { vindRelatie, relatieNummer, vindRelatieOpNaam, zorgRelatieVoorNaam, relatieExtra, bewaarRelatieGegevens, zorgRelatienummer } from './relaties.js?v=20261110e';
+import { txVanJaar, lopendJaar } from './jaren.js?v=20261110e';
 
 export const veilig = s => String(s ?? '').replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -33,7 +34,21 @@ export function boekingenVoorJaar(jaar) {
   return txVanJaar(jaar);
 }
 
-const partijNaamVan = b => (b.naam || '').trim() || '(geen naam)';
+const norm0 = t => String(t || '').trim().toLowerCase();
+const eersteSpelling = new Map();   // genormaliseerde naam -> eerst geziene schrijfwijze (voor namen zonder relatie)
+
+/** Eén naam voor één partij: via de gekoppelde relatie, via een alias van een relatie, of hoofdletterongevoelig. */
+export function canoniekeNaam(naam, relatieId) {
+  const r = (relatieId && vindRelatie(relatieId)) || vindRelatieOpNaam(naam);
+  if (r) return r.naam;
+  const t = String(naam || '').trim();
+  if (!t) return '(geen naam)';
+  const k = norm0(t);
+  if (!eersteSpelling.has(k)) eersteSpelling.set(k, t);
+  return eersteSpelling.get(k);
+}
+const partijNaamVan = b => canoniekeNaam(b.naam, b.relatieId);
+let lijstNamen = [];   // namen in de getoonde lijst, als suggestie bij samenvoegen
 
 // ------------------------------------------------------------ facturen per partij
 
@@ -45,7 +60,7 @@ function facturenVanPartij(naam, boekingen, o) {
   const relIds = new Set(boekingen.map(b => b.relatieId).filter(Boolean));
   return facturenVan(factuurSoortVan(o)).filter(f => {
     if (f.relatieId && relIds.has(f.relatieId)) return true;
-    if (norm(f.relatie) === norm(naam)) return true;
+    if (norm(f.relatie) === norm(naam) || canoniekeNaam(f.relatie, f.relatieId) === naam) return true;
     const r = f.relatieId ? vindRelatie(f.relatieId) : null;
     return !!(r && norm(r.naam) === norm(naam));
   });
@@ -107,11 +122,12 @@ export function tekenPartijen(o) {
 
   // Wie nog een open factuur heeft maar dit jaar geen boekingen, hoort er toch bij te staan.
   for (const f of openF) {
-    const naam = (f.relatie || '').trim() || '(geen naam)';
+    const naam = canoniekeNaam(f.relatie, f.relatieId);
     if (![...groepen.keys()].some(k => norm(k) === norm(naam))) groepen.set(naam, { totaal: 0, aantal: 0 });
   }
 
   const gesorteerd = [...groepen.entries()].sort((a, b) => b[1].totaal - a[1].totaal);
+  lijstNamen = gesorteerd.map(([n]) => n);
   const teken = o.soort === 'inkomst' ? 'pos' : 'neg';
   const plus = o.soort === 'inkomst' ? '+&nbsp;' : '';
 
@@ -151,14 +167,15 @@ export function tekenPartijen(o) {
       <span class="partij-naam" title="${veilig(naam)}">${perPartij[i].nr ? `<span class="muted" style="font-size:12px">${perPartij[i].nr}</span> ` : ''}${veilig(naam)}${perPartij[i].open.length ? ` <span class="badge badge-amber" title="Openstaande facturen">${perPartij[i].open.length} open · ${fmt(perPartij[i].bedragOpen)}</span>` : ''}</span>
       <span class="partij-aantal">${g.aantal}&times;</span>
       <span class="partij-bedrag ${teken}">${plus}${fmt(g.totaal)}</span>
-      <button type="button" class="btn-details" data-rij="${i}">Details</button>
+      <span class="partij-acties"><button type="button" class="btn-details" data-gegevens="${i}" title="Nummer, KVK, BTW, contact en samenvoegen">Gegevens</button><button type="button" class="btn-details" data-rij="${i}">Details</button></span>
     </div>`).join('');
 
   // Alleen binnen deze lijst zoeken, niet in het hele document.
   lijst.querySelectorAll('.btn-details').forEach(knop => {
     knop.addEventListener('click', () => {
-      const naam = gesorteerd[Number(knop.dataset.rij)][0];
-      openPartijVenster(naam, boekingen.filter(b => partijNaamVan(b) === naam), o);
+      const metGegevens = knop.dataset.gegevens != null;
+      const naam = gesorteerd[Number(metGegevens ? knop.dataset.gegevens : knop.dataset.rij)][0];
+      openPartijVenster(naam, boekingen.filter(b => partijNaamVan(b) === naam), o, metGegevens);
     });
   });
 
@@ -199,12 +216,12 @@ function toonVenster(id, inhoudHtml) {
   return { laag, sluit };
 }
 
-function gegevensHtml(naam, nr, o, rel) {
+function gegevensHtml(naam, nr, o, rel, open = false) {
   const x = relatieExtra(rel && rel.id), r = rel || {};
   const soort = factuurSoortVan(o);
   const veld = (id, label, waarde, extra = '', breed = false) =>
     `<label${breed ? ' class="pm-breed"' : ''}>${label}<input type="text" id="pm-g-${id}" value="${veilig(waarde || '')}" ${extra}></label>`;
-  return `<details class="pm-gegevens" style="margin:0 0 14px;border:1px solid var(--border-default);border-radius:8px">
+  return `<details class="pm-gegevens" id="pm-gegevens" ${open ? 'open' : ''} style="margin:0 0 14px;border:1px solid var(--border-default);border-radius:8px">
     <summary style="cursor:pointer;font-weight:600;padding:10px 14px">Gegevens van deze ${soort === 'debiteur' ? 'klant' : 'leverancier'}
       <span class="muted" style="font-weight:400;font-size:13px" id="pm-g-nr">${nr ? `${soort}nummer ${nr}` : 'nog geen nummer, wordt toegekend bij opslaan'}</span></summary>
     <div class="pm-velden" style="padding:6px 14px 14px">
@@ -222,6 +239,10 @@ function gegevensHtml(naam, nr, o, rel) {
       ${veld('telefoon', 'Telefoon', x.telefoon)}
       ${veld('iban', 'IBAN', x.iban)}
       <label class="pm-breed">Notitie<textarea id="pm-g-notitie" rows="2">${veilig(x.notitie || '')}</textarea></label>
+      <label class="pm-breed">Zelfde partij onder een andere naam? Voeg samen (bijv. een andere schrijfwijze)
+        <span style="display:flex;gap:8px"><input type="text" id="pm-g-samen" list="pm-g-samen-lijst" placeholder="typ of kies de andere naam" style="flex:1" autocomplete="off">
+        <button type="button" class="btn btn-sm" id="pm-g-voegsamen">Samenvoegen</button></span>
+        <datalist id="pm-g-samen-lijst">${lijstNamen.filter(n => n !== naam).map(n => `<option value="${veilig(n)}"></option>`).join('')}</datalist></label>
       <div class="pm-breed" style="display:flex;gap:12px;align-items:center">
         <button type="button" class="btn btn-primary btn-sm" id="pm-g-opslaan">Gegevens opslaan</button>
         <span class="muted" id="pm-g-melding" style="font-size:13px"></span>
@@ -230,7 +251,7 @@ function gegevensHtml(naam, nr, o, rel) {
   </details>`;
 }
 
-function openPartijVenster(naam, boekingen, o) {
+function openPartijVenster(naam, boekingen, o, metGegevens = false) {
   const opDatum = [...boekingen].sort((a, b) => String(a.datum).localeCompare(String(b.datum)));
   const totaal = opDatum.reduce((s, b) => s + (Number(b.bedrag) || 0), 0);
 
@@ -265,10 +286,11 @@ function openPartijVenster(naam, boekingen, o) {
         <h3><span id="pm-nr-kop">${nr ? nr + ' · ' : ''}</span>${veilig(naam)}</h3>
         <p class="pm-sub">${opDatum.length} boeking${opDatum.length === 1 ? '' : 'en'} &middot; ${fmt(totaal)}</p>
       </div>
-      <button type="button" class="pm-kruis" data-pm-sluit aria-label="Sluiten">&times;</button>
+      <span style="display:flex;gap:8px;align-items:center"><button type="button" class="btn btn-sm" id="pm-open-gegevens">Gegevens invullen of wijzigen</button>
+      <button type="button" class="pm-kruis" data-pm-sluit aria-label="Sluiten">&times;</button></span>
     </header>
     <div class="pm-inhoud">
-      ${gegevensHtml(naam, nr, o, relatieVanPartij(naam, fs, boekingen))}
+      ${gegevensHtml(naam, nr, o, relatieVanPartij(naam, fs, boekingen), metGegevens)}
       <table class="pm-tabel">
         <thead>
           <tr>
@@ -289,6 +311,28 @@ function openPartijVenster(naam, boekingen, o) {
 
   laag.querySelectorAll('[data-bewerk]').forEach(k => k.addEventListener('click',
     () => openBewerkVenster(opDatum[Number(k.dataset.bewerk)], o)));
+
+  laag.querySelector('#pm-open-gegevens')?.addEventListener('click', () => {
+    const d = laag.querySelector('#pm-gegevens'); d.open = true; d.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    laag.querySelector('#pm-g-zoeksleutel')?.focus({ preventScroll: true });
+  });
+  if (metGegevens) setTimeout(() => laag.querySelector('#pm-g-zoeksleutel')?.focus({ preventScroll: true }), 0);
+
+  laag.querySelector('#pm-g-voegsamen')?.addEventListener('click', async () => {
+    const ander = laag.querySelector('#pm-g-samen').value.trim();
+    const melding = laag.querySelector('#pm-g-melding');
+    if (!ander || norm0(ander) === norm0(naam)) { melding.textContent = 'Kies een andere naam om samen te voegen.'; return; }
+    if (!window.confirm(`"${ander}" wordt dezelfde partij als "${naam}". De boekingen blijven staan zoals ze zijn; alleen de lijst telt ze samen. Doorgaan?`)) return;
+    melding.textContent = 'Bezig met samenvoegen…';
+    const rel = relatieVanPartij(naam, fs, boekingen) || await zorgRelatieVoorNaam(naam);
+    if (!rel) { melding.textContent = 'Samenvoegen mislukt (verbinding?).'; return; }
+    const andere = vindRelatieOpNaam(ander);
+    const ok = andere && andere.id !== rel.id ? await voegRelatiesSamen(rel.id, andere.id) : await voegNaamToeAlsAlias(rel.id, ander);
+    if (!ok) { melding.textContent = 'Samenvoegen mislukt (verbinding?).'; return; }
+    melding.textContent = 'Samengevoegd.';
+    o.herteken?.();
+    laag.querySelector('[data-pm-sluit]')?.click();
+  });
 
   laag.querySelector('#pm-g-opslaan')?.addEventListener('click', async () => {
     const w = id => laag.querySelector('#pm-g-' + id)?.value ?? '';

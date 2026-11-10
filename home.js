@@ -8,16 +8,16 @@
 // nodig is. Alle gebruikte functies zijn alleen-lezend; deze module wijzigt
 // nooit data.
 
-import { draaiControles } from './controle.js?v=20261110d';
-import { factuurSamenvatting } from './facturen.js?v=20261110d';
-import { esc, fmt } from './helpers.js?v=20261110d';
-import { standaardMinVoorraad, state } from './storage.js?v=20261110d';
-import { telInbox } from './bankinbox.js?v=20261110d';
-import { onverwerkteInkoop } from './artikelregels.js?v=20261110d';
-import { berekenJaarMetrics, berekenBanksaldo, vorigJaarMetrics, berekenVoorraad, kpi, kpiTrend } from './dashboard.js?v=20261110d';
-import { txVanJaar, lopendJaar } from './jaren.js?v=20261110d';
-import { charts, cssVar, dc, baseOpts, lijn } from './charts.js?v=20261110d';
-import { fmtKort, isInkomst, isOmzet, ddmm, weergaveNaam } from './helpers.js?v=20261110d';
+import { draaiControles } from './controle.js?v=20261110e';
+import { factuurSamenvatting } from './facturen.js?v=20261110e';
+import { esc, fmt } from './helpers.js?v=20261110e';
+import { standaardMinVoorraad, state } from './storage.js?v=20261110e';
+import { telInbox } from './bankinbox.js?v=20261110e';
+import { onverwerkteInkoop } from './artikelregels.js?v=20261110e';
+import { berekenJaarMetrics, berekenBanksaldo, vorigJaarMetrics, berekenVoorraad, kpi, kpiTrend } from './dashboard.js?v=20261110e';
+import { txVanJaar, lopendJaar } from './jaren.js?v=20261110e';
+import { charts, cssVar, dc, baseOpts, lijn } from './charts.js?v=20261110e';
+import { fmtKort, isInkomst, isOmzet, ddmm, weergaveNaam } from './helpers.js?v=20261110e';
 
 const el = id => document.getElementById(id);
 
