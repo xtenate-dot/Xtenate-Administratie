@@ -3,15 +3,16 @@
 import {
   bedragUit, ddmm, esc, fmt, isInkomst, isUitgave, leegVlak, maandLabel, MND_KORT, rekBadge,
   typeBadge, vulMaandSelect, weergaveNaam
-} from './helpers.js?v=20261109u';
+} from './helpers.js?v=20261110a';
 import {
   MAAND_SALDOS, saveHistTxData, saveTxData, state, isBtwPlichtig,
   grootboekNamen, rekeningNamen, grootboekOptgroepen, rekeningenLijst
-, jaarIsVergrendeld} from './storage.js?v=20261109u';
-import { maakSorteerbaar } from './tables.js?v=20261109u';
-import { EERSTE_TX_JAAR, isTxJaar, lopendJaar, txVanJaar, banksaldoTot, jaarVan } from './jaren.js?v=20261109u';
-import { heeftBonnetje, startModalBonnetjes, sluitModalBonnetjes, bewaarWachtende } from './bonnetjes.js?v=20261109u';
-import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking } from './facturen.js?v=20261109u';
+, jaarIsVergrendeld} from './storage.js?v=20261110a';
+import { maakSorteerbaar } from './tables.js?v=20261110a';
+import { EERSTE_TX_JAAR, isTxJaar, lopendJaar, txVanJaar, banksaldoTot, jaarVan } from './jaren.js?v=20261110a';
+import { heeftBonnetje, startModalBonnetjes, sluitModalBonnetjes, bewaarWachtende } from './bonnetjes.js?v=20261110a';
+import { schrijfLijstNaarExcel } from './lijst-export.js?v=20261110a';
+import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking } from './facturen.js?v=20261110a';
 
 // Fase 3A: Supabase pending queue
 import {
@@ -19,7 +20,7 @@ import {
   syncPendingQueue,
   pendingQueue,
   isSupabaseReady
-} from './supabase-client-v2.js?v=20261109u';
+} from './supabase-client-v2.js?v=20261110a';
 
 const el = id => document.getElementById(id);
 
@@ -94,6 +95,14 @@ function vulRekeningFilter() {
 // door het hele jaar hoeft te scrollen. 'Totaal' toont het overzicht per maand.
 const bankBegonnen = new Set();
 let toonAlleBoekingen = false;
+let laatsteBankLijst = [];
+let laatsteBankNaam = 'Bank';
+
+/** Exporteert precies de regels die nu in de banklijst staan (zelfde maand- en filterkeuze). */
+export function exporteerBankLijst() {
+  if (!laatsteBankLijst.length) { alert('Er zijn geen transacties om te exporteren.'); return; }
+  schrijfLijstNaarExcel(laatsteBankLijst, laatsteBankNaam, 'Bank');
+}
 
 export function kiesBankMaand(m) {
   const sel = el('f-maand');
@@ -171,6 +180,8 @@ export function renderBank() {
     if (typeF === 'uitgave' && t.type !== 'uitgave') return false;
     return true;
   }).sort((a, b) => b.datum.localeCompare(a.datum));
+  laatsteBankLijst = lijst;
+  laatsteBankNaam = `Bank_${maand || (jaar === 'all' ? 'alle_jaren' : jaar)}${rek ? '_' + rek : ''}`;
 
   const inkomsten = lijst.filter(isInkomst).reduce((s, t) => s + t.bedrag, 0);
   const uitgaven = lijst.filter(isUitgave).reduce((s, t) => s + t.bedrag, 0);

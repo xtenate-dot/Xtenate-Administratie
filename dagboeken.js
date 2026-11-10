@@ -8,11 +8,12 @@
 import {
   state, saveHistTxData, saveTxData, saveRekeningen, saveGrootboek, jaarIsVergrendeld,
   grootboekNamen, grootboekOptgroepen, rekeningenLijst
-} from './storage.js?v=20261109u';
-import { addToPendingQueue, syncPendingQueue, isSupabaseReady } from './supabase-client-v2.js?v=20261109u';
-import { esc, fmt, isInkomst, maandLabel } from './helpers.js?v=20261109u';
-import { lopendJaar, txVanJaar, banksaldoTot, vandaagIso } from './jaren.js?v=20261109u';
-import { telInbox } from './bankinbox.js?v=20261109u';
+} from './storage.js?v=20261110a';
+import { addToPendingQueue, syncPendingQueue, isSupabaseReady } from './supabase-client-v2.js?v=20261110a';
+import { esc, fmt, isInkomst, maandLabel } from './helpers.js?v=20261110a';
+import { lopendJaar, txVanJaar, banksaldoTot, vandaagIso } from './jaren.js?v=20261110a';
+import { schrijfLijstNaarExcel } from './lijst-export.js?v=20261110a';
+import { telInbox } from './bankinbox.js?v=20261110a';
 
 const el = id => document.getElementById(id);
 export const VRAAGPOST_GB = '9999';
@@ -24,6 +25,13 @@ let jaarKeuze = null, zoek = '';
 let periode = 'jaar', vanDatum = '', totDatum = '';   // 'jaar' | 'q1'..'q4' | 'm01'..'m12' | 'eigen'
 const MAANDEN = ['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December'];
 const aangevinkt = new Set();
+let laatsteDagboekLijst = [], laatsteDagboekNaam = 'Dagboek';
+
+/** Exporteert alle regels van het getoonde dagboek en de gekozen periode (ook als er meer dan 600 zijn). */
+export function exporteerDagboekLijst() {
+  if (!laatsteDagboekLijst.length) { alert('Er zijn geen boekingen om te exporteren.'); return; }
+  schrijfLijstNaarExcel(laatsteDagboekLijst, laatsteDagboekNaam, 'Dagboek');
+}
 
 // ─── Dagboeken (rekeningen) ────────────────────────────────────────────────
 
@@ -149,6 +157,8 @@ export function renderDagboeken(behoudFocus = false, behoudScroll = false) {
       <strong>Vraagposten</strong><span class="muted">${vraag ? `<span style="color:var(--semantic-warning-bright,#b7791f)">${vraag} uit te zoeken</span>` : 'niets uit te zoeken'}</span></button>`;
 
   const rijen = lijstRijen();
+  laatsteDagboekLijst = rijen;
+  laatsteDagboekNaam = `Dagboek_${String(gekozen).replace(/[^\w-]+/g,'_')}_${jaar === 'all' ? 'alle_jaren' : jaar}${periode !== 'jaar' && periode !== 'eigen' ? '_' + periode : ''}`;
   const dagboek = gekozen === 'vraagposten' ? null : dagboekVan(gekozen);
   const gebruikteJaren = [...new Set([lopendJaar(), ...alleBoekingen().map(t => String(t.datum).slice(0, 4))])].sort().reverse();
   const geselecteerd = rijen.filter(t => aangevinkt.has(String(t.id)));
@@ -224,6 +234,7 @@ export function renderDagboeken(behoudFocus = false, behoudScroll = false) {
       <span style="flex:1"></span>
       ${gekozen !== 'vraagposten' && dagboek?.soort !== 'memoriaal' ? `<button type="button" class="btn btn-sm btn-primary" onclick="nieuweBoekingInDagboek()">+ Boeking in ${esc(dagboek?.naam || 'dagboek')}</button>` : ''}
       <button type="button" class="btn btn-sm" onclick="openMemoriaalBoeking()">+ Memoriaalboeking</button>
+      <button type="button" class="btn btn-sm" onclick="exporteerDagboekLijst()" title="Download de getoonde boekingen als Excel-bestand">Exporteer naar Excel</button>
     </div>
     <div class="dg-samenvatting">
       <div><div class="lbl">Periode</div><div class="val" style="font-size:16px;padding-top:3px">${esc(periodeTekst(jaar))}</div></div>
