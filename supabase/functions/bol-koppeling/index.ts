@@ -3,6 +3,7 @@
 //
 //   POST /bol-koppeling   body: { van, tot, account?: "1" | "2" | "alle" }   (hooguit 31 dagen, hooguit ~91 dagen terug)
 //   POST /bol-koppeling/dagelijks   (door pg_cron, met geheim uit bank_cron_geheim: de laatste 7 dagen voor elke gebruiker met Bol-bestellingen)
+//   POST /bol-koppeling   body: { actie: "facturen", van, tot, account? }   (hooguit 31 dagen per keer; Bol geeft facturen en specificaties tot 2 jaar terug; ruw bewaard in bol_facturen)
 //   POST /bol-koppeling   body: { actie: "info" }   -> welke Bol-accounts zijn ingesteld (nummer + naam)
 //   Account 1: BOL_CLIENT_ID, BOL_CLIENT_SECRET, BOL_NAAM (naam is optioneel). Account 2: BOL_CLIENT_ID_2, BOL_CLIENT_SECRET_2, BOL_NAAM_2. Tot 4 accounts.
 //
@@ -159,6 +160,62 @@ async function haalRetouren(tok: string): Promise<{ rijen: any[]; fout: string }
 }
 
 type Db = ReturnType<typeof createClient>;
+
+/** De langste lijst (array van objecten) in een antwoord, of het antwoord zelf als dat al een lijst is. */
+function eersteLijst(x: any): any[] {
+  if (Array.isArray(x)) return x;
+  if (!x || typeof x !== "object") return [];
+  let beste: any[] = [];
+  for (const v of Object.values(x)) if (Array.isArray(v) && v.length > beste.length) beste = v;
+  return beste;
+}
+
+/** Haalt de facturen (met volledige specificatie) van een periode op en bewaart ze ruw, één rij per factuur. */
+async function verwerkFacturen(gekozen: ReturnType<typeof accounts>, van: string, tot: string, supabase: Db, userId: string): Promise<Response> {
+  const start = Date.now();
+  let facturen = 0, transacties = 0, onvolledig = false;
+  let voorbeeldKop: unknown = null, voorbeeldSpec: unknown = null;
+  for (const acc of gekozen) {
+    const tok = await token(acc.id, acc.geheim);
+    if (!tok) return Response.json({ ok: false, fout: `Inloggen bij Bol is mislukt voor "${acc.naam}". ${laatsteTokenFout}` }, { status: 502 });
+    const lijst = await haal(`https://api.bol.com/retailer/invoices?${new URLSearchParams({ "period-start": van, "period-end": tot })}`, tok);
+    if (!lijst.data) {
+      if (lijst.status === 401 || lijst.status === 403) return Response.json({ ok: false, fout: `Bol weigert de toegang tot facturen voor "${acc.naam}".` }, { status: 502 });
+      return Response.json({ ok: false, fout: `Facturen ophalen bij Bol mislukt (status ${lijst.status}).` }, { status: 502 });
+    }
+    const items = eersteLijst(lijst.data);
+    if (items.length && !voorbeeldKop) voorbeeldKop = vorm(items[0]);
+    for (const f of items) {
+      const id = String(f?.invoiceId ?? f?.id ?? "");
+      if (!id) continue;
+      const paginas: unknown[] = [];
+      let vorige = "", compleet = true;
+      for (let pagina = 1; pagina <= 80; pagina++) {
+        if (Date.now() - start > TIJDBUDGET_MS) { onvolledig = true; compleet = false; break; }
+        const sp = await haal(`https://api.bol.com/retailer/invoices/${encodeURIComponent(id)}/specification?page=${pagina}`, tok);
+        if (!sp.data) { if (sp.status !== 404 && pagina === 1) compleet = false; break; }
+        const rijen = eersteLijst(sp.data);
+        const inhoud = JSON.stringify(sp.data);
+        if (!rijen.length || inhoud === vorige) break;
+        vorige = inhoud;
+        paginas.push(sp.data);
+        transacties += rijen.length;
+        if (!voorbeeldSpec) voorbeeldSpec = vorm(sp.data);
+        if (rijen.length < 50) break;
+      }
+      if (!compleet) continue;
+      const { error } = await supabase.from("bol_facturen").upsert({
+        user_id: userId, account: acc.nummer, invoice_id: id,
+        uitgegeven: f?.issueDate ? String(f.issueDate).slice(0, 10) : null,
+        type: f?.invoiceType ? String(f.invoiceType) : null,
+        kop: f, specificatie: paginas, opgehaald_op: new Date().toISOString(),
+      }, { onConflict: "user_id,account,invoice_id" });
+      if (error) return Response.json({ ok: false, fout: "Opslaan van de facturen is mislukt (bestaat de tabel bol_facturen al?)." }, { status: 500 });
+      facturen += 1;
+    }
+  }
+  return Response.json({ ok: true, van, tot, facturen, transacties, onvolledig, voorbeeldKop, voorbeeldSpec }, { status: 200 });
+}
 /** Haalt de bestellingen van de gekozen accounts op en bewaart ze voor één gebruiker. */
 async function verwerk(gekozen: ReturnType<typeof accounts>, van: string, tot: string, supabase: Db, userId: string): Promise<Response> {
   const lijstDagen = dagen(van, tot);
@@ -260,6 +317,7 @@ async function afhandelen(req: Request): Promise<Response> {
   const lijstDagen = dagen(van, tot);
   if (lijstDagen.length > MAX_DAGEN) return Response.json({ ok: false, fout: `Kies hooguit ${MAX_DAGEN} dagen tegelijk.` }, { status: 400 });
 
+  if (body.actie === "facturen") return await verwerkFacturen(gekozen, van, tot, supabase, gebruiker.user.id);
   return await verwerk(gekozen, van, tot, supabase, gebruiker.user.id);
 }
 

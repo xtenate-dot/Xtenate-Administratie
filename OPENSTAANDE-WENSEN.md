@@ -48,6 +48,11 @@ App en Excel/bank wijken constant EUR 9,36 af vanaf eind oktober 2026. Zoek de o
 ## Gedaan 10-11-2026 (v20261110e): partijen samenvoegen en vindbaarheid
 - Klanten/Leveranciers groeperen nu op één naam per partij: via gekoppelde relatie, alias of hoofdletterongevoelig. Knop 'Gegevens' per rij en 'Gegevens invullen of wijzigen' in Details. Blok 'Samenvoegen': andere schrijfwijze (bijv. BOLCOM BV bij Bol.com) wordt alias van de relatie; boekingen zelf blijven ongewijzigd. Niet getest in de live app.
 
+## Bol-historie via facturen (10-11-2026) - STAP 1 GEBOUWD, wacht op gebruiker
+- Bol geeft bestellingen ~91 dagen terug, facturen+specificatie tot 2 jaar. Gebouwd: tabel bol_facturen (bol_facturen.sql, ruw bewaard), actie 'facturen' in Edge Function bol-koppeling (GET /retailer/invoices?period-start&period-end en /invoices/{id}/specification?page=n; veldnamen NIET geverifieerd), kaart 'Oudere periode ophalen via Bol-facturen' op de Bol-pagina (toont de vorm van factuur en specificatie).
+- Gebruiker moet: bol_facturen.sql draaien en bol-koppeling opnieuw uitrollen; daarna 'Facturen ophalen' 1-1-2026 t/m 24-7-2026 en de getoonde vorm doorsturen. STAP 2: specificatie verwerken (TURNOVER/COMMISSION per bestelnummer, EAN) tot omzet/commissie per maand en per artikel op de Bol-pagina.
+- Het bestand 'artikelen per dag' uit het partnerplatform is een bezoekrapport en niet bruikbaar.
+
 ## Wensen van de gebruiker (nog te doen)
 0a. **Bank-inbox: meerdere regels tegelijk verwijderen (10-11-2026).** Regels in de bank-inbox aan kunnen vinken (met 'alles selecteren') en in één keer verwijderen. Doel: de inbox snel op 0 krijgen.
 0b. **Bank-inbox: filter 'alleen openstaande'.** Een filter dat alleen de nog niet verwerkte/openstaande bedragen toont, zodat je bij correcties niet lang hoeft te scrollen.

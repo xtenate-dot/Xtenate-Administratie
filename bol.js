@@ -2,9 +2,9 @@
 // tabel bol_bestellingen en uitrekenen (stuks, omzet, commissie). Alleen lezen en tonen:
 // dit raakt je boekingen en je voorraad niet.
 
-import { getClient } from './supabase.js?v=20261110e';
-import { state } from './storage.js?v=20261110e';
-import { vandaagIso } from './jaren.js?v=20261110e';
+import { getClient } from './supabase.js?v=20261110f';
+import { state } from './storage.js?v=20261110f';
+import { vandaagIso } from './jaren.js?v=20261110f';
 
 const dag = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
 const r2 = n => Math.round(n * 100) / 100;
@@ -88,6 +88,40 @@ export async function haalBijBol(van, tot, voortgang = () => {}, account = 'alle
     start = dag(eind, 1);
   }
   return { opgeslagen, onvolledig };
+}
+
+/**
+ * Haalt Bol-facturen met specificatie op voor een periode (Bol geeft die tot 2 jaar terug), in stukken van 31 dagen.
+ * Alles wordt ruw bewaard in bol_facturen. Geeft { facturen, transacties, onvolledig, voorbeeldKop, voorbeeldSpec }.
+ */
+export async function haalFacturenBijBol(van, tot, voortgang = () => {}, account = 'alle') {
+  const sb = await getClient();
+  let facturen = 0, transacties = 0, onvolledig = false, voorbeeldKop = null, voorbeeldSpec = null;
+  let start = van;
+  while (start <= tot) {
+    const eind = dag(start, 30) < tot ? dag(start, 30) : tot;
+    voortgang(`Facturen ophalen ${start} t/m ${eind}…`);
+    const { data, error } = await sb.functions.invoke('bol-koppeling', { body: { actie: 'facturen', van: start, tot: eind, account } });
+    let fout = data && data.fout;
+    if (error && !fout) { try { fout = (await error.context.json())?.fout; } catch { /* geen detail */ } }
+    if (error || !data?.ok) throw new Error(fout || 'Facturen ophalen bij Bol is niet gelukt. Is de functie bol-koppeling bijgewerkt in Supabase?');
+    facturen += data.facturen || 0; transacties += data.transacties || 0;
+    if (data.onvolledig) onvolledig = true;
+    voorbeeldKop = voorbeeldKop || data.voorbeeldKop; voorbeeldSpec = voorbeeldSpec || data.voorbeeldSpec;
+    start = dag(eind, 1);
+  }
+  return { facturen, transacties, onvolledig, voorbeeldKop, voorbeeldSpec };
+}
+
+/** Aantal bewaarde Bol-facturen en de periode ervan, of null als de tabel er nog niet is. */
+export async function leesFacturenOverzicht() {
+  try {
+    const sb = await getClient();
+    const { data, error } = await sb.from('bol_facturen').select('uitgegeven').order('uitgegeven', { ascending: true }).limit(1000);
+    if (error) return null;
+    const d = (data || []).map(r => r.uitgegeven).filter(Boolean);
+    return { aantal: (data || []).length, eerste: d[0] || '', laatste: d[d.length - 1] || '' };
+  } catch { return null; }
 }
 
 /** Welke Bol-accounts zijn ingesteld? [{ nummer, naam }], of null als dat niet lukt (bijvoorbeeld nog geen sleutels). */

@@ -2,11 +2,11 @@
 // verkocht per artikel, en een vergelijking met wat Bol op je bankrekening heeft gestort.
 // Alleen kijken: er wordt niets geboekt en de voorraad verandert niet.
 
-import { esc, fmt, ddmm } from './helpers.js?v=20261110e';
-import { bolArtikelenHtml } from './bolartikelen.js?v=20261110e';
-import { lopendJaar } from './jaren.js?v=20261110e';
-import { state } from './storage.js?v=20261110e';
-import { leesBestellingen, leesRetouren, retourSamenvatting, haalBijBol, samenvatting, bolUitbetalingen, standaardPeriodes, leesBolAccounts } from './bol.js?v=20261110e';
+import { esc, fmt, ddmm } from './helpers.js?v=20261110f';
+import { bolArtikelenHtml } from './bolartikelen.js?v=20261110f';
+import { lopendJaar } from './jaren.js?v=20261110f';
+import { state } from './storage.js?v=20261110f';
+import { haalFacturenBijBol, leesFacturenOverzicht, leesBestellingen, leesRetouren, retourSamenvatting, haalBijBol, samenvatting, bolUitbetalingen, standaardPeriodes, leesBolAccounts } from './bol.js?v=20261110f';
 
 const el = id => document.getElementById(id);
 const MAAND = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
@@ -119,7 +119,17 @@ function teken() {
         <option value="laatste90"${ophaal === 'laatste90' ? ' selected' : ''}>Laatste 3 maanden</option></select>
       <button class="btn btn-primary" onclick="haalBolBestellingenOp()"${bezig ? ' disabled' : ''}>${bezig ? 'Bezig…' : 'Ophalen bij Bol.com'}</button>
     </div>
-    ${melding ? `<div class="card" style="margin-bottom:var(--spacing-4)"><div style="font-size:14px;white-space:pre-line">${esc(melding)}</div></div>` : ''}`;
+    ${melding ? `<div class="card" style="margin-bottom:var(--spacing-4)"><div style="font-size:14px;white-space:pre-line">${esc(melding)}</div></div>` : ''}
+    <details class="card" style="padding:14px;margin-bottom:var(--spacing-4)"${factuurMelding ? ' open' : ''}>
+      <summary style="font-weight:600;cursor:pointer">Oudere periode ophalen via Bol-facturen (tot 2 jaar terug)</summary>
+      <p class="muted" style="font-size:13px;margin:8px 0">Bestellingen geeft Bol maar ongeveer 3 maanden terug, facturen met specificatie wel tot 2 jaar. Hiermee haal je ze binnen en bewaar je ze.${factuurOverzicht && factuurOverzicht.aantal ? ` Nu bewaard: ${factuurOverzicht.aantal} facturen (${esc(factuurOverzicht.eerste)} t/m ${esc(factuurOverzicht.laatste)}).` : ''}</p>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <label style="font-size:13px">Van <input type="date" id="bol-fac-van" value="${esc(factuurVan)}"></label>
+        <label style="font-size:13px">Tot <input type="date" id="bol-fac-tot" value="${esc(factuurTot)}"></label>
+        <button class="btn" onclick="haalBolFacturenOp()"${bezig ? ' disabled' : ''}>${bezig ? 'Bezig…' : 'Facturen ophalen'}</button>
+      </div>
+      ${factuurMelding ? `<div style="font-size:14px;white-space:pre-line;margin-top:10px">${esc(factuurMelding)}</div>` : ''}
+    </details>`;
 
   if (geenData) {
     doel.innerHTML = kop + `<div class="card"><p>Er zijn nog geen Bol-bestellingen opgeslagen. Klik op <b>Ophalen bij Bol.com</b>.</p>
@@ -203,6 +213,27 @@ function teken() {
 }
 const r2 = n => Math.round(n * 100) / 100;
 
+let factuurMelding = '', factuurOverzicht = null, factuurVan = '2026-01-01', factuurTot = '2026-07-24';
+export async function haalBolFacturenOp() {
+  if (bezig) return;
+  factuurVan = document.getElementById('bol-fac-van')?.value || factuurVan;
+  factuurTot = document.getElementById('bol-fac-tot')?.value || factuurTot;
+  bezig = true; factuurMelding = ''; teken();
+  try {
+    const uit = await haalFacturenBijBol(factuurVan, factuurTot, t => { factuurMelding = t; teken(); }, ophaalAccount);
+    factuurOverzicht = await leesFacturenOverzicht();
+    factuurMelding = `✅ Klaar: ${uit.facturen} facturen met ${uit.transacties} transacties bewaard (${factuurVan} t/m ${factuurTot}).`
+      + (uit.onvolledig ? '\nNiet alles paste in één keer; klik nog eens op Facturen ophalen.' : '')
+      + (uit.voorbeeldKop ? `\n\nVorm van een factuur (voor controle):\n${JSON.stringify(uit.voorbeeldKop)}` : '')
+      + (uit.voorbeeldSpec ? `\n\nVorm van een specificatie (voor controle):\n${JSON.stringify(uit.voorbeeldSpec).slice(0, 1800)}` : '');
+  } catch (e) {
+    factuurMelding = `❌ ${e.message}`;
+  } finally {
+    bezig = false; teken();
+  }
+}
+leesFacturenOverzicht().then(o => { factuurOverzicht = o; });
+
 export function zetBolPeriode(w) { periode = w; teken(); }
 export function zetBolOphalen(w) { ophaal = w; }
 export function zetBolAccount(w) { accountFilter = w; teken(); }
@@ -228,4 +259,4 @@ export async function haalBolBestellingenOp() {
   }
 }
 
-Object.assign(window, { zetBolPeriode, zetBolOphalen, zetBolAccount, zetBolOphaalAccount, laadBolOpnieuw, haalBolBestellingenOp });
+Object.assign(window, { haalBolFacturenOp, zetBolPeriode, zetBolOphalen, zetBolAccount, zetBolOphaalAccount, laadBolOpnieuw, haalBolBestellingenOp });
