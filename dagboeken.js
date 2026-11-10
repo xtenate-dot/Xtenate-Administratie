@@ -8,12 +8,12 @@
 import {
   state, saveHistTxData, saveTxData, saveRekeningen, saveGrootboek, jaarIsVergrendeld,
   grootboekNamen, grootboekOptgroepen, rekeningenLijst
-} from './storage.js?v=20261110g';
-import { addToPendingQueue, syncPendingQueue, isSupabaseReady } from './supabase-client-v2.js?v=20261110g';
-import { esc, fmt, isInkomst, maandLabel } from './helpers.js?v=20261110g';
-import { lopendJaar, txVanJaar, banksaldoTot, vandaagIso } from './jaren.js?v=20261110g';
-import { schrijfLijstNaarExcel } from './lijst-export.js?v=20261110g';
-import { telInbox } from './bankinbox.js?v=20261110g';
+} from './storage.js?v=20261110h';
+import { addToPendingQueue, syncPendingQueue, isSupabaseReady } from './supabase-client-v2.js?v=20261110h';
+import { esc, fmt, isInkomst, maandLabel } from './helpers.js?v=20261110h';
+import { lopendJaar, txVanJaar, banksaldoTot, vandaagIso } from './jaren.js?v=20261110h';
+import { schrijfLijstNaarExcel } from './lijst-export.js?v=20261110h';
+import { telInbox } from './bankinbox.js?v=20261110h';
 
 const el = id => document.getElementById(id);
 export const VRAAGPOST_GB = '9999';

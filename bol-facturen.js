@@ -5,7 +5,7 @@
 // lineExtensionAmount.value (excl. btw; negatief = Bol betaalt jou) en AdditionalItemProperty (o.a. Bestelnummer, EAN).
 // Op factuurniveau: payableAmount (negatief = Bol betaalt jou uit).
 
-import { getClient } from './supabase.js?v=20261110g';
+import { getClient } from './supabase.js?v=20261110h';
 
 const r2 = n => Math.round(n * 100) / 100;
 const tekst = x => (x && typeof x === 'object' && !Array.isArray(x) ? tekst(x.value ?? x.Value ?? x.name ?? '') : Array.isArray(x) ? tekst(x[0]) : x == null ? '' : String(x));
