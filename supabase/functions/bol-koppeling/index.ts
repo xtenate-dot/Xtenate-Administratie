@@ -206,7 +206,10 @@ async function verwerkFacturen(gekozen: ReturnType<typeof accounts>, van: string
       if (!compleet) continue;
       // Postgres (jsonb) weigert het teken \u0000 in tekst; haal dat eruit voor het opslaan.
       const schoon = (x: unknown) => JSON.parse(JSON.stringify(x).replace(/\\u0000/g, ""));
-      const datum = String(f?.issueDate ?? "").slice(0, 10);
+      const ruw = f?.issueDate;
+      const datum = typeof ruw === "number" || /^\d{9,}$/.test(String(ruw ?? ""))
+        ? new Date(Number(ruw)).toLocaleDateString("sv-SE", { timeZone: "Europe/Amsterdam" })
+        : String(ruw ?? "").slice(0, 10);
       const { error } = await supabase.from("bol_facturen").upsert({
         user_id: userId, account: acc.nummer, invoice_id: id,
         uitgegeven: /^\d{4}-\d{2}-\d{2}$/.test(datum) ? datum : null,

@@ -48,7 +48,8 @@ App en Excel/bank wijken constant EUR 9,36 af vanaf eind oktober 2026. Zoek de o
 ## Gedaan 10-11-2026 (v20261110e): partijen samenvoegen en vindbaarheid
 - Klanten/Leveranciers groeperen nu op één naam per partij: via gekoppelde relatie, alias of hoofdletterongevoelig. Knop 'Gegevens' per rij en 'Gegevens invullen of wijzigen' in Details. Blok 'Samenvoegen': andere schrijfwijze (bijv. BOLCOM BV bij Bol.com) wordt alias van de relatie; boekingen zelf blijven ongewijzigd. Niet getest in de live app.
 
-## Bol-historie via facturen (10-11-2026) - STAP 1 GEBOUWD, wacht op gebruiker
+## Bol-historie via facturen (10-11-2026) - STAP 1 EN 2 GEBOUWD (v20261110g); 102 facturen/1258 regels opgehaald 2024-01 t/m 2026-11. Stap 2: bol-facturen.js + tabel 'Per maand volgens Bol-facturen' (omzet/commissie/overig/netto/uitbetaald/bank). Nog niet gecontroleerd door gebruiker; nog te doen: per artikel (EAN) en koppeling met bestelnummers. Opmerking: issueDate komt als epoch-ms; kolom uitgegeven in bol_facturen is daardoor leeg (niet gebruikt).
+## (oorspronkelijk plan stap 1)
 - Bol geeft bestellingen ~91 dagen terug, facturen+specificatie tot 2 jaar. Gebouwd: tabel bol_facturen (bol_facturen.sql, ruw bewaard), actie 'facturen' in Edge Function bol-koppeling (GET /retailer/invoices?period-start&period-end en /invoices/{id}/specification?page=n; veldnamen NIET geverifieerd), kaart 'Oudere periode ophalen via Bol-facturen' op de Bol-pagina (toont de vorm van factuur en specificatie).
 - Gebruiker moet: bol_facturen.sql draaien en bol-koppeling opnieuw uitrollen; daarna 'Facturen ophalen' 1-1-2026 t/m 24-7-2026 en de getoonde vorm doorsturen. STAP 2: specificatie verwerken (TURNOVER/COMMISSION per bestelnummer, EAN) tot omzet/commissie per maand en per artikel op de Bol-pagina.
 - Het bestand 'artikelen per dag' uit het partnerplatform is een bezoekrapport en niet bruikbaar.
