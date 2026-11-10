@@ -37,6 +37,9 @@ App en Excel/bank wijken constant EUR 9,36 af vanaf eind oktober 2026. Zoek de o
 - Tarieven per jaar (tarieven.js): 2024-2026 volgens KVK, 2027 voorstel Belastingplan; bewerkbaar via knop "Tarieven {jaar}" op Belasting; zelfstandigenaftrek optioneel (standaard uit). Nog niet gedaan: heffingskortingen; herstel.js/migratie.js/opslagdiagnose zijn diagnosetools met 2026-aannames; voorraad-"Omzet {jaar}" gebruikt nog het veld omzet2026 (legacy naam).
 - Draaiboek begin januari 2027: back-up maken; 2026 afsluiten via Jaarafsluiting (eindvoorraad vastleggen, controle doorlopen, aangifte, vergrendelen); daarna boeken in 2027.
 
+## Gedaan 10-11-2026 (v20261110b): factuurmaker
+- Logo groter (100 px hoog), kop/voet van de browser weg (@page-marge 0), 'Nummer' heet 'Factuurnummer', tekst onder Totaal lager, bij KOR een regel 'BTW 0%', pdf-bestandsnaam = 'Factuur <nummer>', 'Indeling en gegevens' blijft open tot je hem sluit. Indeling wordt opgeslagen (localStorage + cloud app_data). Niet getest in de live app.
+
 ## Wensen van de gebruiker (nog te doen)
 0a. **Bank-inbox: meerdere regels tegelijk verwijderen (10-11-2026).** Regels in de bank-inbox aan kunnen vinken (met 'alles selecteren') en in één keer verwijderen. Doel: de inbox snel op 0 krijgen.
 0b. **Bank-inbox: filter 'alleen openstaande'.** Een filter dat alleen de nog niet verwerkte/openstaande bedragen toont, zodat je bij correcties niet lang hoeft te scrollen.

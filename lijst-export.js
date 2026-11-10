@@ -1,6 +1,6 @@
 // lijst-export.js — zet een getoonde lijst boekingen om in een Excel-bestand (alleen lezen, wijzigt geen gegevens).
 
-import { grootboekNamen, rekeningNamen } from './storage.js?v=20261110a';
+import { grootboekNamen, rekeningNamen } from './storage.js?v=20261110b';
 
 const PLUS = new Set(['inkomst', 'prive_storting']);
 const SOORT = { inkomst: 'Inkomst', uitgave: 'Uitgave', prive_storting: 'Privé storting', prive_opname: 'Privé opname' };

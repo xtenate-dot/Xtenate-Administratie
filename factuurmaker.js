@@ -6,13 +6,15 @@
 // (zie facturen.js). De voorraad en de boekingen worden NIET aangepast: de
 // verkoop komt via de bank binnen, zoals altijd.
 
-import { state, BEDRIJFSGEGEVENS, bewaarFactuurmakerInstellingen } from './storage.js?v=20261110a';
-import { esc, fmt } from './helpers.js?v=20261110a';
-import { modelNaarPdf } from './pdf.js?v=20261110a';
-import { voegFactuurToe, werkFactuurBij, vindFactuur, plusDagen, vandaagISO, standaardTermijn, factuurnummerInGebruik } from './facturen.js?v=20261110a';
+import { state, BEDRIJFSGEGEVENS, bewaarFactuurmakerInstellingen } from './storage.js?v=20261110b';
+import { esc, fmt } from './helpers.js?v=20261110b';
+import { modelNaarPdf } from './pdf.js?v=20261110b';
+import { voegFactuurToe, werkFactuurBij, vindFactuur, plusDagen, vandaagISO, standaardTermijn, factuurnummerInGebruik } from './facturen.js?v=20261110b';
 
 const KEY = 'xtenate_factuurmaker';
 const el = id => document.getElementById(id);
+let instellingenOpen = false;   // blijft open tot je hem zelf sluit, ook na opnieuw tekenen
+function fmInstellingenOpen(open) { instellingenOpen = !!open; }
 
 const STANDAARD = {
   instellingen: {
@@ -116,19 +118,20 @@ export function factuurHtml(c = concept(), i = opslag.instellingen) {
       <td class="r">${eur(num(r.aantal) * num(r.prijs))}</td></tr>`).join('');
   const leeg = (i.toonAantal ? 1 : 0) + (i.toonStukprijs ? 1 : 0) + 1;
 
-  const logo = i.logo ? `<img src="${esc(i.logo)}" alt="" style="max-height:70px;max-width:220px">` : '';
+  const logo = i.logo ? `<img src="${esc(i.logo)}" alt="" style="max-height:100px;max-width:300px">` : '';
   const kop = `<div class="id"><div class="titel">${esc(i.titel || 'Factuur')}</div></div>`;
   const koprij = i.logoRechts ? `${kop}<div>${logo}</div>` : `<div>${logo}</div>${kop}`;
 
   const kor = i.btw === 'kor'
-    ? '<p class="klein">Vrijgesteld van omzetbelasting op grond van de kleineondernemersregeling (KOR).</p>' : '';
+    ? '<p class="klein na-totaal">Vrijgesteld van omzetbelasting op grond van de kleineondernemersregeling (KOR).</p>' : '';
   const betaal = `<p>Wij verzoeken je het bedrag van <b>${eur(t.totaal)}</b> vóór <b>${nlDatum(verval)}</b> over te maken${i.iban ? ` op <b>${esc(i.iban)}</b>` : ''}${b.naam ? ` t.n.v. ${esc(b.naam)}` : ''}, onder vermelding van <b>${esc(c.nummer)}</b>.</p>`;
 
   return `<!doctype html><html lang="nl"><head><meta charset="utf-8"><title>${esc(i.titel || 'Factuur')} ${esc(c.nummer)}</title>
 <style>
-@page{size:A4;margin:16mm}
+@page{size:A4;margin:0}
 *{box-sizing:border-box}
 body{font:13px/1.45 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#222;margin:0;padding:24px;background:#fff}
+@media print{body{padding:16mm 18mm}}
 .kop{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:28px}
 .titel{font-size:28px;font-weight:700;color:${kleur}}
 .id{text-align:right}
@@ -143,21 +146,22 @@ td{padding:7px 8px;border-bottom:1px solid #e3e3e3;vertical-align:top}
 .tot div{display:flex;justify-content:space-between;padding:3px 0}
 .tot .eind{border-top:2px solid ${kleur};margin-top:4px;padding-top:6px;font-weight:700;font-size:15px}
 .klein{font-size:12.5px;color:#555}
+.na-totaal{margin-top:26px}
 .voet{margin-top:26px;padding-top:10px;border-top:1px solid #ddd;font-size:12px;color:#666}
 </style></head><body>
 <div class="kop">${koprij}</div>
 <div class="twee">
   <div><div class="lbl">Van</div>${afzender.map(x => esc(x)).join('<br>') || '<span style="color:#aaa">(vul je bedrijfsgegevens in bij Beheer)</span>'}</div>
   <div><div class="lbl">Aan</div>${klant.map(x => esc(x)).join('<br>') || '<span style="color:#aaa">(klant)</span>'}${c.klantRef ? `<br><span class="klein">Uw referentie: ${esc(c.klantRef)}</span>` : ''}</div>
-  <div style="text-align:right"><div class="lbl">Factuurgegevens</div>Nummer: <b>${esc(c.nummer)}</b><br>Datum: ${nlDatum(c.datum)}<br>Vervaldatum: ${nlDatum(verval)}</div>
+  <div style="text-align:right"><div class="lbl">Factuurgegevens</div>Factuurnummer: <b>${esc(c.nummer)}</b><br>Datum: ${nlDatum(c.datum)}<br>Vervaldatum: ${nlDatum(verval)}</div>
 </div>
 <table><thead><tr>${kolommen}</tr></thead><tbody>${rijen || `<tr><td colspan="${leeg + 1}" style="color:#aaa">Nog geen regels</td></tr>`}</tbody></table>
 <div class="tot">
-  ${i.btw === 'btw21' ? `<div><span>Subtotaal</span><span>${eur(t.sub)}</span></div><div><span>BTW 21%</span><span>${eur(t.btw)}</span></div>` : ''}
+  ${i.btw === 'btw21' ? `<div><span>Subtotaal</span><span>${eur(t.sub)}</span></div><div><span>BTW 21%</span><span>${eur(t.btw)}</span></div>` : `<div><span>BTW 0%</span><span>${eur(0)}</span></div>`}
   <div class="eind"><span>Totaal</span><span>${eur(t.totaal)}</span></div>
 </div>
 ${kor}
-${c.notitie ? `<p>${esc(c.notitie).replace(/\n/g, '<br>')}</p>` : ''}
+${c.notitie ? `<p class="${i.btw === 'kor' ? '' : 'na-totaal'}">${esc(c.notitie).replace(/\n/g, '<br>')}</p>` : ''}
 ${betaal}
 ${i.voettekst ? `<div class="voet">${esc(i.voettekst).replace(/\n/g, '<br>')}</div>` : ''}
 </body></html>`;
@@ -195,6 +199,7 @@ export function factuurPdfModel(c = concept(), i = opslag.instellingen) {
       ...(i.btw === 'btw21' ? [
         { type: 'regel', label: 'Subtotaal', bedrag: t.sub },
         { type: 'regel', label: 'BTW 21%', bedrag: t.btw }] : []),
+      ...(i.btw === 'kor' ? [{ type: 'regel', label: 'BTW 0%', bedrag: 0 }] : []),
       { type: 'regel', label: 'Totaal', bedrag: t.totaal, totaal: true },
       ...(i.btw === 'kor' ? regels(['Vrijgesteld van omzetbelasting op grond van de kleineondernemersregeling (KOR).']) : []),
       ...regels([c.notitie]),
@@ -326,7 +331,7 @@ export function renderFactuurmaker() {
       <div class="form-group" style="margin-top:10px"><label>Opmerking onderaan (optioneel)</label><textarea rows="2" oninput="fmVeld('notitie',this.value)">${esc(c.notitie)}</textarea></div>
     </div>
 
-    <details class="card" style="padding:14px;margin-bottom:12px">
+    <details class="card" style="padding:14px;margin-bottom:12px" ${instellingenOpen ? 'open' : ''} ontoggle="fmInstellingenOpen(this.open)">
       <summary style="font-weight:600;cursor:pointer">Indeling en gegevens</summary>
       <div style="margin-top:10px">
         <div class="form-group"><label>Titel</label><input type="text" value="${esc(i.titel)}" oninput="fmInst('titel',this.value)"></div>
@@ -510,7 +515,16 @@ function fmPrint() {
   const f = el('fm-preview');
   if (!f) return;
   f.srcdoc = factuurHtml();
-  setTimeout(() => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch { alert('Afdrukken lukt niet vanuit dit venster.'); } }, 250);
+  // De bestandsnaam bij "Opslaan als pdf" komt uit de paginatitel: tijdelijk het factuurnummer gebruiken.
+  const c = concept(), oudeTitel = document.title;
+  const nieuweTitel = `${opslag.instellingen.titel || 'Factuur'} ${c.nummer}`.trim();
+  const terug = () => { document.title = oudeTitel; window.removeEventListener('afterprint', terug); };
+  window.addEventListener('afterprint', terug);
+  setTimeout(() => {
+    try { document.title = nieuweTitel; f.contentWindow.focus(); f.contentWindow.print(); }
+    catch { terug(); alert('Afdrukken lukt niet vanuit dit venster.'); }
+    setTimeout(terug, 60000);
+  }, 250);
 }
 
 function fmOpslaan() {
@@ -539,5 +553,5 @@ function fmOpslaan() {
 
 Object.assign(window, {
   renderFactuurmaker, fmVeld, fmKiesKlant, fmRegel, fmVoegRegel, fmVerwijderRegel,
-  fmKiesArtikel, fmInst, fmLogo, fmWisLogo, fmNieuw, fmPrint, fmOpslaan, fmMail
+  fmKiesArtikel, fmInst, fmInstellingenOpen, fmLogo, fmWisLogo, fmNieuw, fmPrint, fmOpslaan, fmMail
 });

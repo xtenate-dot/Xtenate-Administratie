@@ -5,8 +5,8 @@
 // je met de Belastingdienst of je boekhouder; deze indicatie gebruikt de omzet
 // zoals de aangifte die uitrekent.
 
-import { aangifteModel } from './belasting.js?v=20261110a';
-import { vandaagIso } from './jaren.js?v=20261110a';
+import { aangifteModel } from './belasting.js?v=20261110b';
+import { vandaagIso } from './jaren.js?v=20261110b';
 
 export const KOR_GRENS = 20000;
 

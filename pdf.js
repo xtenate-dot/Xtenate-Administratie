@@ -126,9 +126,9 @@ export function modelNaarPdf(doc) {
     pagina.tekst.push({ tekst: bedrag, x: rechts - breedte(bedrag, CORPS), y, corps: CORPS, vet });
   };
 
-  // Optioneel logo (jpeg) boven aan de eerste pagina, op maximaal 150 x 50 punten.
+  // Optioneel logo (jpeg) boven aan de eerste pagina, op maximaal 200 x 70 punten.
   if (doc.logo && doc.logo.jpeg && doc.logo.pxBreed > 0 && doc.logo.pxHoog > 0) {
-    const schaal = Math.min(150 / doc.logo.pxBreed, 50 / doc.logo.pxHoog);
+    const schaal = Math.min(200 / doc.logo.pxBreed, 70 / doc.logo.pxHoog);
     const w = doc.logo.pxBreed * schaal;
     const h = doc.logo.pxHoog * schaal;
     const rechtsBoven = doc.logo.plaats === 'rechts';
