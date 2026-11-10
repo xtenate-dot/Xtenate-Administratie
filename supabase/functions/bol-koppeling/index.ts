@@ -178,15 +178,32 @@ async function verwerkFacturen(gekozen: ReturnType<typeof accounts>, van: string
   for (const acc of gekozen) {
     const tok = await token(acc.id, acc.geheim);
     if (!tok) return Response.json({ ok: false, fout: `Inloggen bij Bol is mislukt voor "${acc.naam}". ${laatsteTokenFout}` }, { status: 502 });
-    const lijst = await haal(`https://api.bol.com/retailer/invoices?${new URLSearchParams({ period: `${van}/${tot}` })}`, tok);
+    // Bol is niet duidelijk over de naam van de periodeparameter; probeer de bekende schrijfwijzen
+    // tot Bol precies de gevraagde periode teruggeeft.
+    const varianten: Record<string, string>[] = [
+      { period: `${van}/${tot}` },
+      { "period-start": van, "period-end": tot },
+      { "period-start-date": van, "period-end-date": tot },
+      { period_start_date: van, period_end_date: tot },
+      { periodStart: van, periodEnd: tot },
+      { "start-date": van, "end-date": tot },
+    ];
+    let lijst: Awaited<ReturnType<typeof haal>> | null = null;
+    const geprobeerd: string[] = [];
+    for (const v of varianten) {
+      const r = await haal(`https://api.bol.com/retailer/invoices?${new URLSearchParams(v)}`, tok);
+      const terug = String((r.data as any)?.period ?? "");
+      const [t1, t2] = terug.split("/");
+      geprobeerd.push(`${Object.keys(v).join("+")} -> ${r.status} ${terug.slice(0, 10)}/${(t2 ?? "").slice(0, 10)}`);
+      if (r.data && t1 && t1.slice(0, 10) === van && (t2 ?? "").slice(0, 10) === tot) { lijst = r; break; }
+      if (!r.data && (r.status === 401 || r.status === 403)) { lijst = r; break; }
+    }
+    if (!lijst) return Response.json({ ok: false, fout: `Bol geeft niet de gevraagde periode terug (${van}/${tot}). Geprobeerd: ${geprobeerd.join("; ")}` }, { status: 502 });
     if (!lijst.data) {
       if (lijst.status === 401 || lijst.status === 403) return Response.json({ ok: false, fout: `Bol weigert de toegang tot facturen voor "${acc.naam}".` }, { status: 502 });
       return Response.json({ ok: false, fout: `Facturen ophalen bij Bol mislukt (status ${lijst.status}).` }, { status: 502 });
     }
     const items = eersteLijst(lijst.data);
-    // Controle: Bol moet precies de gevraagde periode teruggeven (anders negeert hij de parameter).
-    const teruggegeven = String((lijst.data as any)?.period ?? "");
-    if (teruggegeven && teruggegeven !== `${van}/${tot}`) return Response.json({ ok: false, fout: `Bol gaf een andere periode terug (${teruggegeven}) dan gevraagd (${van}/${tot}).` }, { status: 502 });
     if (items.length && !voorbeeldKop) voorbeeldKop = vorm(items[0]);
     for (const f of items) {
       const id = String(f?.invoiceId ?? f?.id ?? "");
