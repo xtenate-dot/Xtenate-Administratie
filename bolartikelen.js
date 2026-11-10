@@ -3,12 +3,12 @@
 // heeft verkocht, naast wat jij als verkocht hebt vastgelegd. Zo zie je eerst of de cijfers kloppen
 // voordat iets automatisch wordt bijgewerkt.
 
-import { state, saveCoversData } from './storage.js?v=20261110i';
-import { saveCoverToSupabase, addToPendingQueue } from './supabase-client-v2.js?v=20261110i';
-import { legVast } from './voorraadlog.js?v=20261110i';
-import { leesBestellingen } from './bol.js?v=20261110i';
-import { esc } from './helpers.js?v=20261110i';
-import { lopendJaar } from './jaren.js?v=20261110i';
+import { state, saveCoversData } from './storage.js?v=20261110j';
+import { saveCoverToSupabase, addToPendingQueue } from './supabase-client-v2.js?v=20261110j';
+import { legVast } from './voorraadlog.js?v=20261110j';
+import { leesBestellingen } from './bol.js?v=20261110j';
+import { esc } from './helpers.js?v=20261110j';
+import { lopendJaar } from './jaren.js?v=20261110j';
 
 const eansVan = a => (Array.isArray(a.ean) ? a.ean : a.ean ? [a.ean] : []).map(String);
 

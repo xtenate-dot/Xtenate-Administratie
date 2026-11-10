@@ -2,12 +2,12 @@
 // verkocht per artikel, en een vergelijking met wat Bol op je bankrekening heeft gestort.
 // Alleen kijken: er wordt niets geboekt en de voorraad verandert niet.
 
-import { esc, fmt, ddmm } from './helpers.js?v=20261110i';
-import { bolArtikelenHtml } from './bolartikelen.js?v=20261110i';
-import { lopendJaar } from './jaren.js?v=20261110i';
-import { state } from './storage.js?v=20261110i';
-import { leesBolFacturen, perMaand, aantalBolFacturen } from './bol-facturen.js?v=20261110i';
-import { haalFacturenBijBol, leesFacturenOverzicht, leesBestellingen, leesRetouren, retourSamenvatting, haalBijBol, samenvatting, bolUitbetalingen, standaardPeriodes, leesBolAccounts } from './bol.js?v=20261110i';
+import { esc, fmt, ddmm } from './helpers.js?v=20261110j';
+import { bolArtikelenHtml } from './bolartikelen.js?v=20261110j';
+import { lopendJaar } from './jaren.js?v=20261110j';
+import { state } from './storage.js?v=20261110j';
+import { leesBolFacturen, perMaand, aantalBolFacturen } from './bol-facturen.js?v=20261110j';
+import { haalFacturenBijBol, leesFacturenOverzicht, leesBestellingen, leesRetouren, retourSamenvatting, haalBijBol, samenvatting, bolUitbetalingen, standaardPeriodes, leesBolAccounts } from './bol.js?v=20261110j';
 
 const el = id => document.getElementById(id);
 const MAAND = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
@@ -235,7 +235,7 @@ function factuurTabel() {
       <thead><tr><th>Maand</th><th style="text-align:right">Facturen</th><th style="text-align:right">Omzet</th><th style="text-align:right">Commissie</th><th style="text-align:right">Overige kosten</th><th style="text-align:right">Netto</th><th style="text-align:right">Uitbetaald (factuur)</th><th style="text-align:right">Op de bank</th></tr></thead>
       <tbody>${metBank.map(r => `<tr><td>${esc(MAAND[Number(r.maand.slice(5)) - 1] || r.maand)} ${esc(r.maand.slice(0, 4))}</td><td style="text-align:right">${r.facturen}</td><td style="text-align:right">${fmt(r.omzet)}</td><td style="text-align:right">${fmt(r.commissie)}</td><td style="text-align:right">${fmt(r.overig)}</td><td style="text-align:right">${fmt(r.netto)}</td><td style="text-align:right">${fmt(r.uitbetaling)}</td><td style="text-align:right">${fmt(r.bank)}</td></tr>`).join('')}
       <tr style="font-weight:700"><td>Totaal</td><td></td><td style="text-align:right">${fmt(r2(t2.omzet))}</td><td style="text-align:right">${fmt(r2(t2.commissie))}</td><td style="text-align:right">${fmt(r2(t2.overig))}</td><td style="text-align:right">${fmt(r2(t2.netto))}</td><td style="text-align:right">${fmt(r2(t2.uitbetaling))}</td><td style="text-align:right">${fmt(r2(t2.bank))}</td></tr></tbody></table></div></div>
-    <p class="muted" style="font-size:13px;margin-top:8px">Bedragen excl. btw, behalve "Uitbetaald" (volgens de factuur, incl. btw). Overige kosten zijn bijvoorbeeld verzendlabels en correcties. De maand is de einddatum van de factuurperiode.${onjuist ? ` ⚠️ Bij ${onjuist} facturen komt de som van de regels niet overeen met het factuurtotaal; die cijfers zijn dan onvolledig.` : ''}</p>`;
+    <p class="muted" style="font-size:13px;margin-top:8px">Bedragen excl. btw, behalve "Uitbetaald" (volgens de factuur, incl. btw). Overige kosten zijn bijvoorbeeld verzendlabels en correcties. De maand is de einddatum van de factuurperiode. ${factuurLijst.length} facturen geladen${factuurDb != null ? ` (in de database: ${factuurDb})` : ''}.${onjuist ? ` ⚠️ Bij ${onjuist} facturen komt de som van de regels niet overeen met het factuurtotaal; die cijfers zijn dan onvolledig.` : ''}</p>`;
 }
 let factuurMelding = '', factuurOverzicht = null, factuurVan = '2026-01-01', factuurTot = '2026-07-24';
 export async function haalBolFacturenOp() {

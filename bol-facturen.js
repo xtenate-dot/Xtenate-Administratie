@@ -5,7 +5,7 @@
 // lineExtensionAmount.value (excl. btw; negatief = Bol betaalt jou) en AdditionalItemProperty (o.a. Bestelnummer, EAN).
 // Op factuurniveau: payableAmount (negatief = Bol betaalt jou uit).
 
-import { getClient } from './supabase.js?v=20261110i';
+import { getClient } from './supabase.js?v=20261110j';
 
 const r2 = n => Math.round(n * 100) / 100;
 const tekst = x => (x && typeof x === 'object' && !Array.isArray(x) ? tekst(x.value ?? x.Value ?? x.amount ?? x.name ?? '') : Array.isArray(x) ? tekst(x[0]) : x == null ? '' : String(x));
@@ -52,12 +52,12 @@ export function verwerkFactuur(rij) {
     else overig += -jouw(r);
   }
   const somRegels = r2(regels.reduce((s, r) => s + r.bedrag, 0));
-  const totaalExcl = getal(kop?.legalMonetaryTotal?.taxExclusiveAmount);
+  const totaalExcl = getal(kop?.legalMonetaryTotal?.taxExclusiveAmount ?? kop?.taxExclusiveAmount);
   return {
     id: rij.invoice_id, account: rij.account || '1', type: rij.type || kop.invoiceType || '',
     van, tot, uitgegeven, maand: (tot || uitgegeven || van).slice(0, 7),
     regels, omzet: r2(omzet), commissie: r2(commissie), overig: r2(overig), netto: r2(omzet - commissie - overig),
-    uitbetaling: r2(-getal(kop?.payableAmount)),         // incl. btw; positief = Bol betaalt jou
+    uitbetaling: r2(-getal(kop?.legalMonetaryTotal?.payableAmount ?? kop?.payableAmount)),         // incl. btw; positief = Bol betaalt jou
     klopt: Math.abs(somRegels - totaalExcl) < 0.05, somRegels, totaalExcl
   };
 }

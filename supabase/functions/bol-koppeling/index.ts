@@ -178,12 +178,15 @@ async function verwerkFacturen(gekozen: ReturnType<typeof accounts>, van: string
   for (const acc of gekozen) {
     const tok = await token(acc.id, acc.geheim);
     if (!tok) return Response.json({ ok: false, fout: `Inloggen bij Bol is mislukt voor "${acc.naam}". ${laatsteTokenFout}` }, { status: 502 });
-    const lijst = await haal(`https://api.bol.com/retailer/invoices?${new URLSearchParams({ "period-start": van, "period-end": tot })}`, tok);
+    const lijst = await haal(`https://api.bol.com/retailer/invoices?${new URLSearchParams({ period: `${van}/${tot}` })}`, tok);
     if (!lijst.data) {
       if (lijst.status === 401 || lijst.status === 403) return Response.json({ ok: false, fout: `Bol weigert de toegang tot facturen voor "${acc.naam}".` }, { status: 502 });
       return Response.json({ ok: false, fout: `Facturen ophalen bij Bol mislukt (status ${lijst.status}).` }, { status: 502 });
     }
     const items = eersteLijst(lijst.data);
+    // Controle: Bol moet precies de gevraagde periode teruggeven (anders negeert hij de parameter).
+    const teruggegeven = String((lijst.data as any)?.period ?? "");
+    if (teruggegeven && teruggegeven !== `${van}/${tot}`) return Response.json({ ok: false, fout: `Bol gaf een andere periode terug (${teruggegeven}) dan gevraagd (${van}/${tot}).` }, { status: 502 });
     if (items.length && !voorbeeldKop) voorbeeldKop = vorm(items[0]);
     for (const f of items) {
       const id = String(f?.invoiceId ?? f?.id ?? "");
