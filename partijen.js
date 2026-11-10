@@ -11,16 +11,16 @@
 //    op display:none en gaan alleen open via .open. Een eigen regel voor
 //    .modal-overlay zou dat overschrijven en elk venster tegelijk tonen.
 
-import { state, saveTxData, saveHistTxData } from './storage.js?v=20261110b';
-import { fmt } from './helpers.js?v=20261110b';
+import { state, saveTxData, saveHistTxData } from './storage.js?v=20261110c';
+import { fmt } from './helpers.js?v=20261110c';
 import {
   saveToSupabase,
   deleteFromSupabase,
   addToPendingQueue
-} from './supabase-client-v2.js?v=20261110b';
-import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking, facturenVan, isOpenstaand, factuurStatus, restBedrag, isDeelsBetaald } from './facturen.js?v=20261110b';
-import { vindRelatie, relatieNummer } from './relaties.js?v=20261110b';
-import { txVanJaar, lopendJaar } from './jaren.js?v=20261110b';
+} from './supabase-client-v2.js?v=20261110c';
+import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking, facturenVan, isOpenstaand, factuurStatus, restBedrag, isDeelsBetaald } from './facturen.js?v=20261110c';
+import { vindRelatie, relatieNummer } from './relaties.js?v=20261110c';
+import { txVanJaar, lopendJaar } from './jaren.js?v=20261110c';
 
 export const veilig = s => String(s ?? '').replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

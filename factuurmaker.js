@@ -6,10 +6,10 @@
 // (zie facturen.js). De voorraad en de boekingen worden NIET aangepast: de
 // verkoop komt via de bank binnen, zoals altijd.
 
-import { state, BEDRIJFSGEGEVENS, bewaarFactuurmakerInstellingen } from './storage.js?v=20261110b';
-import { esc, fmt } from './helpers.js?v=20261110b';
-import { modelNaarPdf } from './pdf.js?v=20261110b';
-import { voegFactuurToe, werkFactuurBij, vindFactuur, plusDagen, vandaagISO, standaardTermijn, factuurnummerInGebruik } from './facturen.js?v=20261110b';
+import { state, BEDRIJFSGEGEVENS, bewaarFactuurmakerInstellingen } from './storage.js?v=20261110c';
+import { esc, fmt } from './helpers.js?v=20261110c';
+import { modelNaarPdf } from './pdf.js?v=20261110c';
+import { voegFactuurToe, werkFactuurBij, vindFactuur, plusDagen, vandaagISO, standaardTermijn, factuurnummerInGebruik } from './facturen.js?v=20261110c';
 
 const KEY = 'xtenate_factuurmaker';
 const el = id => document.getElementById(id);
@@ -157,7 +157,8 @@ td{padding:7px 8px;border-bottom:1px solid #e3e3e3;vertical-align:top}
 </div>
 <table><thead><tr>${kolommen}</tr></thead><tbody>${rijen || `<tr><td colspan="${leeg + 1}" style="color:#aaa">Nog geen regels</td></tr>`}</tbody></table>
 <div class="tot">
-  ${i.btw === 'btw21' ? `<div><span>Subtotaal</span><span>${eur(t.sub)}</span></div><div><span>BTW 21%</span><span>${eur(t.btw)}</span></div>` : `<div><span>BTW 0%</span><span>${eur(0)}</span></div>`}
+  <div><span>Bedrag excl. BTW</span><span>${eur(t.sub)}</span></div>
+  <div><span>BTW ${i.btw === 'btw21' ? '21%' : '0%'}</span><span>${eur(t.btw)}</span></div>
   <div class="eind"><span>Totaal</span><span>${eur(t.totaal)}</span></div>
 </div>
 ${kor}
@@ -196,10 +197,8 @@ export function factuurPdfModel(c = concept(), i = opslag.instellingen) {
       { type: 'kop', tekst: 'Aan' },
       ...regels([c.klantNaam, c.klantAdres, c.klantPlaats, c.klantRef ? `Uw referentie: ${c.klantRef}` : '']),
       { type: 'tabel', kop: 'Regels', kolommen, rijen },
-      ...(i.btw === 'btw21' ? [
-        { type: 'regel', label: 'Subtotaal', bedrag: t.sub },
-        { type: 'regel', label: 'BTW 21%', bedrag: t.btw }] : []),
-      ...(i.btw === 'kor' ? [{ type: 'regel', label: 'BTW 0%', bedrag: 0 }] : []),
+      { type: 'regel', label: 'Bedrag excl. BTW', bedrag: t.sub },
+      { type: 'regel', label: `BTW ${i.btw === 'btw21' ? '21%' : '0%'}`, bedrag: t.btw },
       { type: 'regel', label: 'Totaal', bedrag: t.totaal, totaal: true },
       ...(i.btw === 'kor' ? regels(['Vrijgesteld van omzetbelasting op grond van de kleineondernemersregeling (KOR).']) : []),
       ...regels([c.notitie]),
