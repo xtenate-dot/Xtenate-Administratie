@@ -7,7 +7,8 @@ Dit bestand is het geheugen tussen sessies. Werk het bij na elke wijziging.
 - "Winst per artikel" uit het menu (pagina blijft bereikbaar via knop op Voorraad); "Artikelvoorraad" heet nu "Veilingvoorraad".
 - Knop "Exporteer naar Excel" op Bank (huidige maand/filters) en Dagboeken (huidig dagboek + periode) via lijst-export.js. Volledige jaarexport blijft onder Beheer > Exporteer Excel en Per periode.
 
-## Open: bankSaldo-verschil EUR 9,36
+## Opgelost 10-11-2026: banksaldo-verschil (29-08: PostNL 3 i.p.v. 4 regels + Gamma 12,57; gebruiker heeft opnieuw geimporteerd en het klopt)
+## (oud) bankSaldo-verschil EUR 9,36
 App en Excel/bank wijken constant EUR 9,36 af vanaf eind oktober 2026. Zoek de oorzaak in oktober of eerder (ontbrekende/dubbele/verkeerd getekende boeking; let op 2 okt PostNL annulering +9,50). Pas niets aan zonder ja van de gebruiker. Aanpak: Bank-export per maand vergelijken met de Excel.
 
 ## Gedaan op 23-10-2026 (nog door de gebruiker te testen)
@@ -37,6 +38,8 @@ App en Excel/bank wijken constant EUR 9,36 af vanaf eind oktober 2026. Zoek de o
 - Draaiboek begin januari 2027: back-up maken; 2026 afsluiten via Jaarafsluiting (eindvoorraad vastleggen, controle doorlopen, aangifte, vergrendelen); daarna boeken in 2027.
 
 ## Wensen van de gebruiker (nog te doen)
+0a. **Bank-inbox: meerdere regels tegelijk verwijderen (10-11-2026).** Regels in de bank-inbox aan kunnen vinken (met 'alles selecteren') en in één keer verwijderen. Doel: de inbox snel op 0 krijgen.
+0b. **Bank-inbox: filter 'alleen openstaande'.** Een filter dat alleen de nog niet verwerkte/openstaande bedragen toont, zodat je bij correcties niet lang hoeft te scrollen.
 1. **Bankimport: verwijderen.** Bij het importeren van de bank geen verwijderknop. Gewenst: regels (dubbel, storno) uit het voorstel kunnen halen, én een al geïmporteerde boeking makkelijk kunnen verwijderen. (Een vinkje om een regel over te slaan bestaat al.)
 2. **HNVI: deel van een lot verkocht.** Voorbeeld: "Vier Hitster spellen", één verkocht, drie nog niet. Nu telt de hele inkoop mee zodra het lot als verkocht staat, dus ontstaat een schijnverlies. Voorstel: aantal stuks per lot, inkoop per stuk, verkochte stuks; kosten = inkoop per stuk × verkochte stuks. Daarnaast optie om een lot te splitsen. Keuze met de gebruiker bespreken (aantal-veld versus splitsen in Excel).
 3. **Facturen maken en versturen.** (EERSTE VERSIE GEBOUWD 23-10; nog te doen: vrije indeling Canva-stijl, voorraad afboeken) Een lege "sheet" die je zelf indeelt (Canva-idee), artikelen uit de voorraad kiezen met aantallen, en eigen regels (bijv. extern werk). Niet urgent. Er bestaat al een facturenonderdeel (facturen.js, facturen-ui.js) — eerst kijken wat daar is.
