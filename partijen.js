@@ -11,16 +11,16 @@
 //    op display:none en gaan alleen open via .open. Een eigen regel voor
 //    .modal-overlay zou dat overschrijven en elk venster tegelijk tonen.
 
-import { state, saveTxData, saveHistTxData } from './storage.js?v=20261110c';
-import { fmt } from './helpers.js?v=20261110c';
+import { state, saveTxData, saveHistTxData } from './storage.js?v=20261110d';
+import { fmt } from './helpers.js?v=20261110d';
 import {
   saveToSupabase,
   deleteFromSupabase,
   addToPendingQueue
-} from './supabase-client-v2.js?v=20261110c';
-import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking, facturenVan, isOpenstaand, factuurStatus, restBedrag, isDeelsBetaald } from './facturen.js?v=20261110c';
-import { vindRelatie, relatieNummer } from './relaties.js?v=20261110c';
-import { txVanJaar, lopendJaar } from './jaren.js?v=20261110c';
+} from './supabase-client-v2.js?v=20261110d';
+import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking, facturenVan, isOpenstaand, factuurStatus, restBedrag, isDeelsBetaald } from './facturen.js?v=20261110d';
+import { vindRelatie, relatieNummer, vindRelatieOpNaam, zorgRelatieVoorNaam, relatieExtra, bewaarRelatieGegevens, zorgRelatienummer } from './relaties.js?v=20261110d';
+import { txVanJaar, lopendJaar } from './jaren.js?v=20261110d';
 
 export const veilig = s => String(s ?? '').replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -52,11 +52,18 @@ function facturenVanPartij(naam, boekingen, o) {
 }
 
 /** Nummer van de relatie (10000-reeks of 20000-reeks), als die er is. */
-function nummerVanPartij(facturen, boekingen, o) {
+function nummerVanPartij(facturen, boekingen, o, naam) {
   const soort = factuurSoortVan(o);
   const ids = [...new Set([...facturen.map(f => f.relatieId), ...boekingen.map(b => b.relatieId)].filter(Boolean))];
   for (const id of ids) { const n = relatieNummer(vindRelatie(id), soort); if (n) return n; }
-  return null;
+  return naam ? relatieNummer(vindRelatieOpNaam(naam), soort) : null;
+}
+
+/** De relatie bij een partij: via een gekoppelde factuur/boeking, anders op naam. */
+function relatieVanPartij(naam, facturen, boekingen) {
+  const ids = [...new Set([...facturen.map(f => f.relatieId), ...boekingen.map(b => b.relatieId)].filter(Boolean))];
+  for (const id of ids) { const r = vindRelatie(id); if (r) return r; }
+  return vindRelatieOpNaam(naam);
 }
 
 // ------------------------------------------------------------------ lijst
@@ -112,7 +119,31 @@ export function tekenPartijen(o) {
     const bk = boekingen.filter(b => partijNaamVan(b) === naam);
     const fs = facturenVanPartij(naam, bk, o);
     const open = fs.filter(f => isOpenstaand(f));
-    return { fs, open, bedragOpen: open.reduce((t, f) => t + restBedrag(f), 0), nr: nummerVanPartij(fs, bk, o) };
+    return { fs, open, bedragOpen: open.reduce((t, f) => t + restBedrag(f), 0), nr: nummerVanPartij(fs, bk, o, naam) };
+  });
+
+  const zonderNr = perPartij.filter(p => !p.nr).length;
+  const toekenId = `pm-toeken-${o.lijstId}`;
+  let balk = document.getElementById(toekenId);
+  if (!balk) { balk = document.createElement('div'); balk.id = toekenId; balk.style.cssText = 'padding:0 16px 10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap'; lijst.parentNode.insertBefore(balk, lijst); }
+  balk.innerHTML = zonderNr
+    ? `<span class="muted" style="font-size:13px">${zonderNr} van ${perPartij.length} hebben nog geen ${factuurSoortVan(o)}nummer.</span> <button type="button" class="btn btn-sm" data-toeken>Nummers toekennen</button>`
+    : `<span class="muted" style="font-size:13px">Alle ${perPartij.length} hebben een ${factuurSoortVan(o)}nummer.</span>`;
+  balk.querySelector('[data-toeken]')?.addEventListener('click', async e => {
+    const knop = e.currentTarget;
+    if (!window.confirm(`${zonderNr} partijen krijgen een ${factuurSoortVan(o)}nummer (${o.soort === 'inkomst' ? 'vanaf 10000' : 'vanaf 20000'}). Voor partijen die nog geen relatie zijn, wordt er één aangemaakt. Doorgaan?`)) return;
+    knop.disabled = true;
+    let klaar = 0, mislukt = 0;
+    for (let i = 0; i < gesorteerd.length; i++) {
+      const naam = gesorteerd[i][0], p = perPartij[i];
+      if (p.nr || naam === '(geen naam)') continue;
+      knop.textContent = `Bezig… ${klaar}/${zonderNr}`;
+      const bk = boekingen.filter(b => partijNaamVan(b) === naam);
+      const rel = relatieVanPartij(naam, p.fs, bk) || await zorgRelatieVoorNaam(naam);
+      if (rel && await zorgRelatienummer(rel.id, soortF)) klaar++; else mislukt++;
+    }
+    if (mislukt) window.alert(`${klaar} nummers toegekend, ${mislukt} mislukt (controleer je verbinding en probeer opnieuw).`);
+    o.herteken?.();
   });
 
   lijst.innerHTML = gesorteerd.map(([naam, g], i) => `
@@ -168,6 +199,37 @@ function toonVenster(id, inhoudHtml) {
   return { laag, sluit };
 }
 
+function gegevensHtml(naam, nr, o, rel) {
+  const x = relatieExtra(rel && rel.id), r = rel || {};
+  const soort = factuurSoortVan(o);
+  const veld = (id, label, waarde, extra = '', breed = false) =>
+    `<label${breed ? ' class="pm-breed"' : ''}>${label}<input type="text" id="pm-g-${id}" value="${veilig(waarde || '')}" ${extra}></label>`;
+  return `<details class="pm-gegevens" style="margin:0 0 14px;border:1px solid var(--border-default);border-radius:8px">
+    <summary style="cursor:pointer;font-weight:600;padding:10px 14px">Gegevens van deze ${soort === 'debiteur' ? 'klant' : 'leverancier'}
+      <span class="muted" style="font-weight:400;font-size:13px" id="pm-g-nr">${nr ? `${soort}nummer ${nr}` : 'nog geen nummer, wordt toegekend bij opslaan'}</span></summary>
+    <div class="pm-velden" style="padding:6px 14px 14px">
+      ${veld('zoeksleutel', 'Zoeksleutel', x.zoeksleutel, 'placeholder="korte code, bijv. BOL"')}
+      ${veld('bedrijfsnaam', 'Bedrijfsnaam (officieel)', x.bedrijfsnaam)}
+      ${veld('kvk', 'KVK-nummer', r.kvkNummer)}
+      ${veld('btw', 'BTW-nummer', r.btwNummer)}
+      <label>BTW-plichtig<select id="pm-g-plichtig">
+        ${[['', 'Onbekend'], ['ja', 'Ja'], ['nee', 'Nee (KOR of vrijgesteld)']].map(([v, t]) => `<option value="${v}" ${(x.btwPlichtig || '') === v ? 'selected' : ''}>${t}</option>`).join('')}
+      </select></label>
+      ${veld('termijn', 'Betaaltermijn (dagen)', x.termijn, 'inputmode="numeric"')}
+      ${veld('adres', 'Adres', r.adres, '', true)}
+      ${veld('plaats', 'Postcode en plaats', r.postcodePlaats)}
+      ${veld('email', 'E-mail', x.email)}
+      ${veld('telefoon', 'Telefoon', x.telefoon)}
+      ${veld('iban', 'IBAN', x.iban)}
+      <label class="pm-breed">Notitie<textarea id="pm-g-notitie" rows="2">${veilig(x.notitie || '')}</textarea></label>
+      <div class="pm-breed" style="display:flex;gap:12px;align-items:center">
+        <button type="button" class="btn btn-primary btn-sm" id="pm-g-opslaan">Gegevens opslaan</button>
+        <span class="muted" id="pm-g-melding" style="font-size:13px"></span>
+      </div>
+    </div>
+  </details>`;
+}
+
 function openPartijVenster(naam, boekingen, o) {
   const opDatum = [...boekingen].sort((a, b) => String(a.datum).localeCompare(String(b.datum)));
   const totaal = opDatum.reduce((s, b) => s + (Number(b.bedrag) || 0), 0);
@@ -185,7 +247,7 @@ function openPartijVenster(naam, boekingen, o) {
     </tr>`).join('');
 
   const fs = facturenVanPartij(naam, boekingen, o).sort((a, b) => String(b.datum).localeCompare(String(a.datum)));
-  const nr = nummerVanPartij(fs, boekingen, o);
+  const nr = nummerVanPartij(fs, boekingen, o, naam);
   const openBedrag = fs.filter(f => isOpenstaand(f)).reduce((t, f) => t + restBedrag(f), 0);
   const STAT = { open: 'open', vervallen: 'te laat', betaald: 'betaald', oninbaar: 'oninbaar' };
   const factuurHtml = fs.length ? `
@@ -200,12 +262,13 @@ function openPartijVenster(naam, boekingen, o) {
   const { laag } = toonVenster('pm-partij', `
     <header class="pm-kop">
       <div>
-        <h3>${nr ? nr + ' · ' : ''}${veilig(naam)}</h3>
+        <h3><span id="pm-nr-kop">${nr ? nr + ' · ' : ''}</span>${veilig(naam)}</h3>
         <p class="pm-sub">${opDatum.length} boeking${opDatum.length === 1 ? '' : 'en'} &middot; ${fmt(totaal)}</p>
       </div>
       <button type="button" class="pm-kruis" data-pm-sluit aria-label="Sluiten">&times;</button>
     </header>
     <div class="pm-inhoud">
+      ${gegevensHtml(naam, nr, o, relatieVanPartij(naam, fs, boekingen))}
       <table class="pm-tabel">
         <thead>
           <tr>
@@ -226,6 +289,26 @@ function openPartijVenster(naam, boekingen, o) {
 
   laag.querySelectorAll('[data-bewerk]').forEach(k => k.addEventListener('click',
     () => openBewerkVenster(opDatum[Number(k.dataset.bewerk)], o)));
+
+  laag.querySelector('#pm-g-opslaan')?.addEventListener('click', async () => {
+    const w = id => laag.querySelector('#pm-g-' + id)?.value ?? '';
+    const melding = laag.querySelector('#pm-g-melding'), knop = laag.querySelector('#pm-g-opslaan');
+    knop.disabled = true; melding.textContent = 'Bezig met opslaan…';
+    const soort = factuurSoortVan(o);
+    const rel = relatieVanPartij(naam, fs, boekingen) || await zorgRelatieVoorNaam(naam);
+    if (!rel) { melding.textContent = 'Opslaan mislukt: de relatie kon niet worden aangemaakt (verbinding?).'; knop.disabled = false; return; }
+    const ok = await bewaarRelatieGegevens(rel.id, {
+      zoeksleutel: w('zoeksleutel'), bedrijfsnaam: w('bedrijfsnaam'), kvkNummer: w('kvk'), btwNummer: w('btw'),
+      btwPlichtig: w('plichtig'), adres: w('adres'), postcodePlaats: w('plaats'), email: w('email'),
+      telefoon: w('telefoon'), iban: w('iban'), termijn: w('termijn'), notitie: w('notitie')
+    });
+    if (!ok) { melding.textContent = 'Opslaan mislukt (verbinding?). Probeer het opnieuw.'; knop.disabled = false; return; }
+    const nieuwNr = await zorgRelatienummer(rel.id, soort);
+    laag.querySelector('#pm-g-nr').textContent = nieuwNr ? `${soort}nummer ${nieuwNr}` : 'nog geen nummer';
+    laag.querySelector('#pm-nr-kop').textContent = nieuwNr ? nieuwNr + ' · ' : '';
+    melding.textContent = 'Opgeslagen.'; knop.disabled = false;
+    o.herteken?.();
+  });
 
   laag.querySelectorAll('[data-verwijder]').forEach(k => k.addEventListener('click',
     () => verwijderBoeking(opDatum[Number(k.dataset.verwijder)], o)));

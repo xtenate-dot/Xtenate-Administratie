@@ -1212,11 +1212,11 @@ body.nav-collapsed .nav-section-btn { pointer-events: none; }
 .pm-velden label { display: flex; flex-direction: column; gap: 5px;
                    font-size: 13px; font-weight: 600; color: var(--text-secondary); }
 .pm-velden .pm-breed { grid-column: 1 / -1; }
-.pm-velden input {
+.pm-velden input, .pm-velden select, .pm-velden textarea {
   padding: 8px 10px; font: inherit; font-size: 14px; font-weight: 400; color: var(--text-primary);
   background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-sm);
 }
-.pm-velden input:focus { outline: 2px solid var(--semantic-info-bright); outline-offset: -1px; border-color: transparent; }
+.pm-velden input:focus, .pm-velden select:focus, .pm-velden textarea:focus { outline: 2px solid var(--semantic-info-bright); outline-offset: -1px; border-color: transparent; }
 
 @media (max-width: 640px) {
   .pm-laag { padding: 0; }

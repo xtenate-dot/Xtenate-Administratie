@@ -10,12 +10,12 @@
 // samenvoegen op basis van relatieSleutel() bleek op de echte data lang
 // niet betrouwbaar genoeg (114 rauwe schrijfwijzen → maar 108 sleutels).
 
-import { state, saveFacturen } from './storage.js?v=20261110c';
-import { getClient } from './supabase.js?v=20261110c';
+import { state, saveFacturen, bewaarRelatieExtra } from './storage.js?v=20261110d';
+import { getClient } from './supabase.js?v=20261110d';
 import {
   loadRelatiesFromSupabase, maakRelatieInSupabase,
   werkRelatieBijInSupabase, verwijderRelatieInSupabase
-} from './supabase-client-v2.js?v=20261110c';
+} from './supabase-client-v2.js?v=20261110d';
 
 export function vindRelatie(id) {
   return state.RELATIES.find(r => r.id === id) || null;
@@ -28,7 +28,9 @@ export function zoekRelaties(q) {
   if (!term) return [];
   return state.RELATIES
     .filter(r => r.naam.toLowerCase().includes(term) ||
-      (r.aliassen || []).some(a => a.toLowerCase().includes(term)))
+      (r.aliassen || []).some(a => a.toLowerCase().includes(term)) ||
+      String((state.RELATIE_EXTRA[r.id] || {}).zoeksleutel || '').toLowerCase().includes(term) ||
+      String((state.RELATIE_EXTRA[r.id] || {}).bedrijfsnaam || '').toLowerCase().includes(term))
     .slice(0, 10);
 }
 
@@ -141,4 +143,39 @@ export async function zorgRelatienummer(relatieId, soort) {
     if (soort === 'crediteur') r.crediteurnr = data; else r.debiteurnr = data;
     return data;
   } catch { return null; }
+}
+
+
+// ─── Relatiegegevens (zoeksleutel, bedrijfsnaam, btw-plichtig, contact, notitie) ───
+
+const nm = t => String(t || '').trim().toLowerCase();
+
+/** De extra velden van een relatie (zoeksleutel, bedrijfsnaam, btwPlichtig, email, telefoon, iban, termijn, notitie). */
+export function relatieExtra(id) {
+  return (id && state.RELATIE_EXTRA[id]) || {};
+}
+
+/** Relatie op exacte naam, alias of bedrijfsnaam (hoofdletterongevoelig), of null. */
+export function vindRelatieOpNaam(naam) {
+  const n = nm(naam);
+  if (!n) return null;
+  return state.RELATIES.find(r => nm(r.naam) === n || (r.aliassen || []).some(a => nm(a) === n)
+    || nm(relatieExtra(r.id).bedrijfsnaam) === n) || null;
+}
+
+/** Zoekt de relatie bij een naam; bestaat die nog niet, dan wordt hij aangemaakt. */
+export async function zorgRelatieVoorNaam(naam) {
+  return vindRelatieOpNaam(naam) || await maakRelatie(naam);
+}
+
+/** Bewaart alle gegevens van een relatie: adres/KVK/BTW in de relaties-tabel, de rest in app_data. */
+export async function bewaarRelatieGegevens(id, g = {}) {
+  const ok = await bewaarRelatieAdres(id, g);
+  if (!ok) return false;
+  const t = v => String(v == null ? '' : v).trim();
+  bewaarRelatieExtra(id, {
+    zoeksleutel: t(g.zoeksleutel), bedrijfsnaam: t(g.bedrijfsnaam), btwPlichtig: t(g.btwPlichtig),
+    email: t(g.email), telefoon: t(g.telefoon), iban: t(g.iban), termijn: t(g.termijn), notitie: t(g.notitie)
+  });
+  return true;
 }

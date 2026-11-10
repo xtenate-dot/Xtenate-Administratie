@@ -40,6 +40,11 @@ App en Excel/bank wijken constant EUR 9,36 af vanaf eind oktober 2026. Zoek de o
 ## Gedaan 10-11-2026 (v20261110b): factuurmaker
 - Logo groter (100 px hoog), kop/voet van de browser weg (@page-marge 0), 'Nummer' heet 'Factuurnummer', tekst onder Totaal lager, bij KOR een regel 'BTW 0%', pdf-bestandsnaam = 'Factuur <nummer>', 'Indeling en gegevens' blijft open tot je hem sluit. Indeling wordt opgeslagen (localStorage + cloud app_data). Niet getest in de live app.
 
+## Gedaan 10-11-2026 (v20261110d): relatiegegevens, nummers, kostenplaats
+- Klanten/Leveranciers: knop 'Nummers toekennen' (debiteur vanaf 10000, crediteur vanaf 20000; maakt zo nodig een relatie aan) + in Details een blok 'Gegevens' met zoeksleutel, bedrijfsnaam, KVK, BTW-nummer, btw-plichtig, adres, e-mail, telefoon, IBAN, betaaltermijn, notitie. KVK/BTW/adres staan in tabel relaties, de rest in app_data 'relatie_extra' (geen SQL nodig). Zoeken op zoeksleutel/bedrijfsnaam werkt in zoekRelaties.
+- Kostenplaats/kostendrager: vrij label per boeking in het boekingsvenster (app_data 'kostenplaats', sleutel = boeking-id; boekingen-tabel en sync ongewijzigd), badge in de banklijst, kolom in Excel-export. Nog niet: filter of overzicht per kostenplaats.
+- Niet getest in de live app.
+
 ## Wensen van de gebruiker (nog te doen)
 0a. **Bank-inbox: meerdere regels tegelijk verwijderen (10-11-2026).** Regels in de bank-inbox aan kunnen vinken (met 'alles selecteren') en in één keer verwijderen. Doel: de inbox snel op 0 krijgen.
 0b. **Bank-inbox: filter 'alleen openstaande'.** Een filter dat alleen de nog niet verwerkte/openstaande bedragen toont, zodat je bij correcties niet lang hoeft te scrollen.

@@ -19,7 +19,7 @@ import {
   saveAppData,
   loadAppData,
   laatsteAppDataFout
-} from './supabase-client-v2.js?v=20261110c';
+} from './supabase-client-v2.js?v=20261110d';
 
 /**
  * Stuurt een los lijstje (groepen, facturen, tellers) naar de cloud zonder
@@ -119,6 +119,8 @@ function appDataWaarde(sleutel) {
   if (sleutel === 'veiling') return state.VEILING;
   if (sleutel === 'hnvi_datums') return state.HNVI_DATUMS;
   if (sleutel === 'hnvi_extra') return state.HNVI_EXTRA;
+  if (sleutel === 'relatie_extra') return state.RELATIE_EXTRA;
+  if (sleutel === 'kostenplaats') return state.KOSTENPLAATS;
   if (sleutel === 'vergrendeld') return state.VERGRENDELD;
   if (sleutel === 'tellers') return { tx: state.nxtTx, cover: state.nxtCover, hnvi: state.nxtHnvi };
   return undefined;
@@ -480,6 +482,30 @@ state.FACTUURMAKER = null;
 export function bewaarFactuurmakerInstellingen(instellingen) {
   state.FACTUURMAKER = instellingen;
   duwAppData('factuurmaker', instellingen);
+}
+
+// Extra gegevens per relatie (zoeksleutel, bedrijfsnaam, btw-plichtig, contact, notitie, ...) en de
+// kostenplaats per boeking staan los in app_data. Zo blijven de tabellen relaties en boekingen
+// ongewijzigd en raakt dit de sync van boekingen niet. Een leeg veld bewaren we als '' zodat het
+// ook op andere apparaten het oude waarde overschrijft.
+state.RELATIE_EXTRA = load('xtenate_relatie_extra', {});
+state.KOSTENPLAATS = load('xtenate_kostenplaats', {});
+export function bewaarRelatieExtra(relatieId, velden) {
+  state.RELATIE_EXTRA[relatieId] = { ...(state.RELATIE_EXTRA[relatieId] || {}), ...velden };
+  save('xtenate_relatie_extra', state.RELATIE_EXTRA);
+  duwAppData('relatie_extra', state.RELATIE_EXTRA);
+}
+export function zetKostenplaats(boekingId, naam) {
+  const sleutel = String(boekingId), nieuw = String(naam || '').trim();
+  if ((state.KOSTENPLAATS[sleutel] || '') === nieuw) return;
+  if (!nieuw && !(sleutel in state.KOSTENPLAATS)) return;
+  state.KOSTENPLAATS[sleutel] = nieuw;
+  save('xtenate_kostenplaats', state.KOSTENPLAATS);
+  duwAppData('kostenplaats', state.KOSTENPLAATS);
+}
+export function kostenplaatsVan(boekingId) { return state.KOSTENPLAATS[String(boekingId)] || ''; }
+export function kostenplaatsNamen() {
+  return [...new Set(Object.values(state.KOSTENPLAATS).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'nl'));
 }
 
 // Verkoopdatums van HNVI-loten staan ook los in app_data. De tabel hnvi_loten
@@ -966,6 +992,16 @@ export async function loadDataHybrid() {
           save('xtenate_hnvi_extra', state.HNVI_EXTRA);
         }
         pasHnviExtraToe();
+        if (extra.relatie_extra && typeof extra.relatie_extra === 'object') {
+          const samen = { ...extra.relatie_extra };
+          for (const [k, v] of Object.entries(state.RELATIE_EXTRA)) samen[k] = { ...(samen[k] || {}), ...v };
+          state.RELATIE_EXTRA = samen;
+          save('xtenate_relatie_extra', state.RELATIE_EXTRA);
+        }
+        if (extra.kostenplaats && typeof extra.kostenplaats === 'object') {
+          state.KOSTENPLAATS = { ...extra.kostenplaats, ...state.KOSTENPLAATS };
+          save('xtenate_kostenplaats', state.KOSTENPLAATS);
+        }
         if (Array.isArray(extra.vergrendeld)) {
           state.VERGRENDELD = [...new Set([...extra.vergrendeld, ...(state.VERGRENDELD || [])])].sort();
           save('xtenate_vergrendeld', state.VERGRENDELD);
