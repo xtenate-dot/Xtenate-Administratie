@@ -5,10 +5,10 @@
 // lineExtensionAmount.value (excl. btw; negatief = Bol betaalt jou) en AdditionalItemProperty (o.a. Bestelnummer, EAN).
 // Op factuurniveau: payableAmount (negatief = Bol betaalt jou uit).
 
-import { getClient } from './supabase.js?v=20261110h';
+import { getClient } from './supabase.js?v=20261110i';
 
 const r2 = n => Math.round(n * 100) / 100;
-const tekst = x => (x && typeof x === 'object' && !Array.isArray(x) ? tekst(x.value ?? x.Value ?? x.name ?? '') : Array.isArray(x) ? tekst(x[0]) : x == null ? '' : String(x));
+const tekst = x => (x && typeof x === 'object' && !Array.isArray(x) ? tekst(x.value ?? x.Value ?? x.amount ?? x.name ?? '') : Array.isArray(x) ? tekst(x[0]) : x == null ? '' : String(x));
 const getal = x => { const n = Number(tekst(x)); return Number.isFinite(n) ? n : 0; };
 
 /** Bol geeft datums als milliseconden sinds 1970 (of als tekst); geeft 'jjjj-mm-dd' in Nederlandse tijd. */
@@ -69,6 +69,15 @@ export async function leesBolFacturen() {
     const { data, error } = await sb.from('bol_facturen').select('account, invoice_id, type, kop, specificatie').limit(2000);
     if (error) return null;
     return (data || []).map(verwerkFactuur);
+  } catch { return null; }
+}
+
+/** Aantal facturen in de database (los van wat er geladen is), of null. */
+export async function aantalBolFacturen() {
+  try {
+    const sb = await getClient();
+    const { count, error } = await sb.from('bol_facturen').select('invoice_id', { count: 'exact', head: true });
+    return error ? null : count;
   } catch { return null; }
 }
 

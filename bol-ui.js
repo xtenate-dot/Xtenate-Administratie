@@ -2,12 +2,12 @@
 // verkocht per artikel, en een vergelijking met wat Bol op je bankrekening heeft gestort.
 // Alleen kijken: er wordt niets geboekt en de voorraad verandert niet.
 
-import { esc, fmt, ddmm } from './helpers.js?v=20261110h';
-import { bolArtikelenHtml } from './bolartikelen.js?v=20261110h';
-import { lopendJaar } from './jaren.js?v=20261110h';
-import { state } from './storage.js?v=20261110h';
-import { leesBolFacturen, perMaand } from './bol-facturen.js?v=20261110h';
-import { haalFacturenBijBol, leesFacturenOverzicht, leesBestellingen, leesRetouren, retourSamenvatting, haalBijBol, samenvatting, bolUitbetalingen, standaardPeriodes, leesBolAccounts } from './bol.js?v=20261110h';
+import { esc, fmt, ddmm } from './helpers.js?v=20261110i';
+import { bolArtikelenHtml } from './bolartikelen.js?v=20261110i';
+import { lopendJaar } from './jaren.js?v=20261110i';
+import { state } from './storage.js?v=20261110i';
+import { leesBolFacturen, perMaand, aantalBolFacturen } from './bol-facturen.js?v=20261110i';
+import { haalFacturenBijBol, leesFacturenOverzicht, leesBestellingen, leesRetouren, retourSamenvatting, haalBijBol, samenvatting, bolUitbetalingen, standaardPeriodes, leesBolAccounts } from './bol.js?v=20261110i';
 
 const el = id => document.getElementById(id);
 const MAAND = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
@@ -59,7 +59,7 @@ export async function renderBol() {
   }
   teken();
   // Facturen pas laden als de pagina opent (dan ben je ingelogd); opnieuw proberen zolang er nog niets is.
-  if (!factuurLijst || !factuurLijst.length) leesBolFacturen().then(l => { if (l && l.length) { factuurLijst = l; teken(); } });
+  if (!factuurLijst || !factuurLijst.length) { leesBolFacturen().then(l => { if (l && l.length) { factuurLijst = l; teken(); } }); aantalBolFacturen().then(n => { factuurDb = n; teken(); }); }
 }
 
 /** Accounts voor de keuzelijsten: uit Supabase als bekend, anders wat er in de opgeslagen bestellingen voorkomt. */
@@ -125,7 +125,7 @@ function teken() {
     ${melding ? `<div class="card" style="margin-bottom:var(--spacing-4)"><div style="font-size:14px;white-space:pre-line">${esc(melding)}</div></div>` : ''}
     <details class="card" style="padding:14px;margin-bottom:var(--spacing-4)"${factuurMelding ? ' open' : ''}>
       <summary style="font-weight:600;cursor:pointer">Oudere periode ophalen via Bol-facturen (tot 2 jaar terug)</summary>
-      <p class="muted" style="font-size:13px;margin:8px 0">Bestellingen geeft Bol maar ongeveer 3 maanden terug, facturen met specificatie wel tot 2 jaar. Hiermee haal je ze binnen en bewaar je ze.${factuurLijst && factuurLijst.length ? ` Nu bewaard: ${factuurLijst.length} facturen.` : ''}</p>
+      <p class="muted" style="font-size:13px;margin:8px 0">Bestellingen geeft Bol maar ongeveer 3 maanden terug, facturen met specificatie wel tot 2 jaar. Hiermee haal je ze binnen en bewaar je ze.${factuurLijst && factuurLijst.length ? ` Geladen op deze pagina: ${factuurLijst.length} facturen${factuurDb != null ? ` (in de database: ${factuurDb})` : ''}, ${esc(factuurBereik())}.` : ''}</p>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <label style="font-size:13px">Van <input type="date" id="bol-fac-van" value="${esc(factuurVan)}"></label>
         <label style="font-size:13px">Tot <input type="date" id="bol-fac-tot" value="${esc(factuurTot)}"></label>
@@ -217,7 +217,11 @@ function teken() {
 }
 const r2 = n => Math.round(n * 100) / 100;
 
-let factuurLijst = null;
+let factuurLijst = null, factuurDb = null;
+function factuurBereik() {
+  const m = (factuurLijst || []).map(f => f.maand).filter(Boolean).sort();
+  return m.length ? `${m[0]} t/m ${m[m.length - 1]}` : '';
+}
 /** Omzet, commissie en uitbetaling per maand uit de Bol-facturen, naast wat er echt op de bank binnenkwam. */
 function factuurTabel() {
   const rijen = perMaand(factuurLijst, accountFilter);
@@ -242,6 +246,7 @@ export async function haalBolFacturenOp() {
   try {
     const uit = await haalFacturenBijBol(factuurVan, factuurTot, t => { factuurMelding = t; teken(); }, ophaalAccount);
     factuurLijst = await leesBolFacturen();
+    factuurDb = await aantalBolFacturen();
     factuurMelding = `✅ Klaar: ${uit.facturen} facturen met ${uit.transacties} transacties bewaard (${factuurVan} t/m ${factuurTot}).`
       + (uit.onvolledig ? '\nNiet alles paste in één keer; klik nog eens op Facturen ophalen.' : '')
       + (uit.voorbeeldKop ? `\n\nVorm van een factuur (voor controle):\n${JSON.stringify(uit.voorbeeldKop)}` : '')

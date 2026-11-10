@@ -5,10 +5,10 @@
 // en zet daar de opbrengst per kanaal (Bol.com, Marktplaats, overig) naast.
 // De voorraadtelling zelf (aantal stuks) wordt hier NIET door aangepast; de regels geven alleen prijzen.
 
-import { state, saveArtikelRegels } from './storage.js?v=20261110h';
-import { esc, fmt } from './helpers.js?v=20261110h';
-import { lopendJaar, vandaagIso } from './jaren.js?v=20261110h';
-import { leesBestellingen } from './bol.js?v=20261110h';
+import { state, saveArtikelRegels } from './storage.js?v=20261110i';
+import { esc, fmt } from './helpers.js?v=20261110i';
+import { lopendJaar, vandaagIso } from './jaren.js?v=20261110i';
+import { leesBestellingen } from './bol.js?v=20261110i';
 
 export const KANALEN = ['Bol.com', 'Marktplaats', 'Overig'];
 const el = id => document.getElementById(id);
