@@ -5,17 +5,18 @@
 // niet nog eens voorgesteld. Grootboek en soort worden afgeleid uit eerdere
 // boekingen met dezelfde naam; wat onbekend is kies je zelf.
 
-import { state, saveTxData, jaarIsVergrendeld } from './storage.js?v=20261110j';
-import { isTxJaar, jaarVan, EERSTE_TX_JAAR, vandaagIso } from './jaren.js?v=20261110j';
-import { esc, fmt } from './helpers.js?v=20261110j';
-import { addToPendingQueue } from './supabase-client-v2.js?v=20261110j';
-import { maakHerstelpunt } from './herstelpunt.js?v=20261110j';
-import { facturenVan, isOpenstaand, koppelBetaling, vindFactuur, restBedrag, isDeelsBetaald } from './facturen.js?v=20261110j';
-import { vindRelatie, relatieNummer } from './relaties.js?v=20261110j';
-import { telInbox, haalInboxOp, zetInboxStatus } from './bankinbox.js?v=20261110j';
+import { state, saveTxData, jaarIsVergrendeld } from './storage.js?v=20261110k';
+import { isTxJaar, jaarVan, EERSTE_TX_JAAR, vandaagIso } from './jaren.js?v=20261110k';
+import { esc, fmt } from './helpers.js?v=20261110k';
+import { addToPendingQueue } from './supabase-client-v2.js?v=20261110k';
+import { maakHerstelpunt } from './herstelpunt.js?v=20261110k';
+import { facturenVan, isOpenstaand, koppelBetaling, vindFactuur, restBedrag, isDeelsBetaald } from './facturen.js?v=20261110k';
+import { vindRelatie, relatieNummer } from './relaties.js?v=20261110k';
+import { telInbox, haalInboxOp, zetInboxStatus } from './bankinbox.js?v=20261110k';
 
 const REK = '1010';          // dagboek "Bank" (rekening 1010)
 const el = id => document.getElementById(id);
+let nurOpen = false;        // toon alleen regels die nog niet in de administratie staan
 let voorstel = null;         // { bestand, rijen, ontbreekt, overgeslagen }
 let melding = '';
 let inboxAantal = null;     // aantal nieuwe regels in de inbox (null = onbekend)
@@ -129,6 +130,29 @@ const VASTE_REGELS = [
   { test: o => /aliexpress|alipay/i.test(o.omschrijving) && o.totaal < 0, naam: 'Aliexpress', gb: '7000', type: 'uitgave' }
 ];
 
+const dagenVerschil = (a, b) => Math.round((Date.parse(a + 'T12:00:00Z') - Date.parse(b + 'T12:00:00Z')) / 86400000);
+
+/** Zoekt twee tot zes boekingen die samen precies het bankbedrag zijn; liefst met dezelfde naam. Anders null. */
+function zoekSplitsing(rij, kandidaten) {
+  const doel = Math.round(rij.bedrag * 100);
+  const sl = sleutel(rij.naam);
+  const eerstOpNaam = kandidaten.filter(t => sl && sleutel(t.naam) && (sleutel(t.naam).includes(sl) || sl.includes(sleutel(t.naam))));
+  for (const pool of [eerstOpNaam, kandidaten]) {
+    if (pool.length < 2 || pool.length > 14) continue;
+    const bedragen = pool.map(t => Math.round(t.bedrag * 100));
+    let gevonden = null;
+    const zoek = (start, som, gekozen) => {
+      if (gevonden) return;
+      if (som === doel && gekozen.length >= 2) { gevonden = gekozen.slice(); return; }
+      if (som >= doel || gekozen.length >= 6) return;
+      for (let i = start; i < pool.length; i++) { gekozen.push(i); zoek(i + 1, som + bedragen[i], gekozen); gekozen.pop(); if (gevonden) return; }
+    };
+    zoek(0, 0, []);
+    if (gevonden) return gevonden.map(i => pool[i]);
+  }
+  return null;
+}
+
 export function maakVoorstel(uit, bestaand = [...state.TX, ...state.HIST_TX], bestandsnaam = '') {
   const kaart = geleerd();
   const eerder = new Map();
@@ -152,6 +176,15 @@ export function maakVoorstel(uit, bestaand = [...state.TX, ...state.HIST_TX], be
     const lijst = eerder.get(s);
     if (lijst && lijst.length) { lijst.pop(); rij.staatAl = true; rij.kies = false; }
     rijen.push(rij);
+  }
+  // Eén bankbetaling die in de administratie is gesplitst (bijvoorbeeld Makro: inkoop + kosten + privé):
+  // de boekingen samen zijn gelijk aan het bankbedrag. Dan staat die betaling er al en boeken we niets dubbel.
+  for (const rij of rijen.filter(r => !r.staatAl)) {
+    const rest = [...eerder.values()].flat().filter(t => richtingPlus(t) === richtingPlus(rij) && Math.abs(dagenVerschil(t.datum, rij.datum)) <= 3);
+    const deel = zoekSplitsing(rij, rest);
+    if (!deel) continue;
+    for (const t of deel) { for (const l of eerder.values()) { const k = l.indexOf(t); if (k >= 0) l.splice(k, 1); } }
+    rij.staatAl = true; rij.kies = false; rij.gesplitst = deel.length;
   }
   // Wat in de app staat maar niet in het bestand, binnen dezelfde periode
   const data = uit.rijen.map(r => r.datum).sort();
@@ -355,6 +388,26 @@ export function zetBankimportKeuze(i, veld, waarde) {
   renderBankimport();
 }
 
+export function zetBankimportFilter(w) { nurOpen = w === 'open'; renderBankimport(); }
+
+export function selecteerAlleBankimport(aan) {
+  if (!voorstel) return;
+  for (const r of voorstel.rijen) if (!r.staatAl) r.kies = !!aan;
+  renderBankimport();
+}
+
+/** Haalt alle aangevinkte regels in één keer uit het voorstel (er wordt niets geboekt of verwijderd uit de administratie). */
+export function verwijderGeselecteerdeBankimport() {
+  if (!voorstel) return;
+  const weg = voorstel.rijen.filter(r => !r.staatAl && r.kies);
+  if (!weg.length) return;
+  if (!window.confirm(`${weg.length} regels uit dit voorstel halen? Ze worden niet geboekt. Er verandert niets in je administratie.`)) return;
+  const inboxIds = weg.map(r => inboxKaart.get(r.sleutel)).filter(Boolean);
+  voorstel.rijen = voorstel.rijen.filter(r => !weg.includes(r));
+  if (inboxIds.length) zetInboxStatus(inboxIds, 'genegeerd').then(() => { inboxAantal = null; inboxGelezen = 0; });
+  renderBankimport();
+}
+
 /** Haalt een regel helemaal uit het voorstel (bijvoorbeeld een dubbele of een storno). */
 export function verwijderBankimportRegel(i) {
   if (!voorstel || !voorstel.rijen[i]) return;
@@ -430,9 +483,9 @@ export function renderBankimport() {
 
   const nieuw = voorstel.rijen.filter(r => !r.staatAl);
   const kies = nieuw.filter(r => r.kies);
-  const rijen = voorstel.rijen.map((r, i) => r.staatAl
+  const rijen = voorstel.rijen.map((r, i) => (nurOpen && r.staatAl) ? '' : r.staatAl
     ? `<tr style="opacity:.55"><td></td><td>${esc(r.datum.slice(8, 10) + '-' + r.datum.slice(5, 7))}</td><td>${esc(r.naam)}</td>
-        <td style="text-align:right">${fmt(r.bedrag)}</td><td colspan="3" class="muted">staat al in de administratie</td><td></td></tr>`
+        <td style="text-align:right">${fmt(r.bedrag)}</td><td colspan="3" class="muted">${r.gesplitst ? `staat al, gesplitst in ${r.gesplitst} boekingen` : 'staat al in de administratie'}</td><td></td></tr>`
     : `<tr><td><input type="checkbox" ${r.kies ? 'checked' : ''} onchange="zetBankimportKeuze(${i},'kies',this.checked)"></td>
         <td>${esc(r.datum.slice(8, 10) + '-' + r.datum.slice(5, 7))}</td>
         <td>${esc(r.naam)}<div class="muted" style="font-size:12px">${esc(r.herkomst)}</div></td>
@@ -452,8 +505,9 @@ export function renderBankimport() {
   const ontbreekt = voorstel.ontbreekt.length
     ? `<div class="section-head"><div class="section-titel">Staat in de administratie, niet in het bestand (${voorstel.ontbreekt.length})</div></div>
        <div class="card card-flush"><div class="table-wrap"><table class="tbl-compact"><tbody>${voorstel.ontbreekt.map(t =>
-         `<tr><td>${esc(t.datum)}</td><td>${esc(t.naam || '')}</td><td style="text-align:right">${fmt(t.bedrag)}</td><td>${esc(t.type)}</td><td>${esc(t.gb)}</td></tr>`).join('')}</tbody></table></div></div>
-       <p class="muted" style="font-size:13px;margin-top:6px">Controleer deze: ze kunnen een verkeerd bedrag of een verkeerde datum hebben, of er is iets dubbel geboekt.</p>`
+         `<tr><td>${esc(t.datum)}</td><td>${esc(t.naam || '')}</td><td style="text-align:right">${fmt(t.bedrag)}</td><td>${esc(t.type)}</td><td>${esc(t.gb)}</td>
+         <td><button class="btn btn-sm" data-bewerk-tx="${esc(t.id)}" title="Open de boeking om te wijzigen of te verwijderen">Openen</button></td></tr>`).join('')}</tbody></table></div></div>
+       <p class="muted" style="font-size:13px;margin-top:6px">Controleer deze: ze kunnen een verkeerd bedrag of een verkeerde datum hebben, of er is iets dubbel geboekt. Met <b>Openen</b> kun je een boeking wijzigen of verwijderen. Betalingen die je zelf hebt gesplitst (bijvoorbeeld inkoop en privé) herkent de app en laat ze staan.</p>`
     : '';
   const overg = voorstel.overgeslagen.length
     ? `<p class="muted" style="font-size:13px">${voorstel.overgeslagen.length} regels overgeslagen (niet afgerond of onleesbaar).</p>` : '';
@@ -464,6 +518,14 @@ export function renderBankimport() {
       <div class="kpi kpi--secondary"><div class="kpi-lbl">Staat al</div><div class="kpi-val">${voorstel.rijen.length - nieuw.length}</div></div>
       <div class="kpi kpi--secondary"><div class="kpi-lbl">Nieuw</div><div class="kpi-val">${nieuw.length}</div></div>
       <div class="kpi kpi--secondary"><div class="kpi-lbl">Nog zonder rekening</div><div class="kpi-val">${kies.filter(r => !r.gb).length}</div></div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:var(--spacing-3)">
+      <select onchange="zetBankimportFilter(this.value)" aria-label="Welke regels tonen" style="font-size:14px">
+        <option value="alles"${nurOpen ? '' : ' selected'}>Alle regels (${voorstel.rijen.length})</option>
+        <option value="open"${nurOpen ? ' selected' : ''}>Alleen openstaande (${nieuw.length})</option></select>
+      <button class="btn btn-sm" onclick="selecteerAlleBankimport(true)">Alles selecteren</button>
+      <button class="btn btn-sm" onclick="selecteerAlleBankimport(false)">Niets selecteren</button>
+      <button class="btn btn-sm btn-ghost" onclick="verwijderGeselecteerdeBankimport()"${kies.length ? '' : ' disabled'} title="Haalt de aangevinkte regels uit dit voorstel; er wordt niets geboekt">Verwijder ${kies.length} geselecteerde uit voorstel</button>
     </div>
     <div class="card card-flush"><div class="table-wrap"><table class="tbl-compact">
       <thead><tr><th></th><th>Datum</th><th>Naam</th><th style="text-align:right">Bedrag</th><th>Grootboek</th><th>Soort</th><th>Factuur</th><th></th></tr></thead>

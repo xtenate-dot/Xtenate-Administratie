@@ -54,6 +54,11 @@ App en Excel/bank wijken constant EUR 9,36 af vanaf eind oktober 2026. Zoek de o
 - Gebruiker moet: bol_facturen.sql draaien en bol-koppeling opnieuw uitrollen; daarna 'Facturen ophalen' 1-1-2026 t/m 24-7-2026 en de getoonde vorm doorsturen. STAP 2: specificatie verwerken (TURNOVER/COMMISSION per bestelnummer, EAN) tot omzet/commissie per maand en per artikel op de Bol-pagina.
 - Het bestand 'artikelen per dag' uit het partnerplatform is een bezoekrapport en niet bruikbaar.
 
+## Gedaan 10-11-2026 (v20261110k): bank verwerken
+- Gesplitste betalingen (bijv. Makro: inkoop + kosten + privé, samen = bankbedrag) worden herkend ('staat al, gesplitst in N boekingen') en niet dubbel voorgesteld; ze staan ook niet meer onder 'staat in de administratie, niet in het bestand'. Die lijst heeft per regel 'Openen' (wijzigen/verwijderen met de gewone beveiligingen).
+- Voorstel: keuze 'Alle regels' / 'Alleen openstaande', 'Alles/Niets selecteren' en 'Verwijder N geselecteerde uit voorstel' (haalt uit voorstel, boekt niets; inboxregels krijgen status genegeerd). Importeren van meerdere tegelijk bestond al. Niet getest in de live app.
+- Bol-facturen: periode-parameter is `period=jjjj-mm-dd/jjjj-mm-dd` (eerdere `period-start/-end` werd genegeerd: 34 x dezelfde 3 facturen). Uitbetaling uit legalMonetaryTotal.payableAmount. Gebruiker moet nieuwe index.ts uitrollen en opnieuw ophalen.
+
 ## Wensen van de gebruiker (nog te doen)
 0a. **Bank-inbox: meerdere regels tegelijk verwijderen (10-11-2026).** Regels in de bank-inbox aan kunnen vinken (met 'alles selecteren') en in één keer verwijderen. Doel: de inbox snel op 0 krijgen.
 0b. **Bank-inbox: filter 'alleen openstaande'.** Een filter dat alleen de nog niet verwerkte/openstaande bedragen toont, zodat je bij correcties niet lang hoeft te scrollen.

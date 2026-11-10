@@ -11,17 +11,17 @@
 //    op display:none en gaan alleen open via .open. Een eigen regel voor
 //    .modal-overlay zou dat overschrijven en elk venster tegelijk tonen.
 
-import { state, saveTxData, saveHistTxData } from './storage.js?v=20261110j';
-import { fmt } from './helpers.js?v=20261110j';
+import { state, saveTxData, saveHistTxData } from './storage.js?v=20261110k';
+import { fmt } from './helpers.js?v=20261110k';
 import {
   saveToSupabase,
   deleteFromSupabase,
   addToPendingQueue
-} from './supabase-client-v2.js?v=20261110j';
-import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking, facturenVan, isOpenstaand, factuurStatus, restBedrag, isDeelsBetaald } from './facturen.js?v=20261110j';
-import { voegRelatiesSamen, voegNaamToeAlsAlias } from './relaties.js?v=20261110j';
-import { vindRelatie, relatieNummer, vindRelatieOpNaam, zorgRelatieVoorNaam, relatieExtra, bewaarRelatieGegevens, zorgRelatienummer } from './relaties.js?v=20261110j';
-import { txVanJaar, lopendJaar } from './jaren.js?v=20261110j';
+} from './supabase-client-v2.js?v=20261110k';
+import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking, facturenVan, isOpenstaand, factuurStatus, restBedrag, isDeelsBetaald } from './facturen.js?v=20261110k';
+import { voegRelatiesSamen, voegNaamToeAlsAlias } from './relaties.js?v=20261110k';
+import { vindRelatie, relatieNummer, vindRelatieOpNaam, zorgRelatieVoorNaam, relatieExtra, bewaarRelatieGegevens, zorgRelatienummer } from './relaties.js?v=20261110k';
+import { txVanJaar, lopendJaar } from './jaren.js?v=20261110k';
 
 export const veilig = s => String(s ?? '').replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
