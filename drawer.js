@@ -1,8 +1,8 @@
 // drawer.js — detailpaneel rechts met alle gegevens van één boeking.
 
-import { esc, fmt, isInkomst, rekBadge, weergaveNaam } from './helpers.js?v=20261111b';
-import { state, grootboekNamen, rekeningNamen } from './storage.js?v=20261111b';
-import { bonnetjesRegelHtml } from './bonnetjes.js?v=20261111b';
+import { esc, fmt, isInkomst, rekBadge, weergaveNaam } from './helpers.js?v=20261111c';
+import { state, grootboekNamen, rekeningNamen } from './storage.js?v=20261111c';
+import { bonnetjesRegelHtml } from './bonnetjes.js?v=20261111c';
 
 const TYPE_LABEL = {
   inkomst: 'Inkomst',

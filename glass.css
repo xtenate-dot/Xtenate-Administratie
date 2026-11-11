@@ -1,15 +1,14 @@
-/* glass.css — glass-stijl (voorbeeld op Home): doorzichtige, vervaagde kaarten op een zachte kleurgloed.
+/* glass.css — glass-stijl over de hele app: doorzichtige, vervaagde kaarten op een zachte kleurgloed.
    Alleen uiterlijk; geen invloed op cijfers of data. */
 
-#p-home { position: relative; isolation: isolate; }
-#p-home::before {
+body::before {
   content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background:
     radial-gradient(520px 380px at 12% 8%, rgba(124, 58, 237, .38), transparent 70%),
     radial-gradient(560px 420px at 88% 18%, rgba(16, 185, 129, .26), transparent 70%),
     radial-gradient(600px 460px at 60% 92%, rgba(59, 130, 246, .22), transparent 70%);
 }
-#p-home .kpi, #p-home .card, #p-home .tegel {
+.page .kpi, .page .card, .page .home-tegel, .page .tegel, .page .panel {
   background: rgba(255, 255, 255, .06);
   border: 1px solid rgba(255, 255, 255, .14);
   box-shadow: 0 8px 30px rgba(0, 0, 0, .22), inset 0 1px 0 rgba(255, 255, 255, .12);
@@ -17,28 +16,50 @@
   backdrop-filter: blur(18px) saturate(150%);
   border-radius: 18px;
 }
-:root[data-theme="light"] #p-home .kpi, :root[data-theme="light"] #p-home .card, :root[data-theme="light"] #p-home .tegel {
+:root[data-theme="light"] .page .kpi, :root[data-theme="light"] .page .card, :root[data-theme="light"] .page .home-tegel, :root[data-theme="light"] .page .tegel, :root[data-theme="light"] .page .panel {
   background: rgba(255, 255, 255, .55);
   border-color: rgba(255, 255, 255, .8);
   box-shadow: 0 8px 30px rgba(76, 29, 149, .12), inset 0 1px 0 rgba(255, 255, 255, .9);
 }
 
-/* Bankpas */
-.bankpas {
-  position: relative; max-width: 380px; aspect-ratio: 1.586; margin: 0 0 var(--spacing-4);
-  padding: 20px 22px; border-radius: 22px; color: #fff; overflow: hidden;
-  display: flex; flex-direction: column; justify-content: space-between;
-  background: linear-gradient(135deg, rgba(16, 185, 129, .75), rgba(124, 58, 237, .65) 70%, rgba(59, 130, 246, .55));
-  border: 1px solid rgba(255, 255, 255, .28);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .35);
-  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+/* Pop-ups en zijpanelen: glas, maar leesbaar */
+.modal, .drawer {
+  background: rgba(22, 27, 52, .82);
+  border: 1px solid rgba(255, 255, 255, .16);
+  -webkit-backdrop-filter: blur(22px) saturate(150%); backdrop-filter: blur(22px) saturate(150%);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(255, 255, 255, .12);
 }
-.bankpas::after { content: ""; position: absolute; inset: -40% -20% auto auto; width: 70%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(closest-side, rgba(255, 255, 255, .28), transparent); pointer-events: none; }
+:root[data-theme="light"] .modal, :root[data-theme="light"] .drawer { background: rgba(255, 255, 255, .86); border-color: rgba(255, 255, 255, .9); }
+.sidebar { background: color-mix(in srgb, var(--bg-sidebar) 78%, transparent); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+body { background-attachment: fixed; }
+
+/* Bankpas: kaart met twee kaarten erachter, zoals een gestapeld kaartenoverzicht */
+.bankpas-stack { position: relative; max-width: 380px; padding-top: 22px; margin: 0 0 var(--spacing-4); }
+.bankpas-stack::before, .bankpas-stack::after {
+  content: ""; position: absolute; border-radius: 22px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, .05));
+  border: 1px solid rgba(255, 255, 255, .2);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+}
+.bankpas-stack::before { top: 0; left: 22px; right: 22px; height: 60px; opacity: .55; }
+.bankpas-stack::after { top: 11px; left: 11px; right: 11px; height: 60px; opacity: .8; }
+.bankpas {
+  position: relative; z-index: 1; aspect-ratio: 1.586; padding: 20px 22px; border-radius: 22px; color: #fff; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: space-between;
+  background: linear-gradient(135deg, rgba(16, 185, 129, .8), rgba(124, 58, 237, .68) 70%, rgba(59, 130, 246, .58));
+  border: 1px solid rgba(255, 255, 255, .3);
+  box-shadow: 0 22px 44px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(255, 255, 255, .4);
+}
+.bankpas::before { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, rgba(255, 255, 255, .22) 0%, rgba(255, 255, 255, 0) 38%); pointer-events: none; }
+.bankpas::after { content: ""; position: absolute; inset: -40% -20% auto auto; width: 70%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(closest-side, rgba(255, 255, 255, .26), transparent); pointer-events: none; }
+.bankpas > * { position: relative; z-index: 1; }
 .bankpas-top { display: flex; justify-content: space-between; align-items: center; }
 .bankpas-merk { font-weight: 700; letter-spacing: .04em; font-size: 15px; }
+.bankpas-nfc { opacity: .9; }
 .bankpas-chip { width: 38px; height: 28px; border-radius: 6px; background: linear-gradient(135deg, #f7e3a1, #c9a24a); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .15); }
-.bankpas-saldo-label { font-size: 12px; opacity: .8; text-transform: uppercase; letter-spacing: .1em; margin-top: 8px; }
-.bankpas-saldo { font-size: 32px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.bankpas-saldo-label { font-size: 11px; opacity: .8; text-transform: uppercase; letter-spacing: .1em; }
+.bankpas-saldo { font-size: 30px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .bankpas-saldo.neg { color: #fecaca; }
-.bankpas-voet { display: flex; justify-content: space-between; font-size: 12px; opacity: .85; gap: 8px; }
-@media (max-width: 720px) { .bankpas { max-width: none; } }
+.bankpas-voet { display: flex; justify-content: space-between; font-size: 12px; opacity: .88; gap: 8px; }
+.bankpas-nr { letter-spacing: .12em; }
+@media (max-width: 720px) { .bankpas-stack { max-width: none; } }

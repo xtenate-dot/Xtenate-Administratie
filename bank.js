@@ -3,16 +3,16 @@
 import {
   bedragUit, ddmm, esc, fmt, isInkomst, isUitgave, leegVlak, maandLabel, MND_KORT, rekBadge,
   typeBadge, vulMaandSelect, weergaveNaam
-} from './helpers.js?v=20261111b';
+} from './helpers.js?v=20261111c';
 import {
   MAAND_SALDOS, saveHistTxData, saveTxData, state, isBtwPlichtig, zetKostenplaats, kostenplaatsVan, kostenplaatsNamen,
   grootboekNamen, rekeningNamen, grootboekOptgroepen, rekeningenLijst
-, jaarIsVergrendeld} from './storage.js?v=20261111b';
-import { maakSorteerbaar } from './tables.js?v=20261111b';
-import { EERSTE_TX_JAAR, isTxJaar, lopendJaar, txVanJaar, banksaldoTot, jaarVan } from './jaren.js?v=20261111b';
-import { heeftBonnetje, startModalBonnetjes, sluitModalBonnetjes, bewaarWachtende } from './bonnetjes.js?v=20261111b';
-import { schrijfLijstNaarExcel } from './lijst-export.js?v=20261111b';
-import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking } from './facturen.js?v=20261111b';
+, jaarIsVergrendeld} from './storage.js?v=20261111c';
+import { maakSorteerbaar } from './tables.js?v=20261111c';
+import { EERSTE_TX_JAAR, isTxJaar, lopendJaar, txVanJaar, banksaldoTot, jaarVan } from './jaren.js?v=20261111c';
+import { heeftBonnetje, startModalBonnetjes, sluitModalBonnetjes, bewaarWachtende } from './bonnetjes.js?v=20261111c';
+import { schrijfLijstNaarExcel } from './lijst-export.js?v=20261111c';
+import { facturenBijBoeking, ontkoppelAlleFacturenVanBoeking } from './facturen.js?v=20261111c';
 
 // Fase 3A: Supabase pending queue
 import {
@@ -20,7 +20,7 @@ import {
   syncPendingQueue,
   pendingQueue,
   isSupabaseReady
-} from './supabase-client-v2.js?v=20261111b';
+} from './supabase-client-v2.js?v=20261111c';
 
 const el = id => document.getElementById(id);
 
