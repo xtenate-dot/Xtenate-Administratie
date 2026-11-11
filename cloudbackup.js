@@ -5,10 +5,10 @@
 // download je er een als bestand. De back-ups zelf worden alleen door de database
 // gemaakt (functie maak_cloud_backup); de app kan ze lezen en verwijderen, niet vervalsen.
 
-import { getClient, heeftClient } from './supabase.js?v=20261111a';
-import { esc } from './helpers.js?v=20261111a';
-import { state } from './storage.js?v=20261111a';
-import { wachtrijStatus } from './supabase-client-v2.js?v=20261111a';
+import { getClient, heeftClient } from './supabase.js?v=20261111b';
+import { esc } from './helpers.js?v=20261111b';
+import { state } from './storage.js?v=20261111b';
+import { wachtrijStatus } from './supabase-client-v2.js?v=20261111b';
 
 const el = id => document.getElementById(id);
 const nl = iso => new Date(iso).toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' });

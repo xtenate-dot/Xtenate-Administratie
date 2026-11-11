@@ -8,16 +8,16 @@
 // nodig is. Alle gebruikte functies zijn alleen-lezend; deze module wijzigt
 // nooit data.
 
-import { draaiControles } from './controle.js?v=20261111a';
-import { factuurSamenvatting } from './facturen.js?v=20261111a';
-import { esc, fmt } from './helpers.js?v=20261111a';
-import { standaardMinVoorraad, state } from './storage.js?v=20261111a';
-import { telInbox } from './bankinbox.js?v=20261111a';
-import { onverwerkteInkoop } from './artikelregels.js?v=20261111a';
-import { berekenJaarMetrics, berekenBanksaldo, vorigJaarMetrics, berekenVoorraad, kpi, kpiTrend } from './dashboard.js?v=20261111a';
-import { txVanJaar, lopendJaar } from './jaren.js?v=20261111a';
-import { charts, cssVar, dc, baseOpts, lijn } from './charts.js?v=20261111a';
-import { fmtKort, isInkomst, isOmzet, ddmm, weergaveNaam } from './helpers.js?v=20261111a';
+import { draaiControles } from './controle.js?v=20261111b';
+import { factuurSamenvatting } from './facturen.js?v=20261111b';
+import { esc, fmt } from './helpers.js?v=20261111b';
+import { standaardMinVoorraad, state } from './storage.js?v=20261111b';
+import { telInbox } from './bankinbox.js?v=20261111b';
+import { onverwerkteInkoop } from './artikelregels.js?v=20261111b';
+import { berekenJaarMetrics, berekenBanksaldo, vorigJaarMetrics, berekenVoorraad, kpi, kpiTrend } from './dashboard.js?v=20261111b';
+import { txVanJaar, lopendJaar } from './jaren.js?v=20261111b';
+import { charts, cssVar, dc, baseOpts, lijn } from './charts.js?v=20261111b';
+import { fmtKort, isInkomst, isOmzet, ddmm, weergaveNaam } from './helpers.js?v=20261111b';
 
 const el = id => document.getElementById(id);
 
@@ -75,7 +75,13 @@ function kpiRij(jaar) {
     const bank = berekenBanksaldo(jaar);
     const groei = (nu, toen) =>
       (vorig && Number.isFinite(toen) && toen !== 0) ? ((nu - toen) / Math.abs(toen)) * 100 : NaN;
-    return `<div class="kpi-grid home-kpi-rij">` +
+    const pas = `<div class="bankpas" aria-label="Bankrekening">
+      <div class="bankpas-top"><span class="bankpas-merk">Xtenate</span><span class="bankpas-chip"></span></div>
+      <div class="bankpas-saldo-label">Saldo</div>
+      <div class="bankpas-saldo${bank.saldo !== null && bank.saldo < 0 ? ' neg' : ''}">${bank.saldo === null ? '\u2014' : fmt(bank.saldo)}</div>
+      <div class="bankpas-voet"><span>Zakelijke rekening</span><span>${esc(bank.label || '')}</span></div>
+    </div>`;
+    return pas + `<div class="kpi-grid home-kpi-rij">` +
       kpi(`Omzet ${jaar}`, fmt(m.omzet), 'pos', `Xtenate ${fmt(m.omzXt)} \u00b7 Bol ${fmt(m.omzBol)}`, '',
           { icoon: 'omzet', trend: kpiTrend(groei(m.omzet, vorig?.omzet), true), primair: true }) +
       kpi('Totale kosten', fmt(m.kosten), 'neg', '', '',
