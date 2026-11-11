@@ -179,3 +179,9 @@ Wens van de gebruiker: een eigen blok "Dagboeken" waarin hij zelf dagboeken kan 
 - Fujifilm X-S10 (HNVI) staat in Excel als verkocht 18-09-2026 voor € 385, in de app nog op voorraad.
 - 2 privé-stortingen (€ 7,50 en € 5,00) horen inkomst op grootboek 8000 te zijn.
 - Nieuwe Excel heeft verkopen sinds laatste controle: Mini Toothless 6 (voorraad 1), M4 RGB roze 7 (voorraad 9), M42 RGB wit 3 (voorraad 1).
+
+## Uiterlijk: glass-stijl en bankpas (gevraagd 11-11, voor later)
+- Wens: de admin-app in "glass"-stijl (doorzichtige, vervaagde kaarten op een rustige gekleurde achtergrond, zachte randen en gloed) zoals de voorbeeld-dashboards "Glassy Dashboard" en het groene "Verdelo"-dashboard.
+- Inclusief een bankpas-kaart (kaartvisual met rekeninghouder en saldo, in glass-stijl) op Home/Bank.
+- Alleen uiterlijk (CSS: backdrop-filter, transparante kaarten, kleurverloop); geen wijziging aan berekeningen of data. Eerst een voorbeeld laten zien op Home en daarna pas overal doorvoeren. Donker en licht thema allebei bekijken.
+- Mobiel app-gevoel (11-11): manifest + standalone-meta + geen overscroll toegevoegd; de gebruiker moet de app wel op het beginscherm zetten.

@@ -8,7 +8,7 @@
 // koppelingen tussen tabellen, of updated_at meeloopt, of zacht verwijderen
 // werkt, en of Row Level Security een regel op naam van iemand anders weigert.
 
-import { VerbindingsFout, getClient, leesbareFout } from './supabase.js?v=20261110m';
+import { VerbindingsFout, getClient, leesbareFout } from './supabase.js?v=20261111a';
 
 const merk = () => 'Zelftest ' + new Date().toISOString().slice(0, 19).replace('T', ' ');
 

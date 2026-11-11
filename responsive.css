@@ -688,3 +688,18 @@
      niets doen en alleen verwarren. */
   .kol-schakelaar { display: none; }
 }
+
+
+/* ============================================================
+   APP-GEVOEL OP DE TELEFOON
+   Geen "uitrekken" van de pagina boven de bovenbalk, geen horizontaal schuiven,
+   en ruimte voor de notch/statusbalk als de app op het beginscherm staat.
+   ============================================================ */
+html, body { overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; }
+@media (max-width: 720px) {
+  html, body { overflow-x: hidden; max-width: 100%; }
+  body { -webkit-text-size-adjust: 100%; }
+  .topbar { height: calc(var(--topbar-height) + env(safe-area-inset-top, 0px)); padding-top: env(safe-area-inset-top, 0px); }
+  .sidebar { padding-top: calc(var(--spacing-4) + env(safe-area-inset-top, 0px)); }
+  .page-wrap { padding-bottom: calc(var(--spacing-7) + 64px + env(safe-area-inset-bottom, 0px)); }
+}
