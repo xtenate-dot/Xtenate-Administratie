@@ -8,16 +8,18 @@
 // nodig is. Alle gebruikte functies zijn alleen-lezend; deze module wijzigt
 // nooit data.
 
-import { draaiControles } from './controle.js?v=20261111c';
-import { factuurSamenvatting } from './facturen.js?v=20261111c';
-import { esc, fmt } from './helpers.js?v=20261111c';
-import { standaardMinVoorraad, state } from './storage.js?v=20261111c';
-import { telInbox } from './bankinbox.js?v=20261111c';
-import { onverwerkteInkoop } from './artikelregels.js?v=20261111c';
-import { berekenJaarMetrics, berekenBanksaldo, vorigJaarMetrics, berekenVoorraad, kpi, kpiTrend } from './dashboard.js?v=20261111c';
-import { txVanJaar, lopendJaar } from './jaren.js?v=20261111c';
-import { charts, cssVar, dc, baseOpts, lijn } from './charts.js?v=20261111c';
-import { fmtKort, isInkomst, isOmzet, ddmm, weergaveNaam } from './helpers.js?v=20261111c';
+import { draaiControles } from './controle.js?v=20261126a';
+import { factuurSamenvatting } from './facturen.js?v=20261126a';
+import { esc, fmt } from './helpers.js?v=20261126a';
+import { standaardMinVoorraad, state } from './storage.js?v=20261126a';
+import { telInbox } from './bankinbox.js?v=20261126a';
+import { onverwerkteInkoop } from './artikelregels.js?v=20261126a';
+import { berekenJaarMetrics, berekenBanksaldo, vorigJaarMetrics, berekenVoorraad, kpi, kpiTrend } from './dashboard.js?v=20261126a';
+import { txVanJaar, lopendJaar } from './jaren.js?v=20261126a';
+import { charts, cssVar, dc, baseOpts, lijn } from './charts.js?v=20261126a';
+import { korStatus } from './kor.js?v=20261126a';
+import { leesBolFacturen, perMaand } from './bol-facturen.js?v=20261126a';
+import { fmtKort, isInkomst, isOmzet, ddmm, weergaveNaam } from './helpers.js?v=20261126a';
 
 const el = id => document.getElementById(id);
 
@@ -83,7 +85,7 @@ function kpiRij(jaar) {
       <div class="bankpas-saldo${bank.saldo !== null && bank.saldo < 0 ? ' neg' : ''}">${bank.saldo === null ? '\u2014' : fmt(bank.saldo)}</div></div>
       <div class="bankpas-voet"><span class="bankpas-nr">\u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022</span><span>${esc(bank.label || 'Zakelijke rekening')}</span></div>
     </div></div>`;
-    return pas + `<div class="kpi-grid home-kpi-rij">` +
+    return `<div class="home-top">` + pas + `<div class="kpi-grid home-kpi-rij">` +
       kpi(`Omzet ${jaar}`, fmt(m.omzet), 'pos', `Xtenate ${fmt(m.omzXt)} \u00b7 Bol ${fmt(m.omzBol)}`, '',
           { icoon: 'omzet', trend: kpiTrend(groei(m.omzet, vorig?.omzet), true), primair: true }) +
       kpi('Totale kosten', fmt(m.kosten), 'neg', '', '',
@@ -93,7 +95,7 @@ function kpiRij(jaar) {
           { icoon: 'winst', trend: kpiTrend(groei(winst, vorig ? vorig.omzet - vorig.kosten : NaN), true) }) +
       kpi('Banksaldo', bank.saldo === null ? '\u2014' : fmt(bank.saldo), bank.saldo !== null && bank.saldo < 0 ? 'neg' : '', bank.label, '',
           { icoon: 'bank' }) +
-      `</div>`;
+      `</div></div>`;
   } catch (e) {
     console.error('Cijfertegels voor Home konden niet worden berekend:', e);
     return '';
@@ -165,6 +167,96 @@ function recenteBoekingen() {
       <td class="td-trunc">${esc(weergaveNaam(t))}</td>
       <td class="td-num ${plus ? 'pos' : 'neg'}">${plus ? '+' : '\u2013'}${fmt(t.bedrag)}</td></tr>`;
   }).join('')}</tbody></table>`;
+}
+
+
+// ─── Aandachtsbalk, KOR-meter en Bol per maand (alleen lezen) ──────────────
+
+function groet() {
+  const u = new Date().getHours();
+  return u < 6 ? 'Goedenacht' : u < 12 ? 'Goedemorgen' : u < 18 ? 'Goedemiddag' : 'Goedenavond';
+}
+
+/** Zet de tekst en de knop van de aandachtsbalk op basis van de lijst met punten. */
+function zetBanner(punten) {
+  const t = document.getElementById('hb-tekst'), k = document.getElementById('hb-knop');
+  if (!t || !k) return;
+  if (!punten.length) {
+    t.textContent = 'Alles is op orde: geen openstaande punten.';
+    k.style.display = 'none';
+    return;
+  }
+  t.textContent = `${punten.length} ${punten.length === 1 ? 'punt vraagt' : 'punten vragen'} aandacht: ${punten.map(p => p.tekst).join(' \u00b7 ')}.`;
+  k.style.display = '';
+  k.textContent = punten[0].knop;
+  k.setAttribute('onclick', punten[0].actie);
+}
+
+function aandachtsBalk() {
+  return `<div class="home-banner">
+    <div>
+      <h2>${groet()}, <em>Xtenate</em></h2>
+      <p id="hb-tekst">Even kijken wat er klaarstaat\u2026</p>
+    </div>
+    <button type="button" class="banner-knop" id="hb-knop" style="display:none"></button>
+  </div>`;
+}
+
+function korKaart(jaar) {
+  try {
+    const k = korStatus(jaar);
+    const pct = Math.max(0, Math.min(100, Math.round(k.pct * 100)));
+    const tekst = k.niveau === 'over' ? 'Boven de KOR-grens'
+      : k.niveau === 'let-op' ? 'Let op: de grens komt in zicht' : 'Ruim onder de grens';
+    return `<div class="card">
+      <div style="font-weight:600">KOR-meter ${esc(String(jaar))}</div>
+      <div class="muted" style="font-size:13px">Omzet tegenover de grens van ${fmt(k.grens)}</div>
+      <div class="kor-meter-groot" style="margin-top:10px">${fmt(k.omzet)}</div>
+      <div class="kor-meter-balk ${k.niveau === 'ok' ? '' : k.niveau}"><span style="width:${pct}%"></span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;gap:8px;flex-wrap:wrap">
+        <span>${pct}% \u00b7 ${k.ruimte >= 0 ? `nog ${fmt(k.ruimte)} ruimte` : `${fmt(-k.ruimte)} erboven`}</span>
+        <span class="muted">${esc(tekst)}${k.prognose !== null ? ` \u00b7 prognose jaareinde ${fmt(k.prognose)}` : ''}</span>
+      </div></div>`;
+  } catch (e) {
+    console.error('KOR-meter kon niet worden berekend:', e);
+    return '';
+  }
+}
+
+function bolKaartLeeg() {
+  return `<div class="card" id="home-bol">
+    <div style="display:flex;justify-content:space-between;align-items:baseline">
+      <span style="font-weight:600">Bol.com per maand</span>
+      <button type="button" class="btn-details" onclick="gaNaar('bol')">Bol.com \u2192</button>
+    </div>
+    <div class="muted" style="font-size:13px">Omzet (balk) en wat Bol uitbetaalde (gevuld)</div>
+    <div id="home-bol-inhoud" class="muted" style="font-size:13px;margin-top:10px">Laden\u2026</div></div>`;
+}
+
+async function vulBolKaart() {
+  const doel = document.getElementById('home-bol-inhoud');
+  if (!doel) return;
+  let lijst = [];
+  try { lijst = (await leesBolFacturen()) || []; } catch { lijst = []; }
+  const ids = new Set(lijst.map(f => String(f.id)));
+  for (const [id, m] of Object.entries(state.BOL_MAAND || {})) {
+    if (ids.has(String(id))) continue;
+    lijst.push({ id, account: '1', maand: m.maand, omzet: m.omzet, commissie: m.commissie, overig: m.overig,
+      netto: Math.round((m.omzet - m.commissie - m.overig) * 100) / 100, uitbetaling: m.uitbetaling, klopt: true });
+  }
+  const rijen = perMaand(lijst).filter(r => r.omzet > 0).slice(0, 6).reverse();
+  if (!document.getElementById('home-bol-inhoud')) return;
+  if (!rijen.length) { doel.textContent = 'Nog geen Bol-facturen ingelezen.'; return; }
+  const max = Math.max(...rijen.map(r => r.omzet));
+  doel.className = '';
+  doel.innerHTML = `<div class="pb-bars">${rijen.map(r => {
+    const hoogte = Math.max(8, Math.round(r.omzet / max * 100));
+    const vul = Math.max(0, Math.min(100, Math.round(Math.max(0, r.uitbetaling) / r.omzet * 100)));
+    return `<div class="pb-bar" title="${esc(r.maand)}: omzet ${fmt(r.omzet)}, uitbetaald ${fmt(r.uitbetaling)}">
+      <div class="pb-pill" style="height:${hoogte}%"><div class="pb-vul" style="height:${vul}%"></div></div>
+      <span class="pb-lbl">${esc(MND[Number(r.maand.slice(5)) - 1] || r.maand)}</span></div>`;
+  }).join('')}</div>
+  <div class="pb-legenda"><span><i style="background:rgba(127,127,160,.4)"></i>Omzet</span><span><i style="background:#7c3aed"></i>Uitbetaald (incl. btw)</span></div>`;
 }
 
 // ─── Tegel ─────────────────────────────────────────────────────────────────
@@ -273,10 +365,7 @@ export function renderPortaal() {
   if (ctr && ctr.waarschuwing > 0) taken.push(taak(`${ctr.waarschuwing} aandachtspunt${ctr.waarschuwing === 1 ? '' : 'en'} in de controle`, 'controle'));
 
   doel.innerHTML = `
-    <div class="home-welkom">
-      <h1 class="home-titel">Welkom bij Xtenate Administratie</h1>
-      <p class="home-sub">Kies waar je heen wilt.</p>
-    </div>
+    ${aandachtsBalk()}
     ${kpiRij(jaar)}
     <div class="card" id="home-todo" style="margin-bottom:16px;padding:14px 18px">
       <div style="font-weight:600;margin-bottom:6px">Nog te doen</div>
@@ -284,6 +373,7 @@ export function renderPortaal() {
       <div id="home-todo-leeg" class="muted" style="font-size:14px;display:${taken.length ? 'none' : 'block'}">Alles op orde.</div>
     </div>
     ${bijzakenBalk(fac)}
+    <div class="home-twee">${korKaart(jaar)}${bolKaartLeeg()}</div>
     <div class="home-twee">
       <div class="card home-jaren">
         <div style="font-weight:600">Omzet, opgeteld per maand</div>
@@ -301,6 +391,14 @@ export function renderPortaal() {
     <div class="home-tegels">${tegels}</div>`;
   tekenJaarVergelijk(jaar);
 
+  const punten = [];
+  if (teLaat > 0) punten.push({ tekst: `${teLaat} factuur${teLaat === 1 ? '' : 'en'} te laat`, knop: 'Bekijk facturen', actie: "gaNaar('inkoopfacturen')" });
+  if (openInkoop > 0) punten.push({ tekst: `${openInkoop} inkoopbetaling${openInkoop === 1 ? '' : 'en'} zonder artikelen`, knop: 'Artikelen koppelen', actie: 'openInkoopLijst()' });
+  if (ctr && ctr.fout > 0) punten.push({ tekst: `${ctr.fout} fout${ctr.fout === 1 ? '' : 'en'} in de controle`, knop: 'Naar de controle', actie: "gaNaar('controle')" });
+  if (vrd.op > 0) punten.push({ tekst: `${vrd.op} artikel${vrd.op === 1 ? '' : 'en'} uitverkocht`, knop: 'Naar voorraad', actie: "gaNaar('voorraad')" });
+  zetBanner(punten);
+  vulBolKaart();
+
   // De bank-inbox komt uit Supabase en wordt daarom pas daarna toegevoegd.
   telInbox().then(n => {
     if (document.getElementById('home-todo-inbox')) return;
@@ -309,5 +407,7 @@ export function renderPortaal() {
     lijst.insertAdjacentHTML('afterbegin', taak(`${n} nieuwe bankregel${n === 1 ? '' : 's'} in de inbox`, 'bank').replace('<li>', '<li id="home-todo-inbox">'));
     const leeg = document.getElementById('home-todo-leeg');
     if (leeg) leeg.style.display = 'none';
+    punten.unshift({ tekst: `${n} nieuwe bankregel${n === 1 ? '' : 's'} in de inbox`, knop: 'Naar de bank', actie: "gaNaar('bank')" });
+    zetBanner(punten);
   });
 }

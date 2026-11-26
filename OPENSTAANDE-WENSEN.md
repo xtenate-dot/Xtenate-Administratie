@@ -185,3 +185,8 @@ Wens van de gebruiker: een eigen blok "Dagboeken" waarin hij zelf dagboeken kan 
 - Inclusief een bankpas-kaart (kaartvisual met rekeninghouder en saldo, in glass-stijl) op Home/Bank.
 - Alleen uiterlijk (CSS: backdrop-filter, transparante kaarten, kleurverloop); geen wijziging aan berekeningen of data. Eerst een voorbeeld laten zien op Home en daarna pas overal doorvoeren. Donker en licht thema allebei bekijken.
 - Mobiel app-gevoel (11-11): manifest + standalone-meta + geen overscroll toegevoegd; de gebruiker moet de app wel op het beginscherm zetten.
+
+## Stijlen en Home-blokken (26-11, v20261126a)
+- Paletknop in de bovenbalk wisselt tussen Glass (standaard), Lavendel (zwevend donker zijmenu, lila achtergrond, witte kaarten, lime accent) en Rood (rood verloop, glazen blokken, navigatiebalk bovenin; zijmenu via "Meer"). Keuze lokaal: xtenate_stijl. Bestanden: stijlen.css, stijlen.js.
+- Home: aandachtsbalk (punten + knop), bankpas naast de cijfertegels, KOR-meter en Bol per maand (pilbalken: omzet en uitbetaald). Alleen-lezen; geen wijziging aan berekeningen.
+- Visueel getest met een mock-pagina (desktop en telefoonbreedte), nog niet in de echte app bekeken.

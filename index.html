@@ -20,6 +20,8 @@
     var t = localStorage.getItem('xtenate_thema');
     if (t !== 'light' && t !== 'dark') t = 'dark';
     document.documentElement.setAttribute('data-theme', t);
+    var st = localStorage.getItem('xtenate_stijl');
+    document.documentElement.setAttribute('data-stijl', st === 'lavendel' || st === 'rood' ? st : 'glass');
     if (localStorage.getItem('xtenate_menu_ingeklapt') === '1') {
       document.addEventListener('DOMContentLoaded', function () { document.body.classList.add('nav-collapsed'); });
     }
@@ -27,12 +29,13 @@
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<link rel="stylesheet" href="theme.css?v=20261111c">
-<link rel="stylesheet" href="layout.css?v=20261111c">
-<link rel="stylesheet" href="components.css?v=20261111c">
-<link rel="stylesheet" href="systeem.css?v=20261111c">
-<link rel="stylesheet" href="glass.css?v=20261111c">
-<link rel="stylesheet" href="responsive.css?v=20261111c">
+<link rel="stylesheet" href="theme.css?v=20261126a">
+<link rel="stylesheet" href="layout.css?v=20261126a">
+<link rel="stylesheet" href="components.css?v=20261126a">
+<link rel="stylesheet" href="systeem.css?v=20261126a">
+<link rel="stylesheet" href="glass.css?v=20261126a">
+<link rel="stylesheet" href="stijlen.css?v=20261126a">
+<link rel="stylesheet" href="responsive.css?v=20261126a">
 </head>
 <body>
 
@@ -333,6 +336,17 @@
     <div class="search-results" id="search-results" role="listbox" aria-label="Zoekresultaten"></div>
   </div>
 
+  <nav class="pillnav" id="pillnav" aria-label="Snelle navigatie">
+    <button type="button" data-page="home" onclick="nav('home')">Home</button>
+    <button type="button" data-page="bank" onclick="nav('bank')">Bank</button>
+    <button type="button" data-page="verkoopfacturen" onclick="nav('verkoopfacturen')">Facturen</button>
+    <button type="button" data-page="bol" onclick="nav('bol')">Bol.com</button>
+    <button type="button" data-page="voorraad" onclick="nav('voorraad')">Voorraad</button>
+    <button type="button" data-page="overzicht" onclick="nav('overzicht')">Overzicht</button>
+    <button type="button" data-page="btw" onclick="nav('btw')">BTW</button>
+    <button type="button" class="pill-meer" onclick="wisselMobielMenu()">Meer &#8943;</button>
+  </nav>
+
   <div class="topbar-spacer"></div>
 
   <span class="sync-status" id="sync-status" role="status" aria-live="polite"></span>
@@ -352,6 +366,7 @@
     <option value="2022">2022</option>
   </select>
 
+  <button class="icon-btn" id="stijl-knop" onclick="wisselStijl()" aria-label="Wissel stijl"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2a10 10 0 100 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2H18a4 4 0 004-4c0-5.5-4.5-9.4-10-9.4z"/></svg></button>
   <button class="icon-btn" id="thema-knop" onclick="wisselThema()" aria-label="Wissel thema"></button>
 </header>
 
@@ -1519,6 +1534,6 @@
 </div>
 </div>
 
-<script type="module" src="app.js?v=20261111c"></script>
+<script type="module" src="app.js?v=20261126a"></script>
 </body>
 </html>

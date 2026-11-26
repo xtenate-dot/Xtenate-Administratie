@@ -7,7 +7,7 @@
 //
 // Deze module bevat geen interface. De schermen komen in stap 3 en 4.
 
-import { FACTUUR_INSTELLINGEN, saveFacturen, state } from './storage.js?v=20261111c';
+import { FACTUUR_INSTELLINGEN, saveFacturen, state } from './storage.js?v=20261126a';
 
 export const SOORTEN = ['debiteur', 'crediteur'];
 

@@ -1,0 +1,195 @@
+/* stijlen.css — twee extra looks naast de standaard glass-stijl: "lavendel" en "rood".
+   Alleen uiterlijk; kies met de paletknop in de bovenbalk. Opslag: xtenate_stijl. */
+
+/* ===== Gedeelde onderdelen (alle stijlen) ===== */
+.pillnav { display: none; }
+
+.home-banner {
+  position: relative; overflow: hidden; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+  padding: 26px 30px; margin-bottom: var(--spacing-4); border-radius: 28px; color: #fff;
+  background: linear-gradient(120deg, rgba(76, 29, 149, .85), rgba(30, 27, 75, .9));
+  border: 1px solid rgba(255, 255, 255, .16);
+  box-shadow: 0 18px 40px rgba(20, 10, 60, .28), inset 0 1px 0 rgba(255, 255, 255, .15);
+}
+.home-banner::after { content: ""; position: absolute; right: -60px; top: -80px; width: 280px; height: 280px; border-radius: 50%; background: radial-gradient(closest-side, rgba(214, 249, 74, .22), transparent); pointer-events: none; }
+.home-banner h2 { margin: 0 0 6px; font-size: 26px; font-weight: 600; letter-spacing: -.5px; line-height: 1.15; }
+.home-banner h2 em { font-family: Georgia, 'Times New Roman', serif; font-weight: 500; font-style: italic; color: #d6f94a; }
+.home-banner p { margin: 0; font-size: 14px; opacity: .8; max-width: 560px; }
+.home-banner .banner-knop {
+  position: relative; z-index: 1; border: 0; cursor: pointer; font: inherit; font-weight: 600; font-size: 14px;
+  padding: 11px 20px; border-radius: 999px; background: #d6f94a; color: #1b1146; white-space: nowrap;
+}
+.home-banner .banner-knop:hover { filter: brightness(1.05); }
+
+.kor-meter-balk { height: 14px; border-radius: 999px; background: rgba(127, 127, 160, .22); overflow: hidden; margin: 12px 0 8px; }
+.kor-meter-balk > span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #10b981, #84cc16); }
+.kor-meter-balk.let-op > span { background: linear-gradient(90deg, #f59e0b, #f97316); }
+.kor-meter-balk.over > span { background: linear-gradient(90deg, #ef4444, #dc2626); }
+.kor-meter-groot { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.pb-bars { display: flex; align-items: flex-end; gap: 12px; height: 150px; margin-top: 10px; }
+.pb-bar { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px; height: 100%; min-width: 0; }
+.pb-pill { position: relative; width: 100%; max-width: 38px; border-radius: 999px; background: rgba(127, 127, 160, .25); overflow: hidden; min-height: 12px; }
+.pb-vul { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 999px; background: linear-gradient(180deg, #a78bfa, #7c3aed); }
+.pb-lbl { font-size: 11px; color: var(--text-muted); text-transform: capitalize; }
+.pb-legenda { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--text-muted); margin-top: 10px; }
+.pb-legenda i { display: inline-block; width: 10px; height: 10px; border-radius: 999px; margin-right: 6px; vertical-align: -1px; }
+
+/* ===== LAVENDEL: zwevend donker zijmenu, lila achtergrond, witte kaarten ===== */
+:root[data-stijl="lavendel"][data-theme="light"], :root[data-stijl="lavendel"][data-theme="dark"] {
+  --bg-app: #e9e5fb; --bg-card: rgba(255, 255, 255, .78); --bg-card-hover: #fff; --bg-elevated: #fff; --bg-input: #fff;
+  --bg-sidebar: #1b1146; --bg-topbar: transparent;
+  --border-default: rgba(255, 255, 255, .9); --border-soft: rgba(76, 29, 149, .08); --border-strong: rgba(76, 29, 149, .2);
+  --text-primary: #1b1146; --text-secondary: #46407a; --text-muted: #7a75a6; --text-subtle: #9a96bd;
+  --app-gradient-layer:
+    radial-gradient(900px 600px at 15% -10%, #cdc3ff 0%, transparent 70%),
+    radial-gradient(800px 520px at 100% 15%, #f3f1ff 0%, transparent 70%),
+    linear-gradient(180deg, #e7e2fb, #f4f2ff);
+  --chart-revenue: #5b3df5; --chart-costs: #f59e0b; --chart-profit: #1b1146;
+  --chart-grid: rgba(27, 17, 70, .08); --chart-axis: #7a75a6; --chart-background: transparent;
+  --sidebar-width: 68px; --sidebar-width-collapsed: 68px;
+  color-scheme: light;
+}
+:root[data-stijl="lavendel"] body { color: var(--text-primary); }
+:root[data-stijl="lavendel"] body::before { display: none; }
+:root[data-stijl="lavendel"] .page .kpi, :root[data-stijl="lavendel"] .page .card, :root[data-stijl="lavendel"] .page .home-tegel,
+:root[data-stijl="lavendel"] .page .tegel, :root[data-stijl="lavendel"] .page .panel {
+  background: rgba(255, 255, 255, .78); border: 1px solid rgba(255, 255, 255, .95); border-radius: 26px;
+  box-shadow: 0 12px 34px rgba(60, 40, 140, .10); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: var(--text-primary);
+}
+:root[data-stijl="lavendel"] .page .kpi.kpi--primair { background: #1b1146; border-color: #1b1146; color: #fff; }
+:root[data-stijl="lavendel"] .page .kpi.kpi--primair .kpi-val { color: #d6f94a; }
+:root[data-stijl="lavendel"] .page .kpi.kpi--primair .kpi-lbl, :root[data-stijl="lavendel"] .page .kpi.kpi--primair .kpi-sub { color: rgba(255, 255, 255, .72); }
+:root[data-stijl="lavendel"] .home-banner { background: linear-gradient(120deg, #2a1a6e, #1b1146); border-radius: 30px; }
+
+/* Zwevend zijmenu */
+:root[data-stijl="lavendel"] .main { margin-left: 96px; }
+:root[data-stijl="lavendel"] .sidebar {
+  top: 14px; left: 14px; bottom: 14px; height: auto; width: 68px; border-radius: 34px; border: 0; padding: 14px 0;
+  background: #1b1146; box-shadow: 0 22px 50px rgba(27, 17, 70, .38); overflow: hidden auto; scrollbar-width: none;
+  -webkit-backdrop-filter: none; backdrop-filter: none; transition: width .25s ease;
+}
+:root[data-stijl="lavendel"] .sidebar::-webkit-scrollbar { display: none; }
+:root[data-stijl="lavendel"] .sidebar:hover { width: 252px; }
+:root[data-stijl="lavendel"] .sidebar .nav-section, :root[data-stijl="lavendel"] .sidebar .nav-section-btn,
+:root[data-stijl="lavendel"] .sidebar .brand-text, :root[data-stijl="lavendel"] .sidebar .nav-label { display: none; white-space: nowrap; }
+:root[data-stijl="lavendel"] .sidebar:hover .nav-section, :root[data-stijl="lavendel"] .sidebar:hover .nav-section-btn,
+:root[data-stijl="lavendel"] .sidebar:hover .brand-text, :root[data-stijl="lavendel"] .sidebar:hover .nav-label { display: block; }
+:root[data-stijl="lavendel"] .sidebar:hover .nav-section-btn { display: flex; }
+:root[data-stijl="lavendel"] .sidebar .nav-groep.dicht .nav-groep-inhoud { display: block !important; max-height: none !important; opacity: 1 !important; }
+:root[data-stijl="lavendel"] .sidebar .brand { justify-content: center; padding: 0 0 10px; }
+:root[data-stijl="lavendel"] .sidebar:hover .brand { justify-content: flex-start; padding-left: 18px; }
+:root[data-stijl="lavendel"] .sidebar .nav-item {
+  width: 44px; height: 44px; margin: 4px auto; padding: 0; justify-content: center; border-radius: 50%; color: rgba(255, 255, 255, .72);
+}
+:root[data-stijl="lavendel"] .sidebar:hover .nav-item { width: auto; height: 42px; margin: 2px 12px; padding: 0 14px; justify-content: flex-start; border-radius: 22px; }
+:root[data-stijl="lavendel"] .sidebar .nav-item:hover { background: rgba(255, 255, 255, .12); color: #fff; }
+:root[data-stijl="lavendel"] .sidebar .nav-item.active { background: #fff; color: #1b1146; box-shadow: 0 6px 18px rgba(0, 0, 0, .25); }
+:root[data-stijl="lavendel"] .sidebar .nav-pil { display: none; }
+:root[data-stijl="lavendel"] .sidebar .nav-item { flex-shrink: 0; }
+:root[data-stijl="lavendel"] .sidebar .nav-item.active::before { display: none; }
+:root[data-stijl="lavendel"] .sidebar .nav-item.active svg { color: #1b1146; }
+:root[data-stijl="lavendel"] .sidebar .nav-section { color: rgba(255, 255, 255, .5); padding-left: 24px; }
+:root[data-stijl="lavendel"] .brand-name { color: #fff; } :root[data-stijl="lavendel"] .brand-sub { color: rgba(255, 255, 255, .6); }
+
+:root[data-stijl="lavendel"] .topbar { background: transparent; border: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+:root[data-stijl="lavendel"] .search-field, :root[data-stijl="lavendel"] .topbar select, :root[data-stijl="lavendel"] .topbar .icon-btn {
+  background: #fff; border: 1px solid rgba(255, 255, 255, .9); border-radius: 999px; box-shadow: 0 6px 18px rgba(60, 40, 140, .08); color: var(--text-primary);
+}
+:root[data-stijl="lavendel"] .btn-primary { background: #1b1146; color: #fff; border-radius: 999px; border-color: #1b1146; }
+:root[data-stijl="lavendel"] .btn-primary:hover { background: #2a1a6e; }
+:root[data-stijl="lavendel"] .modal, :root[data-stijl="lavendel"] .drawer { background: rgba(255, 255, 255, .94); color: var(--text-primary); border-radius: 26px; }
+:root[data-stijl="lavendel"] .tabbar { background: #1b1146; }
+@media (max-width: 720px) {
+  :root[data-stijl="lavendel"] .main { margin-left: 0; }
+  :root[data-stijl="lavendel"] .sidebar { width: 260px; transform: translateX(-110%); }
+  :root[data-stijl="lavendel"] body.nav-open .sidebar { transform: none; }
+  :root[data-stijl="lavendel"] .sidebar .nav-label, :root[data-stijl="lavendel"] .sidebar .nav-section, :root[data-stijl="lavendel"] .sidebar .brand-text { display: block; }
+  :root[data-stijl="lavendel"] .sidebar .nav-section-btn { display: flex; }
+  :root[data-stijl="lavendel"] .sidebar .nav-item { width: auto; height: 42px; margin: 2px 12px; padding: 0 14px; justify-content: flex-start; border-radius: 22px; }
+}
+
+/* ===== ROOD: rood verloop, glazen blokken, navigatie bovenin ===== */
+:root[data-stijl="rood"][data-theme="light"], :root[data-stijl="rood"][data-theme="dark"] {
+  --bg-app: #8f1827; --bg-card: rgba(255, 255, 255, .18); --bg-card-hover: rgba(255, 255, 255, .26); --bg-elevated: rgba(90, 12, 26, .9); --bg-input: rgba(255, 255, 255, .16);
+  --bg-sidebar: rgba(70, 8, 20, .88); --bg-topbar: transparent;
+  --border-default: rgba(255, 255, 255, .32); --border-soft: rgba(255, 255, 255, .18); --border-strong: rgba(255, 255, 255, .5);
+  --text-primary: #fff; --text-secondary: rgba(255, 255, 255, .86); --text-muted: rgba(255, 255, 255, .66); --text-subtle: rgba(255, 255, 255, .5);
+  --app-gradient-layer:
+    radial-gradient(700px 500px at 85% 0%, rgba(255, 120, 90, .55), transparent 70%),
+    radial-gradient(600px 500px at 0% 100%, rgba(255, 90, 80, .35), transparent 70%),
+    linear-gradient(160deg, #650b19 0%, #a91d2c 48%, #e0525a 100%);
+  --semantic-success-bright: #a6ffcb; --semantic-danger-bright: #ffe3de; --semantic-success: #a6ffcb; --semantic-danger: #ffe3de;
+  --chart-revenue: #ff6a3d; --chart-costs: #ffd2c9; --chart-profit: #fff; --chart-color-1: #ff6a3d; --chart-color-2: #ffd2c9; --chart-color-3: #fff;
+  --chart-grid: rgba(255, 255, 255, .16); --chart-axis: rgba(255, 255, 255, .75); --chart-background: transparent;
+  color-scheme: dark;
+}
+:root[data-stijl="rood"] body { color: #fff; background-attachment: fixed; }
+:root[data-stijl="rood"] body::before { display: none; }
+:root[data-stijl="rood"] .page .kpi, :root[data-stijl="rood"] .page .card, :root[data-stijl="rood"] .page .home-tegel,
+:root[data-stijl="rood"] .page .tegel, :root[data-stijl="rood"] .page .panel {
+  background: rgba(255, 255, 255, .17); border: 1px solid rgba(255, 255, 255, .34); border-radius: 26px; color: #fff;
+  box-shadow: 0 14px 36px rgba(60, 5, 15, .3), inset 0 1px 0 rgba(255, 255, 255, .35);
+  -webkit-backdrop-filter: blur(20px) saturate(140%); backdrop-filter: blur(20px) saturate(140%);
+}
+:root[data-stijl="rood"] .page .kpi.kpi--primair { background: linear-gradient(135deg, rgba(255, 106, 61, .85), rgba(224, 82, 90, .6)); }
+:root[data-stijl="rood"] .home-banner { background: linear-gradient(120deg, rgba(60, 5, 15, .75), rgba(120, 15, 30, .6)); }
+:root[data-stijl="rood"] .home-banner .banner-knop { background: #ff6a3d; color: #fff; }
+:root[data-stijl="rood"] .kor-meter-balk > span, :root[data-stijl="rood"] .pb-vul { background: linear-gradient(180deg, #ffb199, #ff5a36); }
+:root[data-stijl="rood"] .kor-meter-balk > span { background: linear-gradient(90deg, #ffb199, #ff5a36); }
+:root[data-stijl="rood"] .pb-pill, :root[data-stijl="rood"] .kor-meter-balk { background: rgba(255, 255, 255, .18); }
+:root[data-stijl="rood"] .kpi .pos, :root[data-stijl="rood"] .pos { color: #a6ffcb; }
+:root[data-stijl="rood"] .neg { color: #ffe3de; }
+:root[data-stijl="rood"] input, :root[data-stijl="rood"] select, :root[data-stijl="rood"] textarea { color: #fff; border-color: rgba(255, 255, 255, .35); }
+:root[data-stijl="rood"] input::placeholder { color: rgba(255, 255, 255, .6); }
+:root[data-stijl="rood"] select option { color: #1b1146; }
+:root[data-stijl="rood"] .btn-primary { background: #ff5a36; color: #fff; border-radius: 999px; border-color: #ff5a36; }
+:root[data-stijl="rood"] .modal, :root[data-stijl="rood"] .drawer { background: rgba(70, 8, 20, .93); color: #fff; border-radius: 26px; }
+:root[data-stijl="rood"] table th { color: rgba(255, 255, 255, .7); }
+:root[data-stijl="rood"] table td { border-color: rgba(255, 255, 255, .14); }
+
+/* Navigatie bovenin; het zijmenu schuift er alleen nog overheen via "Meer" */
+:root[data-stijl="rood"] .main { margin-left: 0; }
+:root[data-stijl="rood"] .sidebar { transform: translateX(-105%); transition: transform .25s ease; box-shadow: none; width: 260px; z-index: 60; }
+:root[data-stijl="rood"] body.nav-open .sidebar { transform: none; box-shadow: 0 0 60px rgba(0, 0, 0, .5); }
+:root[data-stijl="rood"] .sidebar .nav-label, :root[data-stijl="rood"] .sidebar .nav-section, :root[data-stijl="rood"] .sidebar .brand-text { display: block; }
+:root[data-stijl="rood"] .sidebar .nav-section-btn { display: flex; }
+:root[data-stijl="rood"] .nav-backdrop { z-index: 55; }
+:root[data-stijl="rood"] .topbar { background: transparent; border: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; height: 72px; padding: 0 var(--spacing-5); }
+:root[data-stijl="rood"] .topbar-title { display: none; }
+:root[data-stijl="rood"] .search-wrap { max-width: 260px; }
+:root[data-stijl="rood"] .search-field, :root[data-stijl="rood"] .topbar select, :root[data-stijl="rood"] .topbar .icon-btn {
+  background: rgba(255, 255, 255, .2); border: 1px solid rgba(255, 255, 255, .35); border-radius: 999px; color: #fff;
+}
+:root[data-stijl="rood"] .pillnav {
+  display: flex; gap: 4px; padding: 5px; border-radius: 999px; margin: 0 auto 0 4px; overflow-x: auto; scrollbar-width: none;
+  background: rgba(255, 255, 255, .18); border: 1px solid rgba(255, 255, 255, .34);
+  -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); box-shadow: 0 10px 28px rgba(60, 5, 15, .28);
+}
+:root[data-stijl="rood"] .pillnav::-webkit-scrollbar { display: none; }
+:root[data-stijl="rood"] .pillnav button {
+  border: 0; background: transparent; color: rgba(255, 255, 255, .85); font: inherit; font-size: 13px; font-weight: 600;
+  padding: 8px 15px; border-radius: 999px; cursor: pointer; white-space: nowrap;
+}
+:root[data-stijl="rood"] .pillnav button:hover { background: rgba(255, 255, 255, .16); color: #fff; }
+:root[data-stijl="rood"] .pillnav button.active { background: #ff5a36; color: #fff; box-shadow: 0 6px 16px rgba(255, 90, 54, .45); }
+:root[data-stijl="rood"] .topbar-spacer { flex: 0; }
+@media (max-width: 720px) {
+  :root[data-stijl="rood"] .pillnav { display: none; }
+  :root[data-stijl="rood"] .topbar-spacer { flex: 1; }
+  :root[data-stijl="rood"] .tabbar { background: rgba(70, 8, 20, .9); }
+}
+
+:root[data-stijl="rood"] .page .kpi.kpi--primair .kpi-lbl, :root[data-stijl="rood"] .page .kpi.kpi--primair .kpi-sub { color: rgba(255, 255, 255, .85); }
+
+/* Bankpas links, de cijfertegels in een 2x2-raster ernaast */
+.home-top { display: grid; grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); gap: var(--spacing-4); align-items: start; margin-bottom: var(--spacing-4); }
+.home-top .bankpas-stack { margin: 0; }
+.home-top .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 0; }
+@media (max-width: 900px) { .home-top { grid-template-columns: minmax(0, 1fr); } .home-top .bankpas-stack { max-width: 420px; } }
+
+@media (max-width: 720px) {
+  .topbar .search-wrap { flex: 1 1 60px; min-width: 0; max-width: none; }
+  .topbar .search-field input { min-width: 0; width: 100%; }
+  .topbar .icon-btn { flex-shrink: 0; }
+}
