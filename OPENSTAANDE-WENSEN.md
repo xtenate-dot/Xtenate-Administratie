@@ -194,3 +194,7 @@ Wens van de gebruiker: een eigen blok "Dagboeken" waarin hij zelf dagboeken kan 
 ## Afwerking (27-11, v20261127a)
 - polish.css: duidelijkere regelscheiding in tabellen (lijnen per stijl, zachte zebra, hover), strakkere koppen, dunne scrollbalken, zichtbare focus, rustige knoppen. Getest op een mock-tabel in Glass/Lavendel/Rood; nog niet op de echte pagina's bekeken.
 - Nog te doen: vaste paginakop en knopindeling per pagina nalopen, laad- en lege standen (skeletons), kleine animaties, alle pagina's in Lavendel en Rood controleren.
+
+## Bank verwerken: scroll en €0-regels (27-11, v20261127b)
+- De pagina springt niet meer omhoog als je een grootboek/soort/factuur kiest (scrollpositie en focus worden bewaard bij hertekenen).
+- €0-regels: de database eist bedrag > 0 (boekingen_bedrag_check), dus een boeking van €0 kan niet worden opgeslagen en werd bij het synchroniseren stilletjes overgeslagen. Ze staan nu in het voorstel als "bedrag €0,00: er valt niets te boeken" en tellen als afgehandeld (ook voor de inbox). Wil je ze toch vastleggen, dan moet de database-eis worden aangepast (structuurwijziging; alleen op jouw verzoek).

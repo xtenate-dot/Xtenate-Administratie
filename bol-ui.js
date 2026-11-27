@@ -2,12 +2,12 @@
 // verkocht per artikel, en een vergelijking met wat Bol op je bankrekening heeft gestort.
 // Alleen kijken: er wordt niets geboekt en de voorraad verandert niet.
 
-import { esc, fmt, ddmm } from './helpers.js?v=20261127a';
-import { bolArtikelenHtml } from './bolartikelen.js?v=20261127a';
-import { lopendJaar } from './jaren.js?v=20261127a';
-import { state } from './storage.js?v=20261127a';
-import { leesBolFacturen, perMaand, aantalBolFacturen } from './bol-facturen.js?v=20261127a';
-import { haalFacturenBijBol, leesFacturenOverzicht, leesBestellingen, leesRetouren, retourSamenvatting, haalBijBol, samenvatting, bolUitbetalingen, standaardPeriodes, leesBolAccounts } from './bol.js?v=20261127a';
+import { esc, fmt, ddmm } from './helpers.js?v=20261127b';
+import { bolArtikelenHtml } from './bolartikelen.js?v=20261127b';
+import { lopendJaar } from './jaren.js?v=20261127b';
+import { state } from './storage.js?v=20261127b';
+import { leesBolFacturen, perMaand, aantalBolFacturen } from './bol-facturen.js?v=20261127b';
+import { haalFacturenBijBol, leesFacturenOverzicht, leesBestellingen, leesRetouren, retourSamenvatting, haalBijBol, samenvatting, bolUitbetalingen, standaardPeriodes, leesBolAccounts } from './bol.js?v=20261127b';
 
 const el = id => document.getElementById(id);
 const MAAND = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];

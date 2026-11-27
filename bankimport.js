@@ -5,14 +5,14 @@
 // niet nog eens voorgesteld. Grootboek en soort worden afgeleid uit eerdere
 // boekingen met dezelfde naam; wat onbekend is kies je zelf.
 
-import { state, saveTxData, jaarIsVergrendeld } from './storage.js?v=20261127a';
-import { isTxJaar, jaarVan, EERSTE_TX_JAAR, vandaagIso } from './jaren.js?v=20261127a';
-import { esc, fmt } from './helpers.js?v=20261127a';
-import { addToPendingQueue } from './supabase-client-v2.js?v=20261127a';
-import { maakHerstelpunt } from './herstelpunt.js?v=20261127a';
-import { facturenVan, isOpenstaand, koppelBetaling, vindFactuur, restBedrag, isDeelsBetaald } from './facturen.js?v=20261127a';
-import { vindRelatie, relatieNummer } from './relaties.js?v=20261127a';
-import { telInbox, haalInboxOp, zetInboxStatus } from './bankinbox.js?v=20261127a';
+import { state, saveTxData, jaarIsVergrendeld } from './storage.js?v=20261127b';
+import { isTxJaar, jaarVan, EERSTE_TX_JAAR, vandaagIso } from './jaren.js?v=20261127b';
+import { esc, fmt } from './helpers.js?v=20261127b';
+import { addToPendingQueue } from './supabase-client-v2.js?v=20261127b';
+import { maakHerstelpunt } from './herstelpunt.js?v=20261127b';
+import { facturenVan, isOpenstaand, koppelBetaling, vindFactuur, restBedrag, isDeelsBetaald } from './facturen.js?v=20261127b';
+import { vindRelatie, relatieNummer } from './relaties.js?v=20261127b';
+import { telInbox, haalInboxOp, zetInboxStatus } from './bankinbox.js?v=20261127b';
 
 const REK = '1010';          // dagboek "Bank" (rekening 1010)
 const el = id => document.getElementById(id);
@@ -172,6 +172,8 @@ export function maakVoorstel(uit, bestaand = [...state.TX, ...state.HIST_TX], be
       naam, omschr: o.referentie.slice(0, 80), type, gb, rek: REK,
       herkomst: vast ? 'vaste regel' : leer ? 'eerder zo geboekt' : 'onbekend', staatAl: false, kies: true
     };
+    // De database accepteert geen boeking van €0 (boekingen_bedrag_check): zo'n regel is er niets te boeken en wordt gewoon als afgehandeld getoond.
+    if (rij.bedrag === 0) { rij.staatAl = true; rij.kies = false; rij.nul = true; rijen.push(rij); continue; }
     const s = eigen(rij);
     const lijst = eerder.get(s);
     if (lijst && lijst.length) { lijst.pop(); rij.staatAl = true; rij.kies = false; }
@@ -458,9 +460,28 @@ export function importeerRevolut() {
 
 const SOORTEN = [['inkomst', 'Inkomst'], ['uitgave', 'Uitgave'], ['prive_storting', 'Privé-storting'], ['prive_opname', 'Privé-opname']];
 
+/** Onthoudt waar de pagina staat en welk veld de focus had, zodat een nieuwe weergave niet naar boven springt. */
+function bewaarPositie(doel) {
+  const schuif = [];
+  for (let e = doel; e; e = e.parentElement) if (e.scrollTop > 0) schuif.push([e, e.scrollTop]);
+  const root = document.scrollingElement;
+  if (root && root.scrollTop > 0 && !schuif.some(([e]) => e === root)) schuif.push([root, root.scrollTop]);
+  const velden = [...doel.querySelectorAll('select, input, button')];
+  const nr = velden.indexOf(document.activeElement);
+  return () => {
+    for (const [e, top] of schuif) e.scrollTop = top;
+    if (nr >= 0) { const nieuw = doel.querySelectorAll('select, input, button')[nr]; if (nieuw && nieuw !== document.activeElement) nieuw.focus({ preventScroll: true }); }
+  };
+}
+
 export function renderBankimport() {
   const doel = el('bankimport-inhoud');
   if (!doel) return;
+  const herstel = bewaarPositie(doel);
+  try { tekenBankimport(doel); } finally { herstel(); requestAnimationFrame(herstel); }
+}
+
+function tekenBankimport(doel) {
   setTimeout(() => ververseInbox(), 0);
   const knop = `<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:var(--spacing-4)">
     <button class="btn btn-primary" onclick="kiesRevolutBestand()">Revolut-afschrift kiezen (CSV)</button>
@@ -485,7 +506,7 @@ export function renderBankimport() {
   const kies = nieuw.filter(r => r.kies);
   const rijen = voorstel.rijen.map((r, i) => (nurOpen && r.staatAl) ? '' : r.staatAl
     ? `<tr style="opacity:.55"><td></td><td>${esc(r.datum.slice(8, 10) + '-' + r.datum.slice(5, 7))}</td><td>${esc(r.naam)}</td>
-        <td style="text-align:right">${fmt(r.bedrag)}</td><td colspan="3" class="muted">${r.gesplitst ? `staat al, gesplitst in ${r.gesplitst} boekingen` : 'staat al in de administratie'}</td><td></td></tr>`
+        <td style="text-align:right">${fmt(r.bedrag)}</td><td colspan="3" class="muted">${r.nul ? 'bedrag \u20ac0,00: er valt niets te boeken' : r.gesplitst ? `staat al, gesplitst in ${r.gesplitst} boekingen` : 'staat al in de administratie'}</td><td></td></tr>`
     : `<tr><td><input type="checkbox" ${r.kies ? 'checked' : ''} onchange="zetBankimportKeuze(${i},'kies',this.checked)"></td>
         <td>${esc(r.datum.slice(8, 10) + '-' + r.datum.slice(5, 7))}</td>
         <td>${esc(r.naam)}<div class="muted" style="font-size:12px">${esc(r.herkomst)}</div></td>

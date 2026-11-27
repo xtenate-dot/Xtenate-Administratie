@@ -4,11 +4,11 @@
 // Alleen kijken en importeren. Er wordt niets in HNVI, Voorraad of de
 // boekingen aangepast; de Excel blijft de bron.
 
-import { state, saveVeiling } from './storage.js?v=20261127a';
-import { esc, fmt } from './helpers.js?v=20261127a';
+import { state, saveVeiling } from './storage.js?v=20261127b';
+import { esc, fmt } from './helpers.js?v=20261127b';
 import {
   leesVeilingWerkboek, voorraadRegels
-} from './veiling.js?v=20261127a';
+} from './veiling.js?v=20261127b';
 
 const el = id => document.getElementById(id);
 let melding = '';

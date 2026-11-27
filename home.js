@@ -8,18 +8,18 @@
 // nodig is. Alle gebruikte functies zijn alleen-lezend; deze module wijzigt
 // nooit data.
 
-import { draaiControles } from './controle.js?v=20261127a';
-import { factuurSamenvatting } from './facturen.js?v=20261127a';
-import { esc, fmt } from './helpers.js?v=20261127a';
-import { standaardMinVoorraad, state } from './storage.js?v=20261127a';
-import { telInbox } from './bankinbox.js?v=20261127a';
-import { onverwerkteInkoop } from './artikelregels.js?v=20261127a';
-import { berekenJaarMetrics, berekenBanksaldo, vorigJaarMetrics, berekenVoorraad, kpi, kpiTrend } from './dashboard.js?v=20261127a';
-import { txVanJaar, lopendJaar } from './jaren.js?v=20261127a';
-import { charts, cssVar, dc, baseOpts, lijn } from './charts.js?v=20261127a';
-import { korStatus } from './kor.js?v=20261127a';
-import { leesBolFacturen, perMaand } from './bol-facturen.js?v=20261127a';
-import { fmtKort, isInkomst, isOmzet, ddmm, weergaveNaam } from './helpers.js?v=20261127a';
+import { draaiControles } from './controle.js?v=20261127b';
+import { factuurSamenvatting } from './facturen.js?v=20261127b';
+import { esc, fmt } from './helpers.js?v=20261127b';
+import { standaardMinVoorraad, state } from './storage.js?v=20261127b';
+import { telInbox } from './bankinbox.js?v=20261127b';
+import { onverwerkteInkoop } from './artikelregels.js?v=20261127b';
+import { berekenJaarMetrics, berekenBanksaldo, vorigJaarMetrics, berekenVoorraad, kpi, kpiTrend } from './dashboard.js?v=20261127b';
+import { txVanJaar, lopendJaar } from './jaren.js?v=20261127b';
+import { charts, cssVar, dc, baseOpts, lijn } from './charts.js?v=20261127b';
+import { korStatus } from './kor.js?v=20261127b';
+import { leesBolFacturen, perMaand } from './bol-facturen.js?v=20261127b';
+import { fmtKort, isInkomst, isOmzet, ddmm, weergaveNaam } from './helpers.js?v=20261127b';
 
 const el = id => document.getElementById(id);
 
