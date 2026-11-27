@@ -190,3 +190,7 @@ Wens van de gebruiker: een eigen blok "Dagboeken" waarin hij zelf dagboeken kan 
 - Paletknop in de bovenbalk wisselt tussen Glass (standaard), Lavendel (zwevend donker zijmenu, lila achtergrond, witte kaarten, lime accent) en Rood (rood verloop, glazen blokken, navigatiebalk bovenin; zijmenu via "Meer"). Keuze lokaal: xtenate_stijl. Bestanden: stijlen.css, stijlen.js.
 - Home: aandachtsbalk (punten + knop), bankpas naast de cijfertegels, KOR-meter en Bol per maand (pilbalken: omzet en uitbetaald). Alleen-lezen; geen wijziging aan berekeningen.
 - Visueel getest met een mock-pagina (desktop en telefoonbreedte), nog niet in de echte app bekeken.
+
+## Afwerking (27-11, v20261127a)
+- polish.css: duidelijkere regelscheiding in tabellen (lijnen per stijl, zachte zebra, hover), strakkere koppen, dunne scrollbalken, zichtbare focus, rustige knoppen. Getest op een mock-tabel in Glass/Lavendel/Rood; nog niet op de echte pagina's bekeken.
+- Nog te doen: vaste paginakop en knopindeling per pagina nalopen, laad- en lege standen (skeletons), kleine animaties, alle pagina's in Lavendel en Rood controleren.

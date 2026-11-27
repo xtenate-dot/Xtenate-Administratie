@@ -1,0 +1,39 @@
+/* polish.css — laatste afwerking: duidelijkere regelscheiding, strakkere koppen,
+   dunne scrollbalken en zichtbare focus. Alleen uiterlijk. */
+
+:root { --row-line: rgba(255, 255, 255, .075); --row-zebra: rgba(255, 255, 255, .022); --row-hover: rgba(255, 255, 255, .06); }
+:root[data-theme="light"] { --row-line: rgba(30, 27, 75, .09); --row-zebra: rgba(30, 27, 75, .02); --row-hover: rgba(91, 61, 245, .06); }
+:root[data-stijl="lavendel"] { --row-line: rgba(27, 17, 70, .1); --row-zebra: rgba(91, 61, 245, .03); --row-hover: rgba(91, 61, 245, .07); }
+:root[data-stijl="rood"] { --row-line: rgba(255, 255, 255, .11); --row-zebra: rgba(255, 255, 255, .03); --row-hover: rgba(255, 255, 255, .09); }
+
+/* Tabellen: elke regel afgebakend, om en om een heel zacht vlak, duidelijke kop */
+td { border-bottom: 1px solid var(--row-line); }
+tbody tr:last-child td { border-bottom: 1px solid transparent; }
+tbody tr:nth-child(even) td { background: var(--row-zebra); }
+tbody tr:hover td { background: var(--row-hover); }
+th { font-size: 11px; letter-spacing: .7px; border-bottom: 1px solid var(--border-strong); }
+td.td-num, td.td-num * { font-variant-numeric: tabular-nums; }
+td.td-num { font-weight: 600; }
+.table-wrap, .card-flush { border-radius: 22px; }
+.card-flush { overflow: hidden; }
+
+/* Koppen en label-vormen */
+.page-title { letter-spacing: -.02em; font-weight: 650; }
+.badge { min-height: 22px; display: inline-flex; align-items: center; letter-spacing: .01em; }
+
+/* Zichtbare focus bij toetsenbordgebruik */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible { outline: 2px solid var(--accent-primary, #7c3aed); outline-offset: 2px; border-radius: 10px; }
+:where(input, select, textarea):focus { outline: none; }
+:where(input, select, textarea):focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-primary, #7c3aed) 35%, transparent); }
+
+/* Dunne, rustige scrollbalken en tekstselectie */
+* { scrollbar-width: thin; scrollbar-color: rgba(140, 140, 175, .4) transparent; }
+*::-webkit-scrollbar { width: 9px; height: 9px; }
+*::-webkit-scrollbar-thumb { background: rgba(140, 140, 175, .4); border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; }
+*::-webkit-scrollbar-thumb:hover { background: rgba(140, 140, 175, .65); background-clip: padding-box; border: 2px solid transparent; }
+::selection { background: color-mix(in srgb, var(--accent-primary, #7c3aed) 40%, transparent); }
+
+/* Knoppen: iets meer ruimte, rustige beweging */
+.btn { transition: background .15s, border-color .15s, transform .15s, box-shadow .15s; }
+.btn-primary { box-shadow: 0 6px 16px color-mix(in srgb, var(--accent-primary, #7c3aed) 28%, transparent); }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
