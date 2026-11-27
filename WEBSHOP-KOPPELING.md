@@ -18,7 +18,7 @@ Nieuwe pagina **Webshop** onder "Handel en voorraad". Werkt zoals de Bol-pagina:
    - `WEBSHOP_KEY` = de consumer key
    - `WEBSHOP_SECRET` = de consumer secret
 3. **Tabel en nachtronde**: voer `webshop_bestellingen.sql` uit in de SQL Editor (eerst het `create table`-deel; het `cron.schedule`-deel pas na stap 4).
-4. **Functie deployen**: `supabase functions deploy webshop-koppeling` (of in het dashboard een nieuwe functie `webshop-koppeling` aanmaken met de inhoud van `supabase/functions/webshop-koppeling/index.ts`). Laat "Verify JWT" aan.
+4. **Functie deployen**: `supabase functions deploy webshop-koppeling` (of in het dashboard een nieuwe functie `webshop-koppeling` aanmaken met de inhoud van `supabase/functions/webshop-koppeling/index.ts`). Zet "Verify JWT" **uit**, net als bij bank- en bol-koppeling: de nachtronde van pg_cron stuurt geen gebruikers-JWT mee, en de functie controleert zelf de gebruiker (auth.getUser) of het cron-geheim.
 5. Open de pagina Webshop: bovenaan moet "Verbonden met de webshop." staan.
 
 ## Bekende beperkingen
