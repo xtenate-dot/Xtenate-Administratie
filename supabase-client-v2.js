@@ -11,8 +11,8 @@
  * Fase 3A Implementation
  */
 
-import { logWachtrijWijziging } from './logboek.js?v=20261127d';
-import { getClient, heeftClient, leesbareFout } from './supabase.js?v=20261127d';
+import { logWachtrijWijziging } from './logboek.js?v=20261127e';
+import { getClient, heeftClient, leesbareFout } from './supabase.js?v=20261127e';
 
 // ===== NOODREM =====
 export function syncIsAangezet() {

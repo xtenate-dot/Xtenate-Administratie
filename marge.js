@@ -5,7 +5,7 @@
 // gelezen, zodat een gewijzigde inkoopprijs hier nooit de cijfers elders raakt.
 // De opzet en de formules komen uit het bestand "Winst / kostprijsberekening".
 
-import { state, bewaarMarge } from './storage.js?v=20261127d';
+import { state, bewaarMarge } from './storage.js?v=20261127e';
 
 export const KANALEN = {
   nl:  { naam: 'Bol.com Nederland',        kort: 'Bol NL',  soort: 'bol' },
@@ -272,8 +272,14 @@ export function zetKostenRij(lijst, id, veld, waarde) {
     // Wijzigt de naam van een verpakking of verzendmethode, dan volgen de producten die er naar verwijzen.
     if (veld === 'naam') {
       const oud = rij.naam;
-      if (lijst === 'verpakking') d.producten.forEach(p => { if (p.verpakking === oud) p.verpakking = waarde; });
-      if (lijst === 'verzending') d.producten.forEach(p => { if (p.methode === oud) p.methode = waarde; });
+      if (lijst === 'verpakking') d.producten.forEach(p => {
+        if (p.verpakking === oud) p.verpakking = waarde;
+        p.regels.forEach(r => (r.staffels || []).forEach(s => { if (s.verpakking === oud) s.verpakking = waarde; }));
+      });
+      if (lijst === 'verzending') d.producten.forEach(p => {
+        if (p.methode === oud) p.methode = waarde;
+        p.regels.forEach(r => (r.staffels || []).forEach(s => { if (s.methode === oud) s.methode = waarde; }));
+      });
     }
     rij[veld] = waarde;
   });

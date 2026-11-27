@@ -5,16 +5,17 @@
 // ongewijzigd: elke tegel roept dezelfde globale functie aan als het
 // zijbalk-item, dus er verandert niets aan wat ze doen.
 
-import { herstelpuntenBlok } from './herstelpunt.js?v=20261127d';
-import { logLijst, soortLabel, actieLabel } from './logboek.js?v=20261127d';
-import { cloudBackupBlok } from './cloudbackup.js?v=20261127d';
-import { draaiControles } from './controle.js?v=20261127d';
-import { esc } from './helpers.js?v=20261127d';
-import { saveVoorraadInstellingen, standaardMinVoorraad, saveControleInstellingen, CONTROLE_INSTELLINGEN, saveBtwInstellingen, BTW_INSTELLINGEN, saveBedrijfsgegevens, BEDRIJFSGEGEVENS, saveKmInstellingen, KM_INSTELLINGEN, saveFactuurInstellingen, FACTUUR_INSTELLINGEN, appDataStatus, state, rekeningenLijst, bankKoppelingDagenTotVerval } from './storage.js?v=20261127d';
-import { werkBankKoppelingRekBijInSupabase } from './supabase-client-v2.js?v=20261127d';
-import { hertekenHuidigePagina } from './ui.js?v=20261127d';
-import { getPendingItems } from './supabase-client-v2.js?v=20261127d';
-import { syncNu } from './autosync.js?v=20261127d';
+import { herstelpuntenBlok } from './herstelpunt.js?v=20261127e';
+import { logLijst, soortLabel, actieLabel } from './logboek.js?v=20261127e';
+import { haalCloudLogboek, controleerCloudLogboek, cloudStatus } from './logboek-cloud.js?v=20261127e';
+import { cloudBackupBlok } from './cloudbackup.js?v=20261127e';
+import { draaiControles } from './controle.js?v=20261127e';
+import { esc } from './helpers.js?v=20261127e';
+import { saveVoorraadInstellingen, standaardMinVoorraad, saveControleInstellingen, CONTROLE_INSTELLINGEN, saveBtwInstellingen, BTW_INSTELLINGEN, saveBedrijfsgegevens, BEDRIJFSGEGEVENS, saveKmInstellingen, KM_INSTELLINGEN, saveFactuurInstellingen, FACTUUR_INSTELLINGEN, appDataStatus, state, rekeningenLijst, bankKoppelingDagenTotVerval } from './storage.js?v=20261127e';
+import { werkBankKoppelingRekBijInSupabase } from './supabase-client-v2.js?v=20261127e';
+import { hertekenHuidigePagina } from './ui.js?v=20261127e';
+import { getPendingItems } from './supabase-client-v2.js?v=20261127e';
+import { syncNu } from './autosync.js?v=20261127e';
 
 const el = id => document.getElementById(id);
 
@@ -85,12 +86,47 @@ function logboekBlok() {
       <td><span class="badge ${badgeKlasse(r)}">${esc(soortLabel(r))} ${esc(actieLabel(r))}</span>${r.n > 1 ? ` <span class="muted">${r.n}×</span>` : ''}</td>
       <td>${esc(r.tekst || '')}</td></tr>`).join('');
   return `<div class="card card-flush" style="margin-top:var(--spacing-4)">
-    <div class="card-title">Logboek <span class="muted" style="font-weight:400;font-size:12.5px">laatste ${regels.length} wijzigingen, alleen in deze browser</span></div>
+    <div class="card-title">Logboek <span class="muted" style="font-weight:400;font-size:12.5px">laatste ${regels.length} wijzigingen in deze browser</span></div>
     ${regels.length
       ? `<div class="table-wrap" style="max-height:340px;overflow:auto"><table class="tbl-compact"><thead><tr><th>Wanneer</th><th>Wat</th><th>Welk item</th></tr></thead><tbody>${body}</tbody></table></div>`
       : '<div class="leeg">Nog geen wijzigingen vastgelegd. Vanaf nu verschijnen hier nieuwe, gewijzigde en verwijderde boekingen, loten, artikelen en instellingen.</div>'}
+  </div>
+  <div class="card" style="margin-top:var(--spacing-3);padding:var(--spacing-4)" id="logboek-cloud">
+    <div style="font-weight:600;margin-bottom:4px">Logboek in de cloud</div>
+    <div class="muted" style="font-size:13px;margin-bottom:10px">Een kopie in Supabase die niemand kan wijzigen of wissen en die je ook op een andere computer ziet.</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" onclick="toonCloudLogboek()">Toon cloud-logboek</button>
+      <button class="btn" onclick="controleerCloudLogboekUi()">Controleer onaangetast</button>
+    </div>
+    <div id="logboek-cloud-uit" style="margin-top:10px;font-size:13px"></div>
   </div>`;
 }
+
+window.toonCloudLogboek = async function () {
+  const doel = document.getElementById('logboek-cloud-uit');
+  if (!doel) return;
+  doel.textContent = 'Laden…';
+  const r = await haalCloudLogboek(100);
+  if (r.fout) { doel.textContent = r.fout; return; }
+  const tijd = iso => new Date(iso).toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'medium' });
+  const wacht = cloudStatus.aantalWacht ? `<div class="muted" style="margin-bottom:6px">${cloudStatus.aantalWacht} regel(s) wachten nog op verzending.</div>` : '';
+  doel.innerHTML = wacht + (r.regels.length
+    ? `<div class="table-wrap" style="max-height:340px;overflow:auto"><table class="tbl-compact"><thead><tr><th>Wanneer (database)</th><th>Wat</th><th>Welk item</th></tr></thead><tbody>${
+      r.regels.map(x => `<tr><td class="muted" style="white-space:nowrap">${esc(tijd(x.tijd))}</td><td>${esc(soortLabel(x))} ${esc(actieLabel(x))}</td><td>${esc(x.tekst || '')}</td></tr>`).join('')
+    }</tbody></table></div>`
+    : 'Nog geen regels in de cloud.');
+};
+
+window.controleerCloudLogboekUi = async function () {
+  const doel = document.getElementById('logboek-cloud-uit');
+  if (!doel) return;
+  doel.textContent = 'Controleren…';
+  const r = await controleerCloudLogboek();
+  if (r.fout) { doel.textContent = 'Controle niet gelukt: ' + r.fout; return; }
+  doel.textContent = r.ok
+    ? `Goed: alle ${r.aantal} regels zijn onaangetast (ketting klopt).`
+    : `LET OP: het logboek is aangepast. De eerste afwijkende regel is nummer ${r.eerste_fout_id}.`;
+};
 
 export function renderBeheer() {
   const doel = el('beheer-inhoud');

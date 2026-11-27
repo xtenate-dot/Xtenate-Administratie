@@ -2,9 +2,9 @@
 // artikelen, instellingen en herstelpunten. Alleen om terug te kijken wie/wat/wanneer
 // er iets is veranderd; het logboek zelf verandert niets aan je gegevens.
 //
-// Het staat alleen in deze browser (localStorage) en bewaart de laatste 500 regels.
-// Er is bewust geen koppeling met de cloud: een fout hier mag nooit een boeking of
-// synchronisatie kunnen verstoren, daarom is elke functie afgeschermd met try/catch.
+// Lokaal: localStorage, laatste 500 regels. Daarnaast (logboek-cloud.js) gaat elke regel
+// los naar de Supabase-tabel logboek, zodra logboek.sql daar is uitgevoerd. Een fout hier
+// mag nooit een boeking of synchronisatie kunnen verstoren, daarom is alles afgeschermd.
 
 const SLEUTEL = 'xtenate_logboek';
 const MAX = 500;
@@ -19,7 +19,12 @@ const lees = () => {
  * Schrijft een regel. Meerdere gelijke regels vlak na elkaar (bijvoorbeeld een import van
  * tientallen boekingen) worden samengevoegd tot één regel met een aantal.
  */
+let cloudSink = null;
+/** logboek-cloud.js meldt zich hier aan; zonder aanmelding blijft het logboek puur lokaal. */
+export function zetCloudSink(fn) { cloudSink = typeof fn === 'function' ? fn : null; }
+
 export function logGebeurtenis(soort, actie, tekst) {
+  try { if (cloudSink) cloudSink({ soort, actie, tekst, t: new Date().toISOString() }); } catch (e) { /* nooit storen */ }
   try {
     const nu = Date.now();
     const lijst = lees();

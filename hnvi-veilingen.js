@@ -5,9 +5,9 @@
 // plus opgeld en btw. Kosten buiten het lot (vervoer, verzending) vul je zelf in per
 // veiling; die staan los opgeslagen en tellen alleen hier mee.
 
-import { state, zetVeilingKosten } from './storage.js?v=20261127d';
-import { esc, fmt } from './helpers.js?v=20261127d';
-import { splitsLoten, lotAantal } from './hnvilot.js?v=20261127d';
+import { state, zetVeilingKosten } from './storage.js?v=20261127e';
+import { esc, fmt } from './helpers.js?v=20261127e';
+import { splitsLoten, lotAantal } from './hnvilot.js?v=20261127e';
 
 const el = id => document.getElementById(id);
 const rond = n => Math.round(n * 100) / 100;
@@ -91,7 +91,11 @@ export function veilingExcelRijen(rijen) {
   const data = rijen.map(r => [r.datum, r.facturen.join(', '), r.loten, r.stuks, r.stuksVerkocht, r.inkoopTotaal, r.inkoopVerkocht, r.opbrengst,
     r.winst, r.extra, r.resultaat, r.rendementNetto === null ? '' : Math.round(r.rendementNetto * 1000) / 1000,
     r.verkochtPct === null ? '' : Math.round(r.verkochtPct * 1000) / 1000, r.voorraadWaarde, r.gemDagen === null ? '' : Math.round(r.gemDagen)]);
-  return [kop, ...data];
+  const t = veilingTotaal(rijen);
+  const som = k => rijen.reduce((s, r) => s + r[k], 0);
+  const totaal = ['Totaal', '', t.loten, som('stuks'), som('stuksVerkocht'), t.inkoopTotaal, t.inkoopVerkocht, t.opbrengst, t.winst, t.extra, t.resultaat,
+    t.rendementNetto === null ? '' : Math.round(t.rendementNetto * 1000) / 1000, t.verkochtPct === null ? '' : Math.round(t.verkochtPct * 1000) / 1000, t.voorraadWaarde, ''];
+  return [kop, ...data, totaal];
 }
 
 export function renderVeilingVergelijk() {
@@ -160,6 +164,12 @@ export function exporteerVeilingen() {
   if (!rijen.length || !window.XLSX) return;
   const ws = window.XLSX.utils.aoa_to_sheet(veilingExcelRijen(rijen));
   ws['!cols'] = [14, 22, 7, 7, 14, 13, 14, 12, 20, 12, 12, 11, 20, 14, 20].map(wch => ({ wch }));
+  // Euro's en procenten als zodanig opmaken (de waarden zelf blijven getallen).
+  const aantalRijen = rijen.length + 1;
+  for (let r = 2; r <= aantalRijen + 1; r++) {
+    for (const c of ['F', 'G', 'H', 'I', 'J', 'K', 'N']) { const cel = ws[c + r]; if (cel && typeof cel.v === 'number') cel.z = '#,##0.00'; }
+    for (const c of ['L', 'M']) { const cel = ws[c + r]; if (cel && typeof cel.v === 'number') cel.z = '0.0%'; }
+  }
   const wb = window.XLSX.utils.book_new();
   window.XLSX.utils.book_append_sheet(wb, ws, 'Veilingen');
   window.XLSX.writeFile(wb, `Veilingen${jaar ? '-' + jaar : ''}.xlsx`);

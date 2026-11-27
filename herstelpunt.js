@@ -2,13 +2,13 @@
 // met een knop om terug te zetten. De momentopname staat in deze browser; de
 // cloud wordt bij terugzetten weer gelijkgetrokken met die opname.
 
-import { logGebeurtenis } from './logboek.js?v=20261127d';
+import { logGebeurtenis } from './logboek.js?v=20261127e';
 import {
   state, load, save, saveTxData, saveHistTxData, saveCoversData, saveHnviData
-} from './storage.js?v=20261127d';
+} from './storage.js?v=20261127e';
 import {
   vervangBoekingenInSupabase, vervangVoorraadInSupabase, saveHnviToSupabase, deleteFromSupabase
-} from './supabase-client-v2.js?v=20261127d';
+} from './supabase-client-v2.js?v=20261127e';
 
 const SLEUTEL = 'xtenate_herstelpunten';
 const MAX = 3;

@@ -4,7 +4,7 @@
 // verwijzen zonder dat we losse globale variabelen nodig hebben.
 
 // Fase 3A: Import Supabase client v2 (pending queue + RLS)
-import { logInstelling } from './logboek.js?v=20261127d';
+import { logInstelling } from './logboek.js?v=20261127e';
 import {
   loadBoekingenFromSupabase,
   loadHnviFromSupabase,
@@ -20,7 +20,7 @@ import {
   saveAppData,
   loadAppData,
   laatsteAppDataFout
-} from './supabase-client-v2.js?v=20261127d';
+} from './supabase-client-v2.js?v=20261127e';
 
 /**
  * Stuurt een los lijstje (groepen, facturen, tellers) naar de cloud zonder

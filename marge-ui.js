@@ -4,13 +4,13 @@
 // opgeslagen (app_data "marge"), zodat een wijziging van een inkoopprijs
 // nergens anders cijfers verandert.
 
-import { esc, fmt } from './helpers.js?v=20261127d';
+import { esc, fmt } from './helpers.js?v=20261127e';
 import {
   KANALEN, GEEN_VERZENDING, leesMarge, alleUitkomsten, samenvatting, productiekosten,
   zetKosten, zetKostenRij, voegKostenRijToe, verwijderKostenRij,
   zetProduct, voegProductToe, verwijderProduct, zetRegel, voegRegelToe, verwijderRegel, nr,
   rekenStaffel, zetStaffel, voegStaffelToe, verwijderStaffel
-} from './marge.js?v=20261127d';
+} from './marge.js?v=20261127e';
 
 const el = id => document.getElementById(id);
 const pct = x => (x * 100).toLocaleString('nl-NL', { maximumFractionDigits: 1 }) + '%';
