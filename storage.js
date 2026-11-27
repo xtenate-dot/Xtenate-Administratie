@@ -19,7 +19,7 @@ import {
   saveAppData,
   loadAppData,
   laatsteAppDataFout
-} from './supabase-client-v2.js?v=20261127b';
+} from './supabase-client-v2.js?v=20261127c';
 
 /**
  * Stuurt een los lijstje (groepen, facturen, tellers) naar de cloud zonder
@@ -122,6 +122,7 @@ function appDataWaarde(sleutel) {
   if (sleutel === 'relatie_extra') return state.RELATIE_EXTRA;
   if (sleutel === 'kostenplaats') return state.KOSTENPLAATS;
   if (sleutel === 'bol_maandcijfers') return state.BOL_MAAND;
+  if (sleutel === 'marge') return state.MARGE || undefined;
   if (sleutel === 'vergrendeld') return state.VERGRENDELD;
   if (sleutel === 'tellers') return { tx: state.nxtTx, cover: state.nxtCover, hnvi: state.nxtHnvi };
   return undefined;
@@ -497,6 +498,14 @@ export function bewaarBolMaand(lijst) {
   state.BOL_MAAND = { ...state.BOL_MAAND, ...lijst };
   save('xtenate_bol_maand', state.BOL_MAAND);
   duwAppData('bol_maandcijfers', state.BOL_MAAND);
+}
+// Kostprijs- en margeberekening (Marge-pagina): kosten, artikelen en prijzen per kanaal.
+// null zolang er niets is bewaard; dan toont de pagina de startwaarden.
+state.MARGE = load('xtenate_marge', null);
+export function bewaarMarge(data) {
+  state.MARGE = data;
+  save('xtenate_marge', state.MARGE);
+  duwAppData('marge', state.MARGE);
 }
 export function bewaarRelatieExtra(relatieId, velden) {
   state.RELATIE_EXTRA[relatieId] = { ...(state.RELATIE_EXTRA[relatieId] || {}), ...velden };
@@ -1009,6 +1018,11 @@ export async function loadDataHybrid() {
         if (extra.bol_maandcijfers && typeof extra.bol_maandcijfers === 'object') {
           state.BOL_MAAND = { ...extra.bol_maandcijfers, ...state.BOL_MAAND };
           save('xtenate_bol_maand', state.BOL_MAAND);
+        }
+        // Marge: wat lokaal staat wint; staat er alleen iets in de cloud, dan nemen we dat over.
+        if (!state.MARGE && extra.marge && typeof extra.marge === 'object' && extra.marge.kosten) {
+          state.MARGE = extra.marge;
+          save('xtenate_marge', state.MARGE);
         }
         if (extra.kostenplaats && typeof extra.kostenplaats === 'object') {
           state.KOSTENPLAATS = { ...extra.kostenplaats, ...state.KOSTENPLAATS };

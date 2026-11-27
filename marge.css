@@ -1,0 +1,66 @@
+/* marge.css — de pagina Marge per artikel. Gebruikt alleen themavariabelen, dus
+   werkt in licht, donker en alle drie de stijlen (glass, lavendel, rood). */
+
+#marge-inhoud .kpi-grid { margin-bottom: var(--spacing-4); }
+
+.mg-overzicht { margin-bottom: var(--spacing-5); }
+.mg-voet { padding: 12px var(--spacing-4) var(--spacing-4); font-size: 12.5px; line-height: 1.55; }
+
+.mg-sectiekop {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin: var(--spacing-5) 0 var(--spacing-3);
+}
+.mg-sectiekop h3 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -.2px; }
+
+/* Marge-balk: de vulling loopt tot 50% marge. */
+.mg-balk { display: flex; align-items: center; gap: 10px; min-width: 130px; }
+.mg-balk-spoor { flex: 1; height: 7px; border-radius: 99px; background: var(--border-soft); overflow: hidden; min-width: 60px; }
+.mg-balk-vul { height: 100%; border-radius: 99px; transition: width var(--duration-base, .2s) var(--easing-out, ease-out); }
+.mg-balk-vul.mg-goed     { background: var(--semantic-success-bright, #34d399); }
+.mg-balk-vul.mg-redelijk { background: var(--semantic-info-bright, #60a5fa); }
+.mg-balk-vul.mg-krap     { background: var(--semantic-warning-bright, #fbbf24); }
+.mg-balk-vul.mg-verlies  { background: var(--semantic-danger-bright, #f87171); }
+.mg-balk-pct { font-variant-numeric: tabular-nums; font-weight: 600; min-width: 48px; text-align: right; }
+
+.mg-rij { cursor: pointer; }
+.mg-uitleg[hidden] { display: none; }
+.mg-uitleg td { padding-top: 0 !important; background: transparent; }
+.mg-delen { display: flex; flex-wrap: wrap; gap: 6px 10px; padding: 8px 10px 12px; font-size: 12.5px; }
+.mg-deel {
+  padding: 4px 10px; border-radius: 99px; background: var(--accent-primary-softer);
+  border: 1px solid var(--border-soft); white-space: nowrap;
+}
+.mg-deel b { font-weight: 700; margin-left: 4px; font-variant-numeric: tabular-nums; }
+.mg-let-op { flex-basis: 100%; color: var(--semantic-warning-bright, #fbbf24); font-weight: 600; }
+.mg-waarschuw {
+  display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; margin-left: 4px;
+  border-radius: 50%; font-size: 11px; font-weight: 800; line-height: 1;
+  background: var(--semantic-warning-soft); color: var(--semantic-warning-bright, #fbbf24);
+}
+
+/* Artikelkaarten en invoervelden */
+.mg-product { margin-bottom: var(--spacing-4); }
+.mg-product-kop { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: var(--spacing-3); }
+.mg-product-kop .mg-inp { font-weight: 700; font-size: 15px; }
+.mg-velden { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-bottom: var(--spacing-3); font-size: 13px; }
+.mg-velden label { display: inline-flex; align-items: center; gap: 8px; color: var(--text-secondary); }
+.mg-printkop { font-weight: 600; }
+.mg-inp { padding: 7px 9px; font-size: 13px; box-sizing: border-box; max-width: 100%; }
+.mg-regels td { vertical-align: middle; }
+.mg-regels { min-width: 920px; }
+.mg-regels td:nth-child(1) .mg-inp { min-width: 130px; }
+.mg-regels td:nth-child(2) .mg-inp { min-width: 175px; }
+.mg-regels td:nth-child(3) .mg-inp { min-width: 165px; }
+.mg-regels td:nth-child(n+4) .mg-inp { min-width: 74px; }
+.mg-product .btn-sm, .mg-blok .btn-sm { margin-top: var(--spacing-2); }
+
+.mg-blok { margin-bottom: var(--spacing-5); }
+.mg-blok:last-child { margin-bottom: 0; }
+.mg-blok-titel { font-weight: 700; margin-bottom: var(--spacing-2); }
+
+@media (max-width: 760px) {
+  .mg-sectiekop { flex-wrap: wrap; }
+  .mg-velden label { flex-wrap: wrap; }
+  .mg-balk { min-width: 0; }
+  .mg-delen { padding-inline: 0; }
+}

@@ -19,13 +19,13 @@
 // je moet er bewust voor kiezen welke boekingen je meeneemt, omdat de
 // suggestie zelf minder betrouwbaar is.
 
-import { esc, fmt, ddmm } from './helpers.js?v=20261127b';
-import { zoekRelaties, maakRelatie } from './relaties.js?v=20261127b';
+import { esc, fmt, ddmm } from './helpers.js?v=20261127c';
+import { zoekRelaties, maakRelatie } from './relaties.js?v=20261127c';
 import {
   berekenIbanClusters, afwijsIbanCluster, afgewezenIbanClusters, herstelIbanCluster,
   berekenTekstClusters, afwijsTekstCluster, afgewezenTekstClusters, herstelTekstCluster,
   bevestigCluster
-} from './boekingen-relaties.js?v=20261127b';
+} from './boekingen-relaties.js?v=20261127c';
 
 let sluitHuidige = null;
 

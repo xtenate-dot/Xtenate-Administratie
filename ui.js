@@ -1,33 +1,34 @@
 // ui.js — navigatie tussen pagina's en het onthouden van de actieve pagina.
 
-import { state } from './storage.js?v=20261127b';
-import { renderBank } from './bank.js?v=20261127b';
-import { renderBelasting } from './belasting.js?v=20261127b';
-import { renderBtw } from './btw.js?v=20261127b';
-import { renderCrediteuren } from './crediteuren.js?v=20261127b';
-import { renderDebiteuren } from './debiteuren.js?v=20261127b';
-import { renderHome } from './dashboard.js?v=20261127b';
-import { renderPortaal } from './home.js?v=20261127b';
-import { renderGrootboek } from './grootboek.js?v=20261127b';
-import { renderHNVI } from './hnvi.js?v=20261127b';
-import { renderDagboeken } from './dagboeken.js?v=20261127b';
-import { renderRendement } from './artikelregels.js?v=20261127b';
-import { renderTerugkerend } from './terugkerend.js?v=20261127b';
-import { renderControle } from './controle.js?v=20261127b';
-import { renderCovers } from './voorraad.js?v=20261127b';
-import { renderFacturenPagina, renderInkoopfacturen, renderVerkoopfacturen } from './facturen-ui.js?v=20261127b';
-import { renderKm } from './km-ui.js?v=20261127b';
-import { renderUren } from './uren-ui.js?v=20261127b';
-import { renderBol } from './bol-ui.js?v=20261127b';
-import { renderActiva } from './activa-ui.js?v=20261127b';
-import { renderVeiling } from './veiling-ui.js?v=20261127b';
-import { renderPeriode } from './periode.js?v=20261127b';
-import { renderFactuurmaker } from './factuurmaker.js?v=20261127b';
-import { renderBankimport } from './bankimport.js?v=20261127b';
-import { renderJaarafsluiting } from './jaarafsluiting.js?v=20261127b';
-import { renderBeheer } from './beheer.js?v=20261127b';
-import { toonGroepVan } from './navgroepen.js?v=20261127b';
-import { zetNavPil } from './navpil.js?v=20261127b';
+import { state } from './storage.js?v=20261127c';
+import { renderBank } from './bank.js?v=20261127c';
+import { renderBelasting } from './belasting.js?v=20261127c';
+import { renderBtw } from './btw.js?v=20261127c';
+import { renderCrediteuren } from './crediteuren.js?v=20261127c';
+import { renderDebiteuren } from './debiteuren.js?v=20261127c';
+import { renderHome } from './dashboard.js?v=20261127c';
+import { renderPortaal } from './home.js?v=20261127c';
+import { renderGrootboek } from './grootboek.js?v=20261127c';
+import { renderHNVI } from './hnvi.js?v=20261127c';
+import { renderDagboeken } from './dagboeken.js?v=20261127c';
+import { renderRendement } from './artikelregels.js?v=20261127c';
+import { renderTerugkerend } from './terugkerend.js?v=20261127c';
+import { renderControle } from './controle.js?v=20261127c';
+import { renderCovers } from './voorraad.js?v=20261127c';
+import { renderFacturenPagina, renderInkoopfacturen, renderVerkoopfacturen } from './facturen-ui.js?v=20261127c';
+import { renderKm } from './km-ui.js?v=20261127c';
+import { renderUren } from './uren-ui.js?v=20261127c';
+import { renderBol } from './bol-ui.js?v=20261127c';
+import { renderMarge } from './marge-ui.js?v=20261127c';
+import { renderActiva } from './activa-ui.js?v=20261127c';
+import { renderVeiling } from './veiling-ui.js?v=20261127c';
+import { renderPeriode } from './periode.js?v=20261127c';
+import { renderFactuurmaker } from './factuurmaker.js?v=20261127c';
+import { renderBankimport } from './bankimport.js?v=20261127c';
+import { renderJaarafsluiting } from './jaarafsluiting.js?v=20261127c';
+import { renderBeheer } from './beheer.js?v=20261127c';
+import { toonGroepVan } from './navgroepen.js?v=20261127c';
+import { zetNavPil } from './navpil.js?v=20261127c';
 
 const RENDERS = {
   home: renderPortaal,      // de startpagina: tegels naar de onderdelen
@@ -49,6 +50,7 @@ const RENDERS = {
   km: renderKm,
   uren: renderUren,
   bol: renderBol,
+  marge: renderMarge,
   inkoopfacturen: renderInkoopfacturen,
   verkoopfacturen: renderVerkoopfacturen,
   terugkerend: renderTerugkerend,
@@ -78,6 +80,7 @@ const TITELS = {
   km: 'Kilometers',
   uren: 'Uren',
   bol: 'Bol.com',
+  marge: 'Marge per artikel',
   inkoopfacturen: 'Inkoopfacturen',
   verkoopfacturen: 'Verkoopfacturen',
   terugkerend: 'Terugkerend',
