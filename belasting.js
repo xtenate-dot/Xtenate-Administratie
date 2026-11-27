@@ -1,14 +1,14 @@
 // belasting.js — Belasting-pagina (indicatieve IB-berekening).
 
-import { splitsLoten } from './hnvilot.js?v=20261127c';
-import { tarievenVoor, ibDetail, pct, zelfstandigenaftrekAan, zetZelfstandigenaftrek, bewaarTarieven, herstelStandaardTarieven } from './tarieven.js?v=20261127c';
-import { lopendJaar, txVanJaar } from './jaren.js?v=20261127c';
-import { charts, dc, kleurVoorGb } from './charts.js?v=20261127c';
-import { ddmm, fmt, gbCode, isInkomst, isKostenBoeking, isKostenTerugbetaling, isOmzet, isPriveBetaaldeKost, isUitgave } from './helpers.js?v=20261127c';
-import { downloadModelPdf } from './pdf.js?v=20261127c';
-import { state, grootboekNamen } from './storage.js?v=20261127c';
-import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261127c';
-import { totaalAfschrijvingVanJaar } from './activa.js?v=20261127c';
+import { splitsLoten } from './hnvilot.js?v=20261127d';
+import { tarievenVoor, ibDetail, pct, zelfstandigenaftrekAan, zetZelfstandigenaftrek, bewaarTarieven, herstelStandaardTarieven } from './tarieven.js?v=20261127d';
+import { lopendJaar, txVanJaar } from './jaren.js?v=20261127d';
+import { charts, dc, kleurVoorGb } from './charts.js?v=20261127d';
+import { ddmm, fmt, gbCode, isInkomst, isKostenBoeking, isKostenTerugbetaling, isOmzet, isPriveBetaaldeKost, isUitgave } from './helpers.js?v=20261127d';
+import { downloadModelPdf } from './pdf.js?v=20261127d';
+import { state, grootboekNamen } from './storage.js?v=20261127d';
+import { kmAftrek, kmTarief, totaalKmVanJaar } from './km.js?v=20261127d';
+import { totaalAfschrijvingVanJaar } from './activa.js?v=20261127d';
 
 
 /** Sleutel waaronder de handmatige posten van één jaar staan opgeslagen. */
@@ -1138,7 +1138,7 @@ export function aangifteModel(jaar = gekozenJaar()) {
   // opmaak in de code staat.
   return {
     jaar,
-    resultaat: { omzet, winst },
+    resultaat: { omzet, winst, inkoopwaarde, overigeKosten },
     titel: 'Aangifte inkomstenbelasting — winst uit onderneming',
     ondertitel: `Boekjaar ${jaar === 'all' ? 'alle jaren' : jaar}`,
     blokken: [

@@ -47,11 +47,13 @@
 .mg-printkop { font-weight: 600; }
 .mg-inp { padding: 7px 9px; font-size: 13px; box-sizing: border-box; max-width: 100%; }
 .mg-regels td { vertical-align: middle; }
-.mg-regels { min-width: 920px; }
-.mg-regels td:nth-child(1) .mg-inp { min-width: 130px; }
-.mg-regels td:nth-child(2) .mg-inp { min-width: 175px; }
-.mg-regels td:nth-child(3) .mg-inp { min-width: 165px; }
-.mg-regels td:nth-child(n+4) .mg-inp { min-width: 74px; }
+.mg-regels { min-width: 860px; }
+.mg-regels td, .mg-regels th { padding-left: 6px; padding-right: 6px; }
+.mg-regels td:nth-child(1) .mg-inp { min-width: 104px; }
+.mg-regels td:nth-child(2) .mg-inp { min-width: 150px; }
+.mg-regels td:nth-child(3) .mg-inp { min-width: 148px; }
+.mg-regels td:nth-child(n+4) .mg-inp { min-width: 64px; }
+.mg-regels .mg-balk { min-width: 110px; }
 .mg-product .btn-sm, .mg-blok .btn-sm { margin-top: var(--spacing-2); }
 
 .mg-blok { margin-bottom: var(--spacing-5); }
@@ -64,3 +66,21 @@
   .mg-balk { min-width: 0; }
   .mg-delen { padding-inline: 0; }
 }
+
+/* Staffelkorting */
+.mg-staffels { margin-top: var(--spacing-3); border-top: 1px solid var(--border-soft); padding-top: var(--spacing-3); }
+.mg-staffels > summary { cursor: pointer; font-weight: 700; padding: 4px 0; }
+.mg-staffelnoot { font-size: 12.5px; margin-top: var(--spacing-2); }
+.mg-staffeltabel { min-width: 980px; }
+.mg-staffeltabel td:nth-child(5) .mg-inp { min-width: 190px; }
+.mg-staffeltabel td:nth-child(6) .mg-inp { min-width: 160px; }
+.mg-staffel-kop td { background: var(--accent-primary-softer); padding-top: 9px !important; padding-bottom: 9px !important; }
+.mg-regels .mg-inp { width: 100% !important; }
+.mg-regels th { white-space: normal; line-height: 1.25; vertical-align: bottom; }
+.mg-staffeltabel td:nth-child(5) .mg-inp { min-width: 160px; }
+.mg-staffeltabel td:nth-child(6) .mg-inp { min-width: 140px; }
+.mg-staffeltabel { min-width: 900px; }
+.mg-staffeltabel .mg-balk { min-width: 96px; }
+.mg-staffeltabel .mg-balk-spoor { min-width: 36px; }
+.mg-staffeltabel td:nth-child(1) .mg-inp, .mg-staffeltabel td:nth-child(2) .mg-inp { min-width: 60px; }
+.mg-staffeltabel td:nth-child(3) { min-width: 56px; }

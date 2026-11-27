@@ -4,12 +4,13 @@
 // opgeslagen (app_data "marge"), zodat een wijziging van een inkoopprijs
 // nergens anders cijfers verandert.
 
-import { esc, fmt } from './helpers.js?v=20261127c';
+import { esc, fmt } from './helpers.js?v=20261127d';
 import {
   KANALEN, GEEN_VERZENDING, leesMarge, alleUitkomsten, samenvatting, productiekosten,
   zetKosten, zetKostenRij, voegKostenRijToe, verwijderKostenRij,
-  zetProduct, voegProductToe, verwijderProduct, zetRegel, voegRegelToe, verwijderRegel, nr
-} from './marge.js?v=20261127c';
+  zetProduct, voegProductToe, verwijderProduct, zetRegel, voegRegelToe, verwijderRegel, nr,
+  rekenStaffel, zetStaffel, voegStaffelToe, verwijderStaffel
+} from './marge.js?v=20261127d';
 
 const el = id => document.getElementById(id);
 const pct = x => (x * 100).toLocaleString('nl-NL', { maximumFractionDigits: 1 }) + '%';
@@ -81,16 +82,16 @@ function overzichtHtml(alle) {
 // ---------- Invoervelden ----------
 
 /** Eén invoerveld. soort: txt | num | opt (leeg = niet ingevuld) */
-function veld({ a, p = '', r = '', k = '', soort = 'num', waarde, breed = 80, placeholder = '', her = false, ariaLabel = '' }) {
+function veld({ a, p = '', r = '', k = '', x = '', soort = 'num', waarde, breed = 80, placeholder = '', her = false, ariaLabel = '' }) {
   return `<input type="text" class="mg-inp" ${soort !== 'txt' ? 'inputmode="decimal"' : ''} style="width:${breed}px"
     value="${esc(soort === 'txt' ? waarde : getal(waarde))}" placeholder="${esc(placeholder)}"
-    data-a="${a}" data-p="${esc(p)}" data-r="${esc(r)}" data-k="${esc(k)}" data-s="${soort}"${her ? ' data-her="1"' : ''}
+    data-a="${a}" data-p="${esc(p)}" data-r="${esc(r)}" data-k="${esc(k)}" data-x="${esc(x)}" data-s="${soort}"${her ? ' data-her="1"' : ''}
     aria-label="${esc(ariaLabel)}" onchange="margeVeld(this)">`;
 }
-function keuze({ a, p = '', r = '', k = '', opties, waarde, breed = 170, ariaLabel = '' }) {
+function keuze({ a, p = '', r = '', k = '', x = '', opties, waarde, breed = 170, ariaLabel = '' }) {
   const lijst = opties.map(o => (typeof o === 'string' ? { w: o, t: o } : o));
   if (!lijst.some(o => o.w === waarde)) lijst.unshift({ w: waarde, t: `${waarde || '(leeg)'} (bestaat niet meer)` });
-  return `<select class="mg-inp" style="width:${breed}px" data-a="${a}" data-p="${esc(p)}" data-r="${esc(r)}" data-k="${esc(k)}" data-s="txt" data-her="1"
+  return `<select class="mg-inp" style="width:${breed}px" data-a="${a}" data-p="${esc(p)}" data-r="${esc(r)}" data-k="${esc(k)}" data-x="${esc(x)}" data-s="txt" data-her="1"
     aria-label="${esc(ariaLabel)}" onchange="margeVeld(this)">${lijst.map(o => `<option value="${esc(o.w)}"${o.w === waarde ? ' selected' : ''}>${esc(o.t)}</option>`).join('')}</select>`;
 }
 
@@ -107,6 +108,37 @@ function regelRij(kosten, p, r) {
     <td id="mg-m-${esc(r.id)}"></td>
     <td style="text-align:right"><button type="button" class="btn-details" onclick="margeVerwijderRegel('${esc(p.id)}','${esc(r.id)}')" title="Verwijder deze regel">&times;</button></td>
   </tr>`;
+}
+
+function staffelBlok(kosten, p) {
+  const groepen = p.regels.filter(r => nr(r.prijs) > 0 || (r.staffels || []).length).map(r => {
+    const kop = `${esc(KANALEN[r.kanaal]?.naam || r.kanaal)}${r.variant ? ' · ' + esc(r.variant) : ''}`;
+    const rijen = (r.staffels || []).map(s => `<tr>
+      <td>${veld({ a: 'staffel', p: p.id, r: r.id, x: s.id, k: 'aantal', waarde: s.aantal, breed: 56, ariaLabel: 'Aantal' })}</td>
+      <td>${veld({ a: 'staffel', p: p.id, r: r.id, x: s.id, k: 'prijs', waarde: s.prijs, breed: 76, ariaLabel: 'Verkoopprijs per stuk' })}</td>
+      <td class="muted" id="mg-sk-${esc(s.id)}"></td>
+      <td>${veld({ a: 'staffel', p: p.id, r: r.id, x: s.id, k: 'kosten', waarde: s.kosten, breed: 76, ariaLabel: 'Commissie excl. btw of kosten voor deze bestelling' })}</td>
+      <td>${keuze({ a: 'staffel', p: p.id, r: r.id, x: s.id, k: 'verpakking', opties: kosten.verpakking.map(v => v.naam), waarde: s.verpakking, breed: 215, ariaLabel: 'Verpakking' })}</td>
+      <td>${keuze({ a: 'staffel', p: p.id, r: r.id, x: s.id, k: 'methode', opties: kosten.verzending.map(v => v.naam), waarde: s.methode, breed: 180, ariaLabel: 'Verzendmethode' })}</td>
+      <td style="text-align:right;font-weight:600" id="mg-sw-${esc(s.id)}"></td>
+      <td id="mg-sm-${esc(s.id)}"></td>
+      <td style="text-align:right" id="mg-sp-${esc(s.id)}"></td>
+      <td style="text-align:right"><button type="button" class="btn-details" onclick="margeVerwijderStaffel('${esc(p.id)}','${esc(r.id)}','${esc(s.id)}')" title="Verwijder deze staffel">&times;</button></td>
+    </tr>`).join('');
+    return `<tr class="mg-staffel-kop"><td colspan="10"><b>${kop}</b>
+        <span class="muted"> · losse verkoop ${fmt(r.prijs)}</span>
+        <button type="button" class="btn-details" style="margin-left:10px" onclick="margeVoegStaffelToe('${esc(p.id)}','${esc(r.id)}')">Staffel toevoegen</button></td></tr>${rijen}`;
+  }).join('');
+  if (!groepen) return '';
+  return `<details class="mg-staffels"${p.regels.some(r => (r.staffels || []).length) ? '' : ''}>
+    <summary>Staffelkorting <span class="muted">(meerdere stuks in één bestelling)</span></summary>
+    <div class="table-wrap"><table class="tbl-compact mg-regels mg-staffeltabel"><thead><tr>
+      <th>Aantal</th><th>Prijs per stuk</th><th>Korting</th>
+      <th title="Bol: commissie voor de hele bestelling zoals op de factuur, excl. btw. Website: je vaste kosten per bestelling.">Commissie (excl. btw)</th>
+      <th>Verpakking</th><th>Verzendmethode</th><th style="text-align:right">Winst</th><th>Marge</th><th style="text-align:right">Per stuk</th><th></th>
+    </tr></thead><tbody>${groepen}</tbody></table></div>
+    <div class="muted mg-staffelnoot">Extra's en de rit naar PostNL tellen één keer per bestelling. Kies per staffel de verpakking en verzendmethode: een grotere bestelling past vaak niet meer in dezelfde doos.</div>
+  </details>`;
 }
 
 function productHtml(kosten, p) {
@@ -131,10 +163,11 @@ function productHtml(kosten, p) {
     </div>
     <div class="table-wrap"><table class="tbl-compact mg-regels"><thead><tr>
       <th>Variant</th><th>Kanaal</th><th>Verzending</th><th>Verkoopprijs</th><th>Inkoop / productie</th>
-      <th title="Bol: de commissie zoals op de factuur, excl. btw (de btw rekent de app erbij). Website: je vaste kosten per verkoop.">Commissie excl. btw / kosten</th>
+      <th title="Bol: de commissie zoals op de factuur, excl. btw (de btw rekent de app erbij). Website: je vaste kosten per verkoop.">Commissie (excl. btw)</th>
       <th style="text-align:right">Winst</th><th>Marge</th><th></th>
     </tr></thead><tbody>${p.regels.map(r => regelRij(kosten, p, r)).join('')}</tbody></table></div>
     <button type="button" class="btn btn-sm" onclick="margeVoegRegelToe('${esc(p.id)}')">Regel toevoegen</button>
+    ${staffelBlok(kosten, p)}
   </div>`;
 }
 
@@ -198,6 +231,8 @@ export function renderMarge() {
   if (!doel) return;
   const data = leesMarge();
   const uit = alleUitkomsten(data);
+  // Opengeklapte staffelblokken blijven open na het opnieuw tekenen.
+  const openStaffels = [...doel.querySelectorAll('details.mg-staffels[open]')].map(d => d.closest('.mg-product')?.id);
   doel.innerHTML = `
     <div id="marge-kpi">${kpiHtml(uit)}</div>
 
@@ -223,6 +258,7 @@ export function renderMarge() {
       ${tarievenTabel(data.kosten)}
       ${losseKosten(data.kosten)}
     </div>`;
+  openStaffels.forEach(id => { const d = id && el(id)?.querySelector('details.mg-staffels'); if (d) d.open = true; });
   werkUitkomstenBij(uit);
 }
 
@@ -237,6 +273,14 @@ function werkUitkomstenBij(uit = alleUitkomsten(leesMarge())) {
     const w = el('mg-w-' + regel.id), m = el('mg-m-' + regel.id);
     if (w) w.textContent = fmt(u.winst);
     if (m) m.innerHTML = margeBalk(u);
+  }
+  for (const p of data.producten) for (const r of p.regels) for (const s of r.staffels || []) {
+    const x = rekenStaffel(data.kosten, p, r, s);
+    const w = el('mg-sw-' + s.id), m = el('mg-sm-' + s.id), pp = el('mg-sp-' + s.id), k = el('mg-sk-' + s.id);
+    if (w) w.textContent = fmt(x.winst);
+    if (m) m.innerHTML = margeBalk({ prijs: x.omzet, marge: x.marge, oordeel: x.oordeel });
+    if (pp) pp.textContent = nr(p.stuks) > 1 || x.aantal > 1 ? fmt(x.winstPerStuk) : '—';
+    if (k) k.textContent = x.korting > 0.0005 ? '−' + pct(x.korting) : (x.korting < -0.0005 ? '+' + pct(-x.korting) : '—');
   }
   for (const p of data.producten) {
     const t = el('mg-prod-' + p.id), prod = productiekosten(data.kosten, p);
@@ -267,12 +311,13 @@ function leesWaarde(inv) {
 }
 
 export function margeVeld(inv) {
-  const { a, p, r, k, her } = inv.dataset;
+  const { a, p, r, k, x, her } = inv.dataset;
   const w = leesWaarde(inv);
   if (a === 'kost') zetKosten(p, w);
   else if (a === 'kostrij') zetKostenRij(p, r, k, w);
   else if (a === 'prod') zetProduct(p, k, k === 'extras' ? w === 'ja' : w);
   else if (a === 'regel') zetRegel(p, r, k, w);
+  else if (a === 'staffel') zetStaffel(p, r, x, k, w);
   if (her) metScrollBehoud(renderMarge);
   else werkUitkomstenBij();
   // Toon de opgeschoonde waarde (bijvoorbeeld "12.5" wordt "12,5", een ongeldige invoer wordt 0).
@@ -297,3 +342,5 @@ export function margeVerwijderKosten(lijst, id) {
   if (!rij || !confirm(`"${rij.naam}" verwijderen uit de vaste kosten? Artikelen die ernaar verwijzen rekenen dan met €0 voor dit onderdeel.`)) return;
   metScrollBehoud(() => { verwijderKostenRij(lijst, id); renderMarge(); });
 }
+export function margeVoegStaffelToe(productId, regelId) { metScrollBehoud(() => { voegStaffelToe(productId, regelId); renderMarge(); const d = document.querySelector(`#mg-p-${productId} details.mg-staffels`); if (d) d.open = true; }); }
+export function margeVerwijderStaffel(productId, regelId, staffelId) { metScrollBehoud(() => { verwijderStaffel(productId, regelId, staffelId); renderMarge(); const d = document.querySelector(`#mg-p-${productId} details.mg-staffels`); if (d) d.open = true; }); }

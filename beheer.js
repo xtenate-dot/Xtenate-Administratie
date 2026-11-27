@@ -5,15 +5,16 @@
 // ongewijzigd: elke tegel roept dezelfde globale functie aan als het
 // zijbalk-item, dus er verandert niets aan wat ze doen.
 
-import { herstelpuntenBlok } from './herstelpunt.js?v=20261127c';
-import { cloudBackupBlok } from './cloudbackup.js?v=20261127c';
-import { draaiControles } from './controle.js?v=20261127c';
-import { esc } from './helpers.js?v=20261127c';
-import { saveVoorraadInstellingen, standaardMinVoorraad, saveControleInstellingen, CONTROLE_INSTELLINGEN, saveBtwInstellingen, BTW_INSTELLINGEN, saveBedrijfsgegevens, BEDRIJFSGEGEVENS, saveKmInstellingen, KM_INSTELLINGEN, saveFactuurInstellingen, FACTUUR_INSTELLINGEN, appDataStatus, state, rekeningenLijst, bankKoppelingDagenTotVerval } from './storage.js?v=20261127c';
-import { werkBankKoppelingRekBijInSupabase } from './supabase-client-v2.js?v=20261127c';
-import { hertekenHuidigePagina } from './ui.js?v=20261127c';
-import { getPendingItems } from './supabase-client-v2.js?v=20261127c';
-import { syncNu } from './autosync.js?v=20261127c';
+import { herstelpuntenBlok } from './herstelpunt.js?v=20261127d';
+import { logLijst, soortLabel, actieLabel } from './logboek.js?v=20261127d';
+import { cloudBackupBlok } from './cloudbackup.js?v=20261127d';
+import { draaiControles } from './controle.js?v=20261127d';
+import { esc } from './helpers.js?v=20261127d';
+import { saveVoorraadInstellingen, standaardMinVoorraad, saveControleInstellingen, CONTROLE_INSTELLINGEN, saveBtwInstellingen, BTW_INSTELLINGEN, saveBedrijfsgegevens, BEDRIJFSGEGEVENS, saveKmInstellingen, KM_INSTELLINGEN, saveFactuurInstellingen, FACTUUR_INSTELLINGEN, appDataStatus, state, rekeningenLijst, bankKoppelingDagenTotVerval } from './storage.js?v=20261127d';
+import { werkBankKoppelingRekBijInSupabase } from './supabase-client-v2.js?v=20261127d';
+import { hertekenHuidigePagina } from './ui.js?v=20261127d';
+import { getPendingItems } from './supabase-client-v2.js?v=20261127d';
+import { syncNu } from './autosync.js?v=20261127d';
 
 const el = id => document.getElementById(id);
 
@@ -70,6 +71,27 @@ function groep(naam, tegels) {
     </div>`;
 }
 
+
+/**
+ * Het logboek: de laatste wijzigingen aan boekingen, loten, artikelen, instellingen en
+ * herstelpunten. Alleen kijken; het logboek staat in deze browser en verandert niets.
+ */
+function logboekBlok() {
+  const regels = logLijst(60);
+  const tijd = iso => new Date(iso).toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' });
+  const badgeKlasse = r => r.actie === 'delete' ? 'badge-red' : r.actie === 'create' ? 'badge-green' : 'badge-gray';
+  const body = regels.map(r => `<tr>
+      <td class="muted" style="white-space:nowrap">${esc(tijd(r.t))}</td>
+      <td><span class="badge ${badgeKlasse(r)}">${esc(soortLabel(r))} ${esc(actieLabel(r))}</span>${r.n > 1 ? ` <span class="muted">${r.n}×</span>` : ''}</td>
+      <td>${esc(r.tekst || '')}</td></tr>`).join('');
+  return `<div class="card card-flush" style="margin-top:var(--spacing-4)">
+    <div class="card-title">Logboek <span class="muted" style="font-weight:400;font-size:12.5px">laatste ${regels.length} wijzigingen, alleen in deze browser</span></div>
+    ${regels.length
+      ? `<div class="table-wrap" style="max-height:340px;overflow:auto"><table class="tbl-compact"><thead><tr><th>Wanneer</th><th>Wat</th><th>Welk item</th></tr></thead><tbody>${body}</tbody></table></div>`
+      : '<div class="leeg">Nog geen wijzigingen vastgelegd. Vanaf nu verschijnen hier nieuwe, gewijzigde en verwijderde boekingen, loten, artikelen en instellingen.</div>'}
+  </div>`;
+}
+
 export function renderBeheer() {
   const doel = el('beheer-inhoud');
   if (!doel) return;
@@ -121,6 +143,7 @@ export function renderBeheer() {
     `<details class="beheer-geavanceerd">
       <summary>Geavanceerd <span class="muted">herstelpunten, back-up in de cloud, controle-instellingen en data wissen</span></summary>
       ${herstelpuntenBlok()}
+      ${logboekBlok()}
       ${cloudBackupBlok()}
       ${controleInstellingenBlok()}
       ${groep('Voorzichtig', [

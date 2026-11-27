@@ -2,12 +2,13 @@
 // met een knop om terug te zetten. De momentopname staat in deze browser; de
 // cloud wordt bij terugzetten weer gelijkgetrokken met die opname.
 
+import { logGebeurtenis } from './logboek.js?v=20261127d';
 import {
   state, load, save, saveTxData, saveHistTxData, saveCoversData, saveHnviData
-} from './storage.js?v=20261127c';
+} from './storage.js?v=20261127d';
 import {
   vervangBoekingenInSupabase, vervangVoorraadInSupabase, saveHnviToSupabase, deleteFromSupabase
-} from './supabase-client-v2.js?v=20261127c';
+} from './supabase-client-v2.js?v=20261127d';
 
 const SLEUTEL = 'xtenate_herstelpunten';
 const MAX = 3;
@@ -29,7 +30,7 @@ export function maakHerstelpunt(reden) {
   let lijst = [punt, ...lijstHerstelpunten()].slice(0, MAX);
   // Past het niet in de opslag, dan eerst de oudste laten vallen.
   while (lijst.length) {
-    try { localStorage.setItem(SLEUTEL, JSON.stringify(lijst)); return true; }
+    try { localStorage.setItem(SLEUTEL, JSON.stringify(lijst)); logGebeurtenis('herstelpunt', 'create', reden); return true; }
     catch (e) { lijst = lijst.slice(0, -1); }
   }
   console.warn('Herstelpunt kon niet worden bewaard (opslag vol).');
@@ -45,6 +46,7 @@ export async function zetHerstelpuntTerug(index) {
   const aantal = `${punt.TX.length + punt.HIST_TX.length} boekingen, ${punt.HNVI_LOTS.length} HNVI-loten en ${punt.COVERS.length} artikelen`;
   if (!window.confirm(`Alles terugzetten naar ${datumTijd(punt.tijd)} (${punt.reden})?\n\nDaarmee staan er ${aantal}. Wat je sindsdien hebt gewijzigd, gaat verloren. Er wordt eerst een nieuw herstelpunt van de huidige toestand gemaakt.`)) return;
 
+  logGebeurtenis('herstelpunt', 'update', `Teruggezet naar ${datumTijd(punt.tijd)} (${punt.reden})`);
   maakHerstelpunt('vóór terugzetten');
   const oudeLoten = (state.HNVI_LOTS || []).map(l => String(l._key || l.id));
 

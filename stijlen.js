@@ -1,8 +1,8 @@
 // stijlen.js — kiest de uiterlijke stijl van de app: glass (standaard), lavendel of rood.
 // Alleen uiterlijk. De keuze staat lokaal in de browser (xtenate_stijl).
 
-import { destroyAll } from './charts.js?v=20261127c';
-import { hertekenHuidigePagina } from './ui.js?v=20261127c';
+import { destroyAll } from './charts.js?v=20261127d';
+import { hertekenHuidigePagina } from './ui.js?v=20261127d';
 
 const KEY = 'xtenate_stijl';
 const STIJLEN = [

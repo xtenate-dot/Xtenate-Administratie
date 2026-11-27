@@ -4,6 +4,7 @@
 // verwijzen zonder dat we losse globale variabelen nodig hebben.
 
 // Fase 3A: Import Supabase client v2 (pending queue + RLS)
+import { logInstelling } from './logboek.js?v=20261127d';
 import {
   loadBoekingenFromSupabase,
   loadHnviFromSupabase,
@@ -19,7 +20,7 @@ import {
   saveAppData,
   loadAppData,
   laatsteAppDataFout
-} from './supabase-client-v2.js?v=20261127c';
+} from './supabase-client-v2.js?v=20261127d';
 
 /**
  * Stuurt een los lijstje (groepen, facturen, tellers) naar de cloud zonder
@@ -37,6 +38,7 @@ const appDataPogingen = {};
 const APP_DATA_MAX_POGINGEN = 5;
 
 function duwAppData(sleutel, waarde) {
+  logInstelling(sleutel);   // logboek; vangt eigen fouten op
   appDataVuil.add(sleutel);
   // Een nieuwe wijziging krijgt een schone lei, ook als de vorige waarde van
   // deze sleutel al vastgelopen was — precies zoals addToPendingQueue() een
@@ -123,6 +125,7 @@ function appDataWaarde(sleutel) {
   if (sleutel === 'kostenplaats') return state.KOSTENPLAATS;
   if (sleutel === 'bol_maandcijfers') return state.BOL_MAAND;
   if (sleutel === 'marge') return state.MARGE || undefined;
+  if (sleutel === 'veiling_kosten') return state.VEILING_KOSTEN;
   if (sleutel === 'vergrendeld') return state.VERGRENDELD;
   if (sleutel === 'tellers') return { tx: state.nxtTx, cover: state.nxtCover, hnvi: state.nxtHnvi };
   return undefined;
@@ -506,6 +509,15 @@ export function bewaarMarge(data) {
   state.MARGE = data;
   save('xtenate_marge', state.MARGE);
   duwAppData('marge', state.MARGE);
+}
+// Bijkomende kosten per veiling (vervoer, verzending, enz.), per veilingdatum. Alleen voor het
+// veilingoverzicht op de HNVI-pagina; het raakt de loten en de boekingen niet.
+state.VEILING_KOSTEN = load('xtenate_veiling_kosten', {});
+export function zetVeilingKosten(datum, bedrag) {
+  const b = Math.round((Number(bedrag) || 0) * 100) / 100;
+  if (b > 0) state.VEILING_KOSTEN[datum] = b; else delete state.VEILING_KOSTEN[datum];
+  save('xtenate_veiling_kosten', state.VEILING_KOSTEN);
+  duwAppData('veiling_kosten', state.VEILING_KOSTEN);
 }
 export function bewaarRelatieExtra(relatieId, velden) {
   state.RELATIE_EXTRA[relatieId] = { ...(state.RELATIE_EXTRA[relatieId] || {}), ...velden };
@@ -1018,6 +1030,10 @@ export async function loadDataHybrid() {
         if (extra.bol_maandcijfers && typeof extra.bol_maandcijfers === 'object') {
           state.BOL_MAAND = { ...extra.bol_maandcijfers, ...state.BOL_MAAND };
           save('xtenate_bol_maand', state.BOL_MAAND);
+        }
+        if (extra.veiling_kosten && typeof extra.veiling_kosten === 'object') {
+          state.VEILING_KOSTEN = { ...extra.veiling_kosten, ...state.VEILING_KOSTEN };
+          save('xtenate_veiling_kosten', state.VEILING_KOSTEN);
         }
         // Marge: wat lokaal staat wint; staat er alleen iets in de cloud, dan nemen we dat over.
         if (!state.MARGE && extra.marge && typeof extra.marge === 'object' && extra.marge.kosten) {

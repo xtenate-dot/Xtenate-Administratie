@@ -11,7 +11,8 @@
  * Fase 3A Implementation
  */
 
-import { getClient, heeftClient, leesbareFout } from './supabase.js?v=20261127c';
+import { logWachtrijWijziging } from './logboek.js?v=20261127d';
+import { getClient, heeftClient, leesbareFout } from './supabase.js?v=20261127d';
 
 // ===== NOODREM =====
 export function syncIsAangezet() {
@@ -66,6 +67,7 @@ export function clearPendingQueueItem(key) {
 }
 
 export function addToPendingQueue(boeking, operation, isHistoric = false, soortHint = null) {
+  logWachtrijWijziging(operation, boeking, soortHint);   // logboek; vangt eigen fouten op
   // De sleutel bevat geen tijdstip meer. Bewerk je hetzelfde artikel drie keer
   // achter elkaar, dan stonden er eerst drie regels in de wachtrij die alle
   // drie verstuurd werden — de eerste twee met verouderde gegevens. Nu

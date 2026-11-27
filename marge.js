@@ -5,7 +5,7 @@
 // gelezen, zodat een gewijzigde inkoopprijs hier nooit de cijfers elders raakt.
 // De opzet en de formules komen uit het bestand "Winst / kostprijsberekening".
 
-import { state, bewaarMarge } from './storage.js?v=20261127c';
+import { state, bewaarMarge } from './storage.js?v=20261127d';
 
 export const KANALEN = {
   nl:  { naam: 'Bol.com Nederland',        kort: 'Bol NL',  soort: 'bol' },
@@ -52,27 +52,63 @@ export function standaardMarge() {
         id: 'p1', naam: 'Hoes', stuks: 1, verpakking: 'Plastic kleding verzendzak (klein)',
         extras: true, perRit: 1, methode: 'Pakket', gram: 0, uur: 0,
         regels: [
-          { id: 'r1', kanaal: 'nl',  variant: '', verzending: 'zelf',       prijs: 31.95, inkoop: 12.5, kosten: 4.81 },
-          { id: 'r2', kanaal: 'be',  variant: '', verzending: 'zelf',       prijs: 34.95, inkoop: 12.5, kosten: 5.18 },
-          { id: 'r3', kanaal: 'web', variant: '', verzending: 'leverancier', prijs: 29.95, inkoop: 15,   kosten: 2 }
+          { id: 'r1', kanaal: 'nl',  variant: '', verzending: 'zelf',       prijs: 31.95, inkoop: 12.5, kosten: 4.81, staffels: [
+            { id: 's1', aantal: 2, prijs: 30.35, kosten: 9.22, verpakking: 'Plastic kleding verzendzak (klein)', methode: 'Pakket' },
+            { id: 's2', aantal: 3, prijs: 29.39, kosten: 13.48, verpakking: 'Plastic kleding verzendzak', methode: 'Groot pakket' },
+            { id: 's3', aantal: 4, prijs: 28.75, kosten: 17.66, verpakking: 'Plastic kleding verzendzak', methode: 'Groot pakket' }
+          ] },
+          { id: 'r2', kanaal: 'be',  variant: '', verzending: 'zelf',       prijs: 34.95, inkoop: 12.5, kosten: 5.18, staffels: [
+            { id: 's4', aantal: 2, prijs: 33.2, kosten: 9.93, verpakking: 'Plastic kleding verzendzak (klein)', methode: 'Pakket' },
+            { id: 's5', aantal: 3, prijs: 32.15, kosten: 14.51, verpakking: 'Plastic kleding verzendzak', methode: 'Groot pakket' },
+            { id: 's6', aantal: 4, prijs: 31.46, kosten: 19.0, verpakking: 'Plastic kleding verzendzak', methode: 'Groot pakket' }
+          ] },
+          { id: 'r3', kanaal: 'web', variant: '', verzending: 'leverancier', prijs: 29.95, inkoop: 15,   kosten: 2, staffels: [
+            { id: 's7', aantal: 2, prijs: 30.87, kosten: 2, verpakking: 'Plastic kleding verzendzak (klein)', methode: 'Geen (leverancier verstuurt)' },
+            { id: 's8', aantal: 3, prijs: 29.155, kosten: 2, verpakking: 'Plastic kleding verzendzak', methode: 'Geen (leverancier verstuurt)' },
+            { id: 's9', aantal: 4, prijs: 27.44, kosten: 2, verpakking: 'Plastic kleding verzendzak', methode: 'Geen (leverancier verstuurt)' }
+          ] }
         ]
       },
       {
         id: 'p2', naam: 'Funko Pop houder', stuks: 4, verpakking: 'Brievenbusdoos (M)',
         extras: true, perRit: 1, methode: 'Pakket', gram: 44.14, uur: 1.5,
         regels: [
-          { id: 'r4', kanaal: 'nl', variant: '', verzending: 'zelf', prijs: 21.95, inkoop: null, kosten: 3.57 },
-          { id: 'r5', kanaal: 'be', variant: '', verzending: 'zelf', prijs: 24.95, inkoop: null, kosten: 2.63 }
+          { id: 'r4', kanaal: 'nl', variant: '', verzending: 'zelf', prijs: 21.95, inkoop: null, kosten: 3.57, staffels: [
+            { id: 's10', aantal: 2, prijs: 20.8525, kosten: 6.87, verpakking: 'Plastic kleding verzendzak', methode: 'Pakket' },
+            { id: 's11', aantal: 3, prijs: 20.194, kosten: 10.06, verpakking: 'Plastic kleding verzendzak', methode: 'Pakket' },
+            { id: 's12', aantal: 5, prijs: 19.316, kosten: 13.98, verpakking: 'Amerikaanse vouwdoos', methode: 'Groot pakket' }
+          ] },
+          { id: 'r5', kanaal: 'be', variant: '', verzending: 'zelf', prijs: 24.95, inkoop: null, kosten: 2.63, staffels: [
+            { id: 's13', aantal: 2, prijs: 17.05, kosten: 5.03, verpakking: 'Brievenbusdoos (M)', methode: 'Brievenbuspakket' },
+            { id: 's14', aantal: 3, prijs: 16.51, kosten: 7.34, verpakking: 'Brievenbusdoos (M)', methode: 'Pakket' },
+            { id: 's15', aantal: 5, prijs: 15.8, kosten: 11.79, verpakking: 'Amerikaanse vouwdoos', methode: 'Groot pakket' }
+          ] }
         ]
       },
       {
         id: 'p3', naam: 'Helm Mascotte', stuks: 1, verpakking: 'Postdoos (XS)',
         extras: true, perRit: 1, methode: 'Pakket', gram: 0, uur: 0,
         regels: [
-          { id: 'r6',  kanaal: 'nl',  variant: 'Zonder licht', verzending: 'zelf', prijs: 24.95, inkoop: 7,   kosten: 3.94 },
-          { id: 'r7',  kanaal: 'nl',  variant: 'Met licht',    verzending: 'zelf', prijs: 27.95, inkoop: 8.5, kosten: 4.31 },
-          { id: 'r8',  kanaal: 'be',  variant: 'Zonder licht', verzending: 'zelf', prijs: 29.95, inkoop: 7,   kosten: 4.56 },
-          { id: 'r9',  kanaal: 'be',  variant: 'Met licht',    verzending: 'zelf', prijs: 30.95, inkoop: 8.5, kosten: 4.69 },
+          { id: 'r6',  kanaal: 'nl',  variant: 'Zonder licht', verzending: 'zelf', prijs: 24.95, inkoop: 7,   kosten: 3.94, staffels: [
+            { id: 's16', aantal: 2, prijs: 23.7, kosten: 7.58, verpakking: 'Postdoos (XS)', methode: 'Pakket' },
+            { id: 's17', aantal: 3, prijs: 22.95, kosten: 11.09, verpakking: 'Amerikaanse vouwdoos', methode: 'Groot pakket' },
+            { id: 's18', aantal: 4, prijs: 22.45, kosten: 14.53, verpakking: 'Amerikaanse vouwdoos', methode: 'Groot pakket' }
+          ] },
+          { id: 'r7',  kanaal: 'nl',  variant: 'Met licht',    verzending: 'zelf', prijs: 27.95, inkoop: 8.5, kosten: 4.31, staffels: [
+            { id: 's19', aantal: 2, prijs: 26.55, kosten: 8.28, verpakking: 'Postdoos (XS)', methode: 'Pakket' },
+            { id: 's20', aantal: 3, prijs: 25.71, kosten: 12.11, verpakking: 'Amerikaanse vouwdoos', methode: 'Groot pakket' },
+            { id: 's21', aantal: 4, prijs: 25.16, kosten: 15.88, verpakking: 'Amerikaanse vouwdoos', methode: 'Groot pakket' }
+          ] },
+          { id: 'r8',  kanaal: 'be',  variant: 'Zonder licht', verzending: 'zelf', prijs: 29.95, inkoop: 7,   kosten: 4.56, staffels: [
+            { id: 's22', aantal: 2, prijs: 28.45, kosten: 8.75, verpakking: 'Postdoos (XS)', methode: 'Pakket' },
+            { id: 's23', aantal: 3, prijs: 27.55, kosten: 12.8, verpakking: 'Amerikaanse vouwdoos', methode: 'Groot pakket' },
+            { id: 's24', aantal: 4, prijs: 26.95, kosten: 16.76, verpakking: 'Amerikaanse vouwdoos', methode: 'Groot pakket' }
+          ] },
+          { id: 'r9',  kanaal: 'be',  variant: 'Met licht',    verzending: 'zelf', prijs: 30.95, inkoop: 8.5, kosten: 4.69, staffels: [
+            { id: 's25', aantal: 2, prijs: 29.4, kosten: 8.99, verpakking: 'Postdoos (XS)', methode: 'Pakket' },
+            { id: 's26', aantal: 3, prijs: 28.47, kosten: 13.14, verpakking: 'Amerikaanse vouwdoos', methode: 'Groot pakket' },
+            { id: 's27', aantal: 4, prijs: 27.86, kosten: 17.21, verpakking: 'Amerikaanse vouwdoos', methode: 'Groot pakket' }
+          ] },
           { id: 'r10', kanaal: 'web', variant: 'Zonder licht', verzending: 'zelf', prijs: 19.95, inkoop: 7,   kosten: 2 }
         ]
       }
@@ -82,7 +118,17 @@ export function standaardMarge() {
 
 /** De opgeslagen gegevens, of de startwaarden zolang er niets is bewaard. */
 export function leesMarge() {
-  return state.MARGE && state.MARGE.kosten ? state.MARGE : standaardMarge();
+  if (!(state.MARGE && state.MARGE.kosten)) return standaardMarge();
+  // Eerder bewaarde gegevens kennen nog geen staffels. Regels die uit de startwaarden komen
+  // (zelfde id en kanaal) krijgen die alsnog; eigen regels en regels met staffels blijven zoals ze zijn.
+  const nieuw = JSON.parse(JSON.stringify(state.MARGE));
+  const start = standaardMarge();
+  for (const p of nieuw.producten) for (const r of p.regels) {
+    if (r.staffels !== undefined) continue;
+    const s = start.producten.flatMap(x => x.regels).find(x => x.id === r.id && x.kanaal === r.kanaal);
+    r.staffels = s && s.staffels ? s.staffels : [];
+  }
+  return nieuw;
 }
 
 // ---------- Rekenen ----------
@@ -147,6 +193,34 @@ export function rekenRegel(kosten, p, r) {
     prijs, inkoop, kanaalKosten, verzend, verpakking, extras, rit, retour, totaal, winst,
     winstPerStuk: winst / Math.max(1, nr(p.stuks)),
     marge, oordeel: prijs > 0 ? oordeel(winst, marge) : '—', waarschuwing
+  };
+}
+
+/**
+ * Rekent een staffelregel door: een bestelling van meerdere verkoopeenheden tegen een lagere prijs.
+ * Extra's en de rit tellen één keer per bestelling; verpakking en verzendmethode kies je per staffel,
+ * omdat een grotere bestelling vaak in een grotere doos moet.
+ */
+export function rekenStaffel(kosten, p, r, s) {
+  const zelf = r.verzending !== 'leverancier';
+  const aantal = Math.max(1, nr(s.aantal));
+  const omzet = aantal * nr(s.prijs);
+  const heeftInkoop = r.inkoop !== null && r.inkoop !== undefined && r.inkoop !== '';
+  const inkoop = aantal * (heeftInkoop ? nr(r.inkoop) : productiekosten(kosten, p));
+  const kanaalKosten = KANALEN[r.kanaal]?.soort === 'bol' ? nr(s.kosten) * BOL_BTW : nr(s.kosten);
+  const tarief = nr(verzendTarief(kosten, s.methode, r.kanaal));
+  const verpakking = zelf ? verpakkingPrijs(kosten, s.verpakking) : 0;
+  const extras = zelf && p.extras ? extrasPerPakket(kosten) : 0;
+  const rit = zelf && nr(p.perRit) > 0 ? ritKosten(kosten) / nr(p.perRit) : 0;
+  const verzend = zelf ? tarief * (1 + nr(kosten.retourPct) / 100 * 2) : 0;   // verzending plus retourreservering
+  const totaal = inkoop + kanaalKosten + verpakking + extras + rit + verzend;
+  const winst = omzet - totaal;
+  const marge = omzet > 0 ? winst / omzet : 0;
+  return {
+    aantal, omzet, inkoop, kanaalKosten, verpakking, extras, rit, verzend, totaal, winst, marge,
+    winstPerStuk: winst / (aantal * Math.max(1, nr(p.stuks))),
+    korting: nr(r.prijs) > 0 ? 1 - nr(s.prijs) / nr(r.prijs) : 0,
+    oordeel: omzet > 0 ? oordeel(winst, marge) : '—'
   };
 }
 
@@ -250,6 +324,33 @@ export function voegRegelToe(productId) {
       id: nieuwId('r'), kanaal: laatste?.kanaal || 'nl', variant: '', verzending: laatste?.verzending || 'zelf',
       prijs: 0, inkoop: laatste?.inkoop ?? null, kosten: 0
     });
+  });
+}
+export function zetStaffel(productId, regelId, staffelId, veld, waarde) {
+  werkBij(d => {
+    const r = d.producten.find(x => x.id === productId)?.regels.find(x => x.id === regelId);
+    const s = (r?.staffels || []).find(x => x.id === staffelId);
+    if (s) s[veld] = waarde;
+  });
+}
+export function voegStaffelToe(productId, regelId) {
+  werkBij(d => {
+    const p = d.producten.find(x => x.id === productId);
+    const r = p?.regels.find(x => x.id === regelId);
+    if (!r) return;
+    // Het scherm toont staffels uit de startwaarden ook als ze nog niet bewaard zijn; neem ze dus mee.
+    if (!r.staffels) r.staffels = leesMarge().producten.find(x => x.id === productId)?.regels.find(x => x.id === regelId)?.staffels || [];
+    const laatste = r.staffels.at(-1);
+    r.staffels.push({
+      id: nieuwId('s'), aantal: laatste ? nr(laatste.aantal) + 1 : 2, prijs: nr(r.prijs), kosten: 0,
+      verpakking: laatste?.verpakking || p.verpakking, methode: laatste?.methode || p.methode
+    });
+  });
+}
+export function verwijderStaffel(productId, regelId, staffelId) {
+  werkBij(d => {
+    const r = d.producten.find(x => x.id === productId)?.regels.find(x => x.id === regelId);
+    if (r) r.staffels = (r.staffels || []).filter(x => x.id !== staffelId);
   });
 }
 export function verwijderRegel(productId, regelId) {

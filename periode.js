@@ -6,10 +6,10 @@
 // bedrijfskosten (geen balansposten, geen HNVI- of voorraadinkoop).
 // HNVI-inkoop staat apart, omdat die pas bij verkoop een kostenpost is.
 
-import { state } from './storage.js?v=20261127c';
-import { esc, fmt, isInkomst, isKostenBoeking, isKostenTerugbetaling, isOmzet, isUitgave, MND_KORT } from './helpers.js?v=20261127c';
-import { isKostenpost, inkoopOverzicht, voorraadRekeningen } from './belasting.js?v=20261127c';
-import { kmTarief } from './km.js?v=20261127c';
+import { state } from './storage.js?v=20261127d';
+import { esc, fmt, isInkomst, isKostenBoeking, isKostenTerugbetaling, isOmzet, isUitgave, MND_KORT } from './helpers.js?v=20261127d';
+import { isKostenpost, inkoopOverzicht, voorraadRekeningen, aangifteModel } from './belasting.js?v=20261127d';
+import { kmTarief } from './km.js?v=20261127d';
 
 const el = id => document.getElementById(id);
 let stand = 'maand';          // 'maand' | 'kwartaal' | 'jaar'
@@ -86,6 +86,48 @@ export function perPeriode(boekingen, soort) {
   return [...groepen.values()]
     .map(g => ({ ...g, resultaat: g.omzet - g.kosten - g.hnviInkoop - g.voorraadInkoop }))
     .sort((a, b) => a.sleutel < b.sleutel ? -1 : 1);
+}
+
+
+// ---------------------------------------------------------------- winst en verlies per jaar
+// Dezelfde berekening als de pagina Belasting (aangifteModel), zodat de cijfers nergens
+// uit elkaar kunnen lopen. Hier staan de jaren naast elkaar voor de vergelijking.
+
+/** Omzet, inkoopwaarde, overige kosten en winst per jaar, oudste eerst. Een jaar dat niet te berekenen is, blijft weg. */
+export function winstVerliesPerJaar(jaren) {
+  const uit = [];
+  for (const j of [...jaren].sort()) {
+    try {
+      const r = aangifteModel(j).resultaat;
+      uit.push({ jaar: j, omzet: r.omzet, inkoopwaarde: r.inkoopwaarde, overigeKosten: r.overigeKosten, winst: r.winst });
+    } catch (e) { console.error('Winst en verlies voor jaar', j, 'niet te berekenen:', e); }
+  }
+  return uit.map((x, i) => ({
+    ...x,
+    brutomarge: x.omzet > 0 ? (x.omzet - x.inkoopwaarde) / x.omzet : null,
+    omzetGroei: i > 0 && uit[i - 1].omzet > 0 ? x.omzet / uit[i - 1].omzet - 1 : null
+  }));
+}
+
+function winstVerliesBlok(jaren) {
+  const rijen = winstVerliesPerJaar(jaren);
+  if (!rijen.length) return '';
+  const pc = n => n === null ? '—' : (n * 100).toLocaleString('nl-NL', { maximumFractionDigits: 1 }) + '%';
+  const groei = n => n === null ? '—' : (n > 0 ? '+' : '') + pc(n);
+  const body = [...rijen].reverse().map(r => `<tr>
+    <td><strong>${esc(r.jaar)}</strong></td>
+    <td style="text-align:right">${fmt(r.omzet)}</td>
+    <td style="text-align:right">${fmt(r.inkoopwaarde)}</td>
+    <td style="text-align:right">${fmt(r.overigeKosten)}</td>
+    <td style="text-align:right;color:${kleur(r.winst)}"><strong>${fmt(r.winst)}</strong></td>
+    <td style="text-align:right">${pc(r.brutomarge)}</td>
+    <td style="text-align:right;color:${r.omzetGroei === null ? '' : kleur(r.omzetGroei)}">${groei(r.omzetGroei)}</td></tr>`).join('');
+  return `<div class="section-head" style="margin-top:var(--spacing-5)"><div class="section-titel">Winst en verlies per jaar</div></div>
+    <div class="card card-flush"><div class="table-wrap"><table class="tbl-compact">
+      <thead><tr><th>Jaar</th><th style="text-align:right">Omzet</th><th style="text-align:right">Inkoopwaarde</th><th style="text-align:right">Overige kosten</th>
+        <th style="text-align:right">Winst</th><th style="text-align:right">Brutomarge</th><th style="text-align:right">Omzet t.o.v. vorig jaar</th></tr></thead>
+      <tbody>${body}</tbody></table></div></div>
+    <p class="muted" style="font-size:13px;margin-top:var(--spacing-2)">Dit is de fiscale winst, op dezelfde manier berekend als op de pagina Belasting: HNVI-inkoop en voorraad tellen pas mee zodra ze verkocht zijn, en de kilometervergoeding en afschrijvingen zitten in de overige kosten. Het resultaat (kas) hierboven kan daardoor afwijken.</p>`;
 }
 
 export function kiesPeriodeSoort(s) {
@@ -254,6 +296,12 @@ export function downloadPeriodeExcel() {
   voeg('Per maand', blad('maand'), [14, 12, 12, 18, 20, 16, 14, 16, 10]);
   voeg('Per kwartaal', blad('kwartaal'), [14, 12, 12, 18, 20, 16, 14, 16, 10]);
   voeg('Per jaar', blad('jaar'), [10, 12, 12, 18, 20, 16, 14, 16, 10]);
+  const wvj = winstVerliesPerJaar([...new Set(alles.map(t => (t.datum || '').slice(0, 4)).filter(Boolean))]);
+  if (wvj.length) {
+    voeg('Winst en verlies per jaar', [['Jaar', 'Omzet', 'Inkoopwaarde', 'Overige kosten', 'Winst', 'Brutomarge', 'Omzet t.o.v. vorig jaar'],
+      ...wvj.map(r => [r.jaar, r.omzet, r.inkoopwaarde, r.overigeKosten, r.winst, r.brutomarge === null ? '' : Math.round(r.brutomarge * 1000) / 1000,
+        r.omzetGroei === null ? '' : Math.round(r.omzetGroei * 1000) / 1000])], [8, 14, 14, 16, 14, 12, 22]);
+  }
 
   const jaren = [...new Set(alles.map(t => (t.datum || '').slice(0, 4)).filter(Boolean))].sort();
   const inkoop = [['Jaar', 'Rekening', 'Naam', 'Ingekocht (bank)', 'Telt dit jaar mee', 'Voorraad (telt niet)', 'Nog te verdelen', 'Toelichting']];
@@ -357,7 +405,7 @@ export function renderPeriode() {
     <p class="muted" style="font-size:13px;margin-top:var(--spacing-2)">
       Resultaat (kas) = omzet min kosten min HNVI-inkoop en voorraadinkoop (AliExpress enz.) zoals die in de bank staan. Terugbetalingen op kostenrekeningen zijn van de kosten afgehaald. De kosten bevatten de kilometervergoeding (kilometers × tarief uit de pagina Kilometers). Het fiscale resultaat staat op de pagina Belasting:
       daar telt HNVI-inkoop pas mee zodra het lot is verkocht.</p>
-    ${stand === 'jaar' ? '' : inkoopSectie(gekozenJaar)}`;
+    ${stand === 'jaar' ? winstVerliesBlok(jaren) : inkoopSectie(gekozenJaar)}`;
 
   // Het grootboek toont altijd de maanden (of kwartalen) van één jaar, ook als
   // de samenvatting op "Per jaar" staat.
