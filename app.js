@@ -22,6 +22,7 @@ import { exporteerDagboekLijst, kiesDagboek, zetDagboekJaar, zetDagboekPeriode, 
 import { zetRendementJaar, zetRendementZoek, zetRendementFilter, openArtikelRegels, openInkoopVerwerken, openInkoopLijst, zetInkoopLijst, ivRekenen, ivKies, ivRijToevoegen, ivVerwijderRij, ivVerwijderAlles, ivBewaar, openRegelFormulier, zoekRegelBank, bewaarRegel, verwijderRegel, haalBolVerkopen, exporteerRendement } from './artikelregels.js?v=20261126b';
 import { verbergTerugkerend, herstelTerugkerend, zetToonVerborgenTerugkerend } from './terugkerend.js?v=20261126b';
 import { koppelBolEan, ontkoppelBolEan, verwerkBolVerkopen } from './bolartikelen.js?v=20261126b';
+import { haalWebshopOp, koppelWebshopSku, ontkoppelWebshopSku, verwerkWebshopVerkopen, stuurVoorraadNaarWebshop, laadWebshopOpnieuw } from './webshop.js?v=20261126b';
 import { openIbanClusterScherm } from './boekingen-relaties-ui.js?v=20261126b';
 import './uren-ui.js?v=20261126b';
 import { verwerkBankTerugkeer } from './bankkoppelen.js?v=20261126b';
@@ -100,6 +101,7 @@ initBonnetjes().then(() => hertekenHuidigePagina());
 
 Object.assign(window, {
   koppelBolEan, ontkoppelBolEan, verwerkBolVerkopen,
+  haalWebshopOp, koppelWebshopSku, ontkoppelWebshopSku, verwerkWebshopVerkopen, stuurVoorraadNaarWebshop, laadWebshopOpnieuw,
   verbergTerugkerend, herstelTerugkerend, zetToonVerborgenTerugkerend,
   kiesDagboek, zetDagboekJaar, zetDagboekPeriode, zetDagboekVanTot, nieuweBoekingInDagboek, zetDagboekZoek, vinkDagboekRij, vinkDagboekAlles, bulkGrootboek, bulkDagboek, bulkVraagpost, openNieuwDagboek, bewaarNieuwDagboek, openMemoriaalBoeking, mmVoorbeeld, bewaarMemoriaal,
   zetRendementJaar, zetRendementZoek, zetRendementFilter, openArtikelRegels, openInkoopVerwerken, openInkoopLijst, zetInkoopLijst, ivRekenen, ivKies, ivRijToevoegen, ivVerwijderRij, ivVerwijderAlles, ivBewaar, openRegelFormulier, zoekRegelBank, bewaarRegel, verwijderRegel, haalBolVerkopen, exporteerRendement,

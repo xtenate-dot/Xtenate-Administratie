@@ -19,6 +19,7 @@ import { renderFacturenPagina, renderInkoopfacturen, renderVerkoopfacturen } fro
 import { renderKm } from './km-ui.js?v=20261126b';
 import { renderUren } from './uren-ui.js?v=20261126b';
 import { renderBol } from './bol-ui.js?v=20261126b';
+import { renderWebshop } from './webshop.js?v=20261126b';
 import { renderActiva } from './activa-ui.js?v=20261126b';
 import { renderVeiling } from './veiling-ui.js?v=20261126b';
 import { renderPeriode } from './periode.js?v=20261126b';
@@ -49,6 +50,7 @@ const RENDERS = {
   km: renderKm,
   uren: renderUren,
   bol: renderBol,
+  webshop: renderWebshop,
   inkoopfacturen: renderInkoopfacturen,
   verkoopfacturen: renderVerkoopfacturen,
   terugkerend: renderTerugkerend,
